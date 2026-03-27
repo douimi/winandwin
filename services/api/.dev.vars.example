@@ -1,0 +1,3 @@
+# Cloudflare Workers local dev secrets
+# Copy to .dev.vars and fill in values
+DATABASE_URL=postgresql://neondb_owner:xxxx@ep-xxx.eu-central-1.aws.neon.tech/neondb?sslmode=require

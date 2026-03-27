@@ -1,0 +1,31 @@
+name = "winandwin-api"
+main = "src/index.ts"
+compatibility_date = "2025-03-15"
+compatibility_flags = ["nodejs_compat"]
+
+[vars]
+ENVIRONMENT = "development"
+
+# DATABASE_URL is a secret — set it with:
+# wrangler secret put DATABASE_URL
+# For local dev, create a .dev.vars file with:
+# DATABASE_URL=postgresql://user:pass@host/dbname
+
+[env.production]
+vars = { ENVIRONMENT = "production" }
+# Secrets set via:
+# wrangler secret put DATABASE_URL --env production
+# wrangler secret put ADMIN_API_KEY --env production
+# wrangler secret put ALLOWED_ORIGINS --env production
+
+# [[ kv_namespaces ]]
+# binding = "GAME_CONFIG_CACHE"
+# id = "your-kv-namespace-id"
+
+# [[ durable_objects.bindings ]]
+# name = "GAME_SESSION"
+# class_name = "GameSession"
+
+# [[migrations]]
+# tag = "v1"
+# new_classes = ["GameSession"]
