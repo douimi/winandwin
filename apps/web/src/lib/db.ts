@@ -4,10 +4,13 @@ let _db: Database | null = null
 
 export function getDb(): Database {
   if (!_db) {
-    if (!process.env.DATABASE_URL) {
-      throw new Error('DATABASE_URL environment variable is not set')
+    const url = process.env.DATABASE_URL
+    if (!url) {
+      // During build time, return a no-op DB that won't be used
+      // (auth routes are force-dynamic so this code path only runs at build)
+      return createDb('postgresql://build:build@localhost/build')
     }
-    _db = createDb(process.env.DATABASE_URL)
+    _db = createDb(url)
   }
   return _db
 }
