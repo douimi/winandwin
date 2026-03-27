@@ -1,5 +1,6 @@
 {
   "$schema": "https://turbo.build/schema.json",
+  "globalPassThroughEnv": ["*"],
   "globalEnv": [
     "DATABASE_URL",
     "BETTER_AUTH_SECRET",
@@ -7,16 +8,13 @@
     "ADMIN_API_KEY",
     "NEXT_PUBLIC_APP_URL",
     "NEXT_PUBLIC_API_URL",
-    "NEXT_PUBLIC_PLAYER_URL",
-    "NODE_ENV",
-    "VERCEL",
-    "VERCEL_ENV"
+    "NEXT_PUBLIC_PLAYER_URL"
   ],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
       "outputs": ["dist/**", ".next/**", "!.next/cache/**"],
-      "env": [
+      "passThroughEnv": [
         "DATABASE_URL",
         "BETTER_AUTH_SECRET",
         "BETTER_AUTH_URL",
