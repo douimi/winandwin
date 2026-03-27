@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@winandwin/ui'
-import { fetchStatsOverview, fetchGames, type StatsOverview, type GameWithStats } from '@/lib/api'
+import { fetchStatsOverview, fetchGames, fetchUsageStats, type StatsOverview, type GameWithStats, type UsageStats } from '@/lib/api'
 import { requireSessionWithMerchant } from '@/lib/session'
 
 export default async function DashboardPage() {
@@ -7,16 +7,19 @@ export default async function DashboardPage() {
 
   let stats: StatsOverview | null = null
   let games: GameWithStats[] = []
+  let usage: UsageStats | null = null
   let apiOffline = false
 
   if (merchantId) {
     try {
-      const [statsData, gamesData] = await Promise.all([
+      const [statsData, gamesData, usageData] = await Promise.all([
         fetchStatsOverview(merchantId).catch(() => null),
         fetchGames(merchantId).catch(() => [] as GameWithStats[]),
+        fetchUsageStats(merchantId).catch(() => null),
       ])
       stats = statsData
       games = gamesData
+      usage = usageData
     } catch {
       apiOffline = true
     }
@@ -79,6 +82,55 @@ export default async function DashboardPage() {
           </Card>
         ))}
       </div>
+
+      {/* Usage bar */}
+      {usage && (
+        <Card className={
+          usage.percentUsed > 90
+            ? 'border-red-300 bg-red-50'
+            : usage.percentUsed > 70
+              ? 'border-yellow-300 bg-yellow-50'
+              : ''
+        }>
+          <CardContent className="py-4">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium">Monthly Usage</span>
+                <span className="inline-flex items-center rounded-md bg-muted px-2 py-0.5 text-xs font-medium capitalize">
+                  {usage.tier}
+                </span>
+              </div>
+              <span className="text-sm text-muted-foreground">
+                {usage.playsThisMonth.toLocaleString()} / {usage.monthlyLimit ? usage.monthlyLimit.toLocaleString() : 'Unlimited'} plays
+              </span>
+            </div>
+            {usage.monthlyLimit && (
+              <div className="h-2.5 w-full rounded-full bg-muted">
+                <div
+                  className={`h-2.5 rounded-full transition-all ${
+                    usage.percentUsed > 90
+                      ? 'bg-red-500'
+                      : usage.percentUsed > 70
+                        ? 'bg-yellow-500'
+                        : 'bg-green-500'
+                  }`}
+                  style={{ width: `${Math.min(usage.percentUsed, 100)}%` }}
+                />
+              </div>
+            )}
+            {usage.percentUsed > 70 && usage.monthlyLimit && (
+              <p className="mt-2 text-xs text-muted-foreground">
+                {usage.percentUsed >= 100
+                  ? 'You have reached your monthly limit. '
+                  : `You have used ${usage.percentUsed}% of your monthly limit. `}
+                <a href="/dashboard/settings" className="font-medium text-primary underline">
+                  Upgrade your plan
+                </a>
+              </p>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Quick Start guide — only shown when no games exist */}
       {hasNoGames && (

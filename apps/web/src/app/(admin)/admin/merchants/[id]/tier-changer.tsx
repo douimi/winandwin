@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { changeMerchantTier } from './actions'
 
 const TIERS = ['free', 'starter', 'pro', 'enterprise'] as const
 
@@ -17,35 +18,19 @@ export function TierChanger({
   const [message, setMessage] = useState<string | null>(null)
   const router = useRouter()
 
-  const apiBase = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8787'
-
   async function handleSave() {
     if (tier === currentTier) return
     setSaving(true)
     setMessage(null)
 
-    try {
-      const res = await fetch(`${apiBase}/api/v1/admin/merchants/${merchantId}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-admin-key': process.env.NEXT_PUBLIC_ADMIN_API_KEY || '',
-        },
-        body: JSON.stringify({ subscriptionTier: tier }),
-      })
+    const result = await changeMerchantTier(merchantId, tier)
+    setMessage(result.message)
 
-      if (!res.ok) {
-        const body = await res.json().catch(() => null)
-        throw new Error(body?.error?.message ?? 'Failed to update tier')
-      }
-
-      setMessage('Tier updated successfully')
+    if (result.success) {
       router.refresh()
-    } catch (e) {
-      setMessage(e instanceof Error ? e.message : 'Failed to update tier')
-    } finally {
-      setSaving(false)
     }
+
+    setSaving(false)
   }
 
   return (
