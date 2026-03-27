@@ -8,7 +8,7 @@ import { getDb } from './db'
 let _auth: any = null
 
 /** Lazy singleton — only created when first accessed at runtime, never at build time */
-function getAuth() {
+export function getAuth() {
   if (!_auth) {
     _auth = betterAuth({
       database: drizzleAdapter(getDb(), {

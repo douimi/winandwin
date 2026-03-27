@@ -32,7 +32,7 @@ export function SignInForm() {
   }
 
   return (
-    <div className="flex flex-col items-center">
+    <div className="mx-auto flex max-w-md flex-col items-center">
       {/* Logo */}
       <a href="/" className="mb-8 flex flex-col items-center gap-2">
         <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-[#6366f1] to-[#ec4899] text-xl font-extrabold text-white shadow-lg shadow-[#6366f1]/25">
