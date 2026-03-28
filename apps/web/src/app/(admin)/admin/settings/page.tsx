@@ -1,5 +1,19 @@
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@winandwin/ui'
+'use client'
+
+import { Card, CardContent, CardHeader, CardTitle } from '@winandwin/ui'
 import { TIER_LIMITS } from '@winandwin/shared'
+
+const tierAccentColors: Record<string, { border: string; badge: string; bg: string }> = {
+  free: { border: 'border-slate-700', badge: 'bg-slate-700 text-slate-300', bg: 'bg-slate-900' },
+  starter: { border: 'border-blue-800/50', badge: 'bg-blue-900/50 text-blue-300', bg: 'bg-slate-900' },
+  pro: { border: 'border-purple-800/50', badge: 'bg-purple-900/50 text-purple-300', bg: 'bg-slate-900' },
+  enterprise: { border: 'border-amber-800/50', badge: 'bg-amber-900/50 text-amber-300', bg: 'bg-slate-900' },
+}
+
+function formatLimit(value: number): string {
+  if (value === Number.POSITIVE_INFINITY) return 'Unlimited'
+  return value.toLocaleString()
+}
 
 export default function AdminSettingsPage() {
   const tiers = Object.entries(TIER_LIMITS) as [
@@ -8,96 +22,83 @@ export default function AdminSettingsPage() {
   ][]
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-gray-100">Platform Settings</h1>
+    <div className="space-y-8">
+      <h1 className="text-2xl font-bold text-slate-100">Platform Settings</h1>
 
-      <Card className="border-gray-800 bg-gray-900">
-        <CardHeader>
-          <CardTitle className="text-gray-100">Tier Limits</CardTitle>
-          <CardDescription className="text-gray-500">
-            Current subscription tier configuration. Edit in code for now &mdash;
-            these values are defined in{' '}
-            <code className="rounded bg-gray-800 px-1 py-0.5 text-xs text-purple-300">
-              packages/shared/src/constants/index.ts
-            </code>
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-gray-800 text-left">
-                  <th className="px-4 py-3 font-medium text-gray-400">Tier</th>
-                  <th className="px-4 py-3 font-medium text-gray-400">Monthly Plays</th>
-                  <th className="px-4 py-3 font-medium text-gray-400">Game Types</th>
-                  <th className="px-4 py-3 font-medium text-gray-400">Max Prizes</th>
-                  <th className="px-4 py-3 font-medium text-gray-400">Max CTAs</th>
-                  <th className="px-4 py-3 font-medium text-gray-400">Locations</th>
-                  <th className="px-4 py-3 font-medium text-gray-400">A/B Testing</th>
-                  <th className="px-4 py-3 font-medium text-gray-400">API Access</th>
-                  <th className="px-4 py-3 font-medium text-gray-400">Analytics</th>
-                </tr>
-              </thead>
-              <tbody>
-                {tiers.map(([name, limits]) => (
-                  <tr key={name} className="border-b border-gray-800/50">
-                    <td className="px-4 py-3">
-                      <span className="font-semibold text-gray-200 capitalize">{name}</span>
-                    </td>
-                    <td className="px-4 py-3 text-gray-300">
-                      {limits.monthlyPlays === Number.POSITIVE_INFINITY
-                        ? 'Unlimited'
-                        : limits.monthlyPlays.toLocaleString()}
-                    </td>
-                    <td className="px-4 py-3 text-gray-400 text-xs">
-                      {limits.gameTypes.join(', ')}
-                    </td>
-                    <td className="px-4 py-3 text-gray-300">
-                      {limits.maxPrizes === Number.POSITIVE_INFINITY
-                        ? 'Unlimited'
-                        : limits.maxPrizes}
-                    </td>
-                    <td className="px-4 py-3 text-gray-300">
-                      {limits.maxCtas === Number.POSITIVE_INFINITY
-                        ? 'Unlimited'
-                        : limits.maxCtas}
-                    </td>
-                    <td className="px-4 py-3 text-gray-300">
-                      {limits.maxLocations === Number.POSITIVE_INFINITY
-                        ? 'Unlimited'
-                        : limits.maxLocations}
-                    </td>
-                    <td className="px-4 py-3">
-                      {limits.abTesting ? (
-                        <span className="text-green-400">Yes</span>
-                      ) : (
-                        <span className="text-gray-600">No</span>
-                      )}
-                    </td>
-                    <td className="px-4 py-3 text-gray-400 text-xs capitalize">
-                      {limits.apiAccess === false ? 'None' : limits.apiAccess}
-                    </td>
-                    <td className="px-4 py-3 text-gray-400 text-xs capitalize">
-                      {limits.analytics}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+      {/* Tier Cards Grid */}
+      <div className="grid gap-6 sm:grid-cols-2">
+        {tiers.map(([name, limits]) => {
+          const defaultAccent = { border: 'border-slate-700', badge: 'bg-slate-700 text-slate-300', bg: 'bg-slate-900' }
+          const accent = tierAccentColors[name] ?? defaultAccent
+          return (
+            <Card key={name} className={`${accent.border} ${accent.bg} overflow-hidden`}>
+              <CardHeader className="pb-4">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-slate-100 capitalize">{name}</CardTitle>
+                  <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold capitalize ${accent.badge}`}>
+                    {name}
+                  </span>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  <LimitRow label="Monthly Plays" value={formatLimit(limits.monthlyPlays)} />
+                  <LimitRow label="Game Types" value={limits.gameTypes.join(', ')} />
+                  <LimitRow label="Max Prizes" value={formatLimit(limits.maxPrizes)} />
+                  <LimitRow label="Max CTAs" value={formatLimit(limits.maxCtas)} />
+                  <LimitRow label="Max Locations" value={formatLimit(limits.maxLocations)} />
+                  <LimitRow
+                    label="A/B Testing"
+                    value={limits.abTesting ? 'Yes' : 'No'}
+                    valueColor={limits.abTesting ? 'text-emerald-400' : 'text-slate-500'}
+                  />
+                  <LimitRow
+                    label="API Access"
+                    value={limits.apiAccess === false ? 'None' : String(limits.apiAccess)}
+                  />
+                  <LimitRow label="Analytics" value={String(limits.analytics)} />
+                </div>
+              </CardContent>
+            </Card>
+          )
+        })}
+      </div>
+
+      {/* Info Note */}
+      <Card className="border-amber-900/30 bg-amber-950/20">
+        <CardContent className="py-4">
+          <div className="flex items-start gap-3">
+            <span className="mt-0.5 text-lg">{'\u26A0\uFE0F'}</span>
+            <div>
+              <p className="text-sm font-medium text-amber-300">Read-only configuration</p>
+              <p className="mt-1 text-sm text-amber-300/70">
+                Tier limits are defined as constants in{' '}
+                <code className="rounded bg-slate-800 px-1.5 py-0.5 text-xs text-indigo-300">
+                  packages/shared/src/constants/index.ts
+                </code>.
+                Contact the developer to modify tier limits.
+              </p>
+            </div>
           </div>
         </CardContent>
       </Card>
+    </div>
+  )
+}
 
-      <Card className="border-amber-900/30 bg-amber-950/20">
-        <CardContent className="py-4">
-          <p className="text-sm text-amber-300">
-            <strong>Note:</strong> Tier limits are currently defined as constants in code.
-            To modify limits, edit the <code className="rounded bg-gray-800 px-1 py-0.5 text-xs">TIER_LIMITS</code> object
-            in <code className="rounded bg-gray-800 px-1 py-0.5 text-xs">packages/shared/src/constants/index.ts</code> and
-            redeploy. A database-backed settings system will be added in a future update.
-          </p>
-        </CardContent>
-      </Card>
+function LimitRow({
+  label,
+  value,
+  valueColor = 'text-slate-200',
+}: {
+  label: string
+  value: string
+  valueColor?: string
+}) {
+  return (
+    <div className="flex items-center justify-between border-b border-slate-800/50 pb-2 last:border-0 last:pb-0">
+      <span className="text-sm text-slate-400">{label}</span>
+      <span className={`text-sm font-medium capitalize ${valueColor}`}>{value}</span>
     </div>
   )
 }

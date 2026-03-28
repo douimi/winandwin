@@ -17,9 +17,9 @@ interface AdminShellProps {
 }
 
 const navItems = [
-  { href: '/admin', label: 'Overview', icon: 'O' },
-  { href: '/admin/merchants', label: 'Merchants', icon: 'M' },
-  { href: '/admin/settings', label: 'Settings', icon: 'S' },
+  { href: '/admin', label: 'Overview', icon: '\uD83D\uDCCA' },
+  { href: '/admin/merchants', label: 'Merchants', icon: '\uD83C\uDFEA' },
+  { href: '/admin/settings', label: 'Settings', icon: '\u2699\uFE0F' },
 ]
 
 export function AdminShell({ user, children }: AdminShellProps) {
@@ -36,11 +36,11 @@ export function AdminShell({ user, children }: AdminShellProps) {
 
   const sidebarContent = (
     <>
-      <div className="flex h-14 items-center border-b border-purple-800/30 px-6 bg-purple-950/50">
+      <div className="flex h-14 items-center border-b border-slate-700/50 px-6">
         <div className="min-w-0 flex-1">
           <span className="flex items-center gap-2 text-lg font-bold text-white truncate">
             Win & Win
-            <span className="inline-flex items-center rounded-md bg-purple-600 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-white">
+            <span className="inline-flex items-center rounded-full bg-indigo-500 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-white">
               Admin
             </span>
           </span>
@@ -55,39 +55,35 @@ export function AdminShell({ user, children }: AdminShellProps) {
               href={item.href}
               className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
                 active
-                  ? 'bg-purple-600/20 text-purple-300 border-l-2 border-purple-400'
-                  : 'text-gray-400 hover:bg-gray-800 hover:text-gray-200'
+                  ? 'bg-indigo-500/15 text-indigo-300 border-l-2 border-indigo-400'
+                  : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'
               }`}
               onClick={() => setSidebarOpen(false)}
             >
-              <span className="flex h-6 w-6 items-center justify-center rounded bg-gray-800 text-xs font-bold text-purple-300">
-                {item.icon}
-              </span>
+              <span className="text-base">{item.icon}</span>
               {item.label}
             </a>
           )
         })}
 
-        <div className="my-4 border-t border-gray-800" />
+        <div className="my-4 border-t border-slate-700/50" />
 
         <a
           href="/dashboard"
-          className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-gray-400 transition-colors hover:bg-gray-800 hover:text-gray-200"
+          className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-slate-400 transition-colors hover:bg-slate-800 hover:text-slate-200"
         >
-          <span className="flex h-6 w-6 items-center justify-center rounded bg-gray-800 text-xs font-bold text-gray-400">
-            &larr;
-          </span>
-          Merchant Dashboard
+          <span className="text-base">{'\u2190'}</span>
+          Back to Dashboard
         </a>
       </nav>
-      <div className="border-t border-gray-800 p-4">
+      <div className="border-t border-slate-700/50 p-4">
         <div className="flex items-center gap-3">
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-purple-600 text-xs font-medium text-white">
+          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-indigo-500 text-xs font-medium text-white">
             {user.name.charAt(0).toUpperCase()}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="truncate text-sm font-medium text-gray-200">{user.name}</p>
-            <p className="truncate text-xs text-gray-500">{user.email}</p>
+            <p className="truncate text-sm font-medium text-slate-200">{user.name}</p>
+            <p className="truncate text-xs text-slate-500">{user.email}</p>
           </div>
         </div>
         <button
@@ -95,7 +91,7 @@ export function AdminShell({ user, children }: AdminShellProps) {
           onClick={() =>
             signOut({ fetchOptions: { onSuccess: () => window.location.assign('/sign-in') } })
           }
-          className="mt-3 w-full rounded-lg border border-gray-700 px-3 py-1.5 text-sm text-gray-400 hover:bg-gray-800"
+          className="mt-3 w-full rounded-lg border border-slate-700 px-3 py-1.5 text-sm text-slate-400 hover:bg-slate-800 hover:text-slate-200 transition-colors"
         >
           Sign Out
         </button>
@@ -104,9 +100,9 @@ export function AdminShell({ user, children }: AdminShellProps) {
   )
 
   return (
-    <div className="flex min-h-screen bg-gray-950">
+    <div className="flex min-h-screen bg-slate-950">
       {/* Desktop sidebar */}
-      <aside className="hidden w-64 flex-col border-r border-gray-800 bg-gray-900 lg:flex">
+      <aside className="hidden w-64 flex-col bg-slate-900 border-r border-slate-800 lg:flex">
         {sidebarContent}
       </aside>
 
@@ -119,19 +115,19 @@ export function AdminShell({ user, children }: AdminShellProps) {
             onKeyDown={() => {}}
             role="presentation"
           />
-          <aside className="fixed inset-y-0 left-0 z-50 flex w-64 flex-col bg-gray-900 shadow-lg">
+          <aside className="fixed inset-y-0 left-0 z-50 flex w-64 flex-col bg-slate-900 shadow-2xl">
             {sidebarContent}
           </aside>
         </div>
       )}
 
       <main className="flex-1 min-w-0">
-        <header className="flex h-14 items-center border-b border-gray-800 px-6 gap-3 bg-gray-900">
+        <header className="flex h-14 items-center border-b border-slate-800 px-6 gap-3 bg-slate-900/50 backdrop-blur-sm">
           {/* Mobile hamburger */}
           <button
             type="button"
             onClick={() => setSidebarOpen(true)}
-            className="lg:hidden rounded-md p-1.5 hover:bg-gray-800 text-gray-400"
+            className="lg:hidden rounded-md p-1.5 hover:bg-slate-800 text-slate-400"
             aria-label="Open menu"
           >
             <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -143,7 +139,7 @@ export function AdminShell({ user, children }: AdminShellProps) {
               />
             </svg>
           </button>
-          <h2 className="text-lg font-semibold text-gray-100">{currentPageLabel}</h2>
+          <h2 className="text-lg font-semibold text-slate-100">{currentPageLabel}</h2>
         </header>
         <div className="p-6">{children}</div>
       </main>
