@@ -20,6 +20,8 @@ export default function SettingsPage() {
   const [category, setCategory] = useState('restaurant')
   const [timezone, setTimezone] = useState('Europe/Paris')
   const [phone, setPhone] = useState('')
+  const [validationPin, setValidationPin] = useState('0000')
+  const [savingPin, setSavingPin] = useState(false)
 
   const loadMerchant = useCallback(async () => {
     if (!merchantId) {
@@ -33,6 +35,7 @@ export default function SettingsPage() {
       setCategory(merchant.category)
       setTimezone(merchant.timezone)
       setPhone(merchant.phone ?? '')
+      setValidationPin((merchant as unknown as Record<string, string>).validationPin ?? '0000')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load settings')
     } finally {
@@ -205,6 +208,58 @@ export default function SettingsPage() {
               </p>
             </div>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Coupon Validation PIN */}
+      <Card>
+        <CardHeader>
+          <CardTitle>{'\uD83D\uDD10'} Coupon Validation PIN</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted-foreground mb-4">
+            Staff will use this PIN to validate coupons when customers present them.
+            The PIN is entered on the coupon validation page after scanning the QR code.
+          </p>
+          <form
+            onSubmit={async (e) => {
+              e.preventDefault()
+              if (!merchantId) return
+              if (!/^\d{4,6}$/.test(validationPin)) {
+                setError('PIN must be 4-6 digits')
+                return
+              }
+              setSavingPin(true)
+              setError(null)
+              try {
+                await updateMerchant(merchantId, { validationPin })
+                showSuccess('Validation PIN updated successfully.')
+              } catch (err) {
+                setError(err instanceof Error ? err.message : 'Failed to save PIN')
+              } finally {
+                setSavingPin(false)
+              }
+            }}
+            className="space-y-4"
+          >
+            <div className="space-y-2">
+              <Label htmlFor="validationPin">Validation PIN (4-6 digits)</Label>
+              <Input
+                id="validationPin"
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                maxLength={6}
+                value={validationPin}
+                onChange={(e) => setValidationPin(e.target.value.replace(/\D/g, ''))}
+                placeholder="0000"
+                className="max-w-[200px] text-center text-lg tracking-widest font-mono"
+              />
+            </div>
+            <Button type="submit" disabled={savingPin}>
+              {savingPin ? 'Saving...' : 'Update PIN'}
+            </Button>
+          </form>
         </CardContent>
       </Card>
 

@@ -5,6 +5,8 @@ import { AlreadyPlayedScreen } from './components/already-played'
 import { LoadingScreen } from './components/loading-screen'
 import { RegisterScreen } from './components/register-screen'
 import { ResultScreen } from './components/result-screen'
+import { MysteryBox } from './components/mystery-box'
+import { Slots } from './components/slots'
 import { Wheel, buildWheelSegments, findTargetIndex } from './components/wheel'
 import { generateFingerprint } from './lib/fingerprint'
 import type { GameConfig, PlayerScreen, PlayerState, SpinResult } from './types'
@@ -57,6 +59,14 @@ function checkPendingAction(slug: string): string | null {
     // Expired — clean up
     localStorage.removeItem('winandwin_pending_action')
   } catch { /* ignore */ }
+  return null
+}
+
+/** Auto-trigger spin for mystery box when game screen loads */
+function MysteryBoxAutoSpin({ onSpin }: { onSpin: () => void }) {
+  useEffect(() => {
+    onSpin()
+  }, [])
   return null
 }
 
@@ -173,14 +183,33 @@ export function App() {
       )
       setResult(spinResult)
 
-      // Find the correct display segment index (wheel has interleaved "Try Again" segments)
-      const segments = buildWheelSegments(config.game.prizes)
-      const idx = findTargetIndex(
-        segments,
-        spinResult.outcome,
-        spinResult.prize?.name,
-      )
-      setTargetIndex(idx)
+      if (config.game.type === 'wheel') {
+        // Find the correct display segment index (wheel has interleaved "Try Again" segments)
+        const segments = buildWheelSegments(config.game.prizes)
+        const idx = findTargetIndex(
+          segments,
+          spinResult.outcome,
+          spinResult.prize?.name,
+        )
+        setTargetIndex(idx)
+      } else if (config.game.type === 'slots') {
+        // For slots, find the prize index
+        if (spinResult.outcome === 'win' && spinResult.prize) {
+          const idx = config.game.prizes.findIndex((p) => p.name === spinResult.prize?.name)
+          setTargetIndex(idx >= 0 ? idx : 0)
+        } else {
+          // Lose — use an index beyond prizes to signal loss
+          setTargetIndex(config.game.prizes.length)
+        }
+      } else if (config.game.type === 'mystery_box') {
+        // For mystery box, find the prize index
+        if (spinResult.outcome === 'win' && spinResult.prize) {
+          const idx = config.game.prizes.findIndex((p) => p.name === spinResult.prize?.name)
+          setTargetIndex(idx >= 0 ? idx : 0)
+        } else {
+          setTargetIndex(0)
+        }
+      }
     } catch (err) {
       setError(classifyError(err))
       setSpinning(false)
@@ -264,14 +293,45 @@ export function App() {
 
           <p class="game-merchant-sub">{config.merchantName}</p>
 
-          <Wheel
-            prizes={config.game.prizes}
-            branding={config.game.branding}
-            spinning={spinning}
-            onSpin={handleSpin}
-            onSpinComplete={handleSpinComplete}
-            targetIndex={targetIndex}
-          />
+          {config.game.type === 'wheel' && (
+            <Wheel
+              prizes={config.game.prizes}
+              branding={config.game.branding}
+              spinning={spinning}
+              onSpin={handleSpin}
+              onSpinComplete={handleSpinComplete}
+              targetIndex={targetIndex}
+            />
+          )}
+
+          {config.game.type === 'slots' && (
+            <Slots
+              prizes={config.game.prizes}
+              branding={config.game.branding}
+              spinning={spinning}
+              onSpin={handleSpin}
+              onSpinComplete={handleSpinComplete}
+              targetIndex={targetIndex}
+            />
+          )}
+
+          {config.game.type === 'mystery_box' && (
+            <MysteryBox
+              prizes={config.game.prizes}
+              branding={config.game.branding}
+              onComplete={() => {
+                setSpinning(false)
+                setScreen('result')
+              }}
+              targetIndex={targetIndex}
+              isWin={result?.outcome === 'win'}
+            />
+          )}
+
+          {/* Mystery box: auto-trigger spin API when game screen loads */}
+          {config.game.type === 'mystery_box' && !spinning && !result && (
+            <MysteryBoxAutoSpin onSpin={handleSpin} />
+          )}
         </div>
       )}
 

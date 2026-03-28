@@ -5,8 +5,8 @@ const publicPaths = ['/', '/sign-in', '/sign-up', '/forgot-password']
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
-  // Allow public paths and API/static routes
-  if (publicPaths.includes(pathname) || pathname.startsWith('/api/')) {
+  // Allow public paths, /validate/* routes, and API/static routes
+  if (publicPaths.includes(pathname) || pathname.startsWith('/validate') || pathname.startsWith('/api/')) {
     return NextResponse.next()
   }
 

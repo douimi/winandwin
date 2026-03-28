@@ -16,6 +16,7 @@ export const players = pgTable('players', {
   phone: varchar('phone', { length: 20 }),
   totalPlays: integer('total_plays').notNull().default(0),
   totalWins: integer('total_wins').notNull().default(0),
+  points: integer('points').notNull().default(0),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   lastSeenAt: timestamp('last_seen_at', { withTimezone: true }).notNull().defaultNow(),
 })

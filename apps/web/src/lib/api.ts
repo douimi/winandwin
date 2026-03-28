@@ -204,6 +204,7 @@ export async function updateMerchant(
     category: string
     timezone: string
     phone: string
+    validationPin: string
     address: {
       street: string
       city: string
@@ -387,6 +388,33 @@ export async function revokeCoupon(
   )
 }
 
+export interface CouponLookup {
+  code: string
+  status: string
+  prizeName: string
+  prizeDescription: string | null
+  merchantName: string
+  validFrom: string
+  validUntil: string
+  redeemedAt: string | null
+}
+
+export async function lookupCoupon(code: string): Promise<CouponLookup> {
+  return request<CouponLookup>(
+    `/api/v1/coupons/lookup/${encodeURIComponent(code)}`,
+  )
+}
+
+export async function validateCoupon(
+  code: string,
+  pin: string,
+): Promise<{ code: string; status: string; prizeName: string; merchantName: string; redeemedAt: string }> {
+  return request<{ code: string; status: string; prizeName: string; merchantName: string; redeemedAt: string }>(
+    '/api/v1/coupons/validate',
+    { method: 'POST', body: JSON.stringify({ code, pin }) },
+  )
+}
+
 // ---------------------------------------------------------------------------
 // CTAs
 // ---------------------------------------------------------------------------
@@ -480,6 +508,29 @@ export async function fetchPlayers(
     path += `&search=${encodeURIComponent(search)}`
   }
   return request<PlayerData[]>(path, {}, token)
+}
+
+export interface PlayerRanking {
+  rank: number
+  id: string
+  name: string | null
+  email: string | null
+  points: number
+  totalPlays: number
+  totalWins: number
+  lastSeenAt: string
+}
+
+export async function fetchPlayerRanking(
+  merchantId: string,
+  limit = 20,
+  token?: string,
+): Promise<PlayerRanking[]> {
+  return request<PlayerRanking[]>(
+    `/api/v1/players/ranking?merchantId=${encodeURIComponent(merchantId)}&limit=${limit}`,
+    {},
+    token,
+  )
 }
 
 // ---------------------------------------------------------------------------

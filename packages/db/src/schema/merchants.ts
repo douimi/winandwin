@@ -48,6 +48,7 @@ export const merchants = pgTable('merchants', {
   subscriptionTier: subscriptionTierEnum('subscription_tier').notNull().default('free'),
   stripeCustomerId: text('stripe_customer_id'),
   stripeSubscriptionId: text('stripe_subscription_id'),
+  validationPin: varchar('validation_pin', { length: 6 }).notNull().default('0000'),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true })
     .notNull()

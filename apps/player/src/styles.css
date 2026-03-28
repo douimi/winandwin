@@ -1292,3 +1292,388 @@ body {
   border-radius: 50%;
   pointer-events: none;
 }
+
+/* ============================================
+   Slots Machine Styles
+   ============================================ */
+
+@keyframes slotSpin {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(-100%); }
+}
+
+@keyframes slotLand {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+  100% { transform: scale(1); }
+}
+
+@keyframes lightPulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
+
+.slots-container {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  z-index: 1;
+}
+
+.slots-frame {
+  position: relative;
+  background: linear-gradient(180deg, #2a2a3e 0%, #1a1a2e 50%, #2a2a3e 100%);
+  border: 3px solid #4a4a6a;
+  border-radius: 20px;
+  padding: 1rem;
+  box-shadow:
+    0 0 30px rgba(0, 0, 0, 0.4),
+    inset 0 2px 4px rgba(255, 255, 255, 0.1),
+    0 0 60px rgba(255, 215, 0, 0.08);
+  width: 100%;
+  max-width: 340px;
+}
+
+.slots-header {
+  text-align: center;
+  padding: 0.5rem 0 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.slots-title-text {
+  font-size: 1.4rem;
+  font-weight: 800;
+  letter-spacing: 0.15em;
+  background: linear-gradient(180deg, var(--gold) 0%, var(--gold-dark) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.slots-star {
+  font-size: 1rem;
+  animation: starTwinkle 1.5s ease-in-out infinite;
+}
+
+.slots-star:last-child {
+  animation-delay: 0.75s;
+}
+
+.slot-window {
+  display: flex;
+  gap: 6px;
+  background: linear-gradient(180deg, #0d0d1a 0%, #1a1a2e 100%);
+  border-radius: 12px;
+  padding: 8px;
+  border: 2px solid #3a3a5a;
+  position: relative;
+  overflow: hidden;
+  box-shadow: inset 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+.slot-reel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%);
+  border-radius: 8px;
+  padding: 8px 4px;
+  position: relative;
+  min-height: 180px;
+  justify-content: center;
+}
+
+.slot-reel.spinning .slot-symbol {
+  animation: subtlePulse 0.15s linear infinite;
+}
+
+.slot-symbol {
+  font-size: 2.8rem;
+  line-height: 1;
+  text-align: center;
+  transition: all 0.1s ease;
+  user-select: none;
+}
+
+.slot-symbol-dim {
+  opacity: 0.25;
+  font-size: 2rem;
+  filter: blur(1px);
+}
+
+.slot-symbol-main {
+  font-size: 3.2rem;
+  position: relative;
+}
+
+.slot-symbol-main.landed {
+  animation: slotLand 0.3s ease;
+}
+
+.slot-win-line {
+  position: absolute;
+  left: 4px;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 3px;
+  background: linear-gradient(90deg, transparent, rgba(255, 215, 0, 0.6), transparent);
+  border-radius: 2px;
+  pointer-events: none;
+}
+
+.slots-lights {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  padding: 0.75rem 0 0.25rem;
+}
+
+.slots-light {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #fff;
+  opacity: 0.4;
+  animation: lightPulse 1.5s ease-in-out infinite;
+}
+
+.slots-light.gold {
+  background: var(--gold);
+  opacity: 0.6;
+}
+
+@media (max-width: 360px) {
+  .slots-frame {
+    max-width: 290px;
+    padding: 0.75rem;
+  }
+
+  .slot-symbol-main {
+    font-size: 2.6rem;
+  }
+
+  .slot-symbol-dim {
+    font-size: 1.6rem;
+  }
+
+  .slot-reel {
+    min-height: 150px;
+  }
+}
+
+/* ============================================
+   Mystery Box Styles
+   ============================================ */
+
+@keyframes boxBounce {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-6px) scale(1.03); }
+}
+
+@keyframes boxReveal {
+  0% { transform: scale(1) rotateY(0deg); }
+  50% { transform: scale(1.1) rotateY(90deg); }
+  100% { transform: scale(1) rotateY(0deg); }
+}
+
+@keyframes boxWinGlow {
+  0% { box-shadow: 0 0 20px rgba(255, 215, 0, 0.3); }
+  50% { box-shadow: 0 0 40px rgba(255, 215, 0, 0.6), 0 0 80px rgba(255, 215, 0, 0.2); }
+  100% { box-shadow: 0 0 20px rgba(255, 215, 0, 0.3); }
+}
+
+@keyframes fadeOut {
+  to { opacity: 0.2; transform: scale(0.9); }
+}
+
+.mystery-container {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  z-index: 1;
+  gap: 1.5rem;
+}
+
+.mystery-instruction {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--text);
+  text-align: center;
+  animation: fadeIn 0.4s ease;
+}
+
+.mystery-grid {
+  display: grid;
+  gap: 12px;
+  width: 100%;
+  max-width: 340px;
+}
+
+.mystery-grid.cols-2 {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.mystery-grid.cols-3 {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.mystery-box {
+  aspect-ratio: 1;
+  border-radius: var(--radius-sm);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.04) 100%);
+  border: 2px solid rgba(255, 255, 255, 0.15);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.mystery-box::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, var(--box-color, var(--primary)), transparent);
+  opacity: 0.08;
+  border-radius: inherit;
+}
+
+.mystery-box.idle {
+  animation: boxBounce 2.5s ease-in-out infinite;
+  animation-delay: var(--box-delay, 0s);
+}
+
+.mystery-box.idle:active {
+  transform: scale(0.92);
+}
+
+.mystery-box.selected {
+  border-color: var(--gold);
+  animation: boxReveal 0.6s ease forwards;
+  cursor: default;
+}
+
+.mystery-box.winner {
+  border-color: var(--gold);
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.2) 0%, rgba(255, 215, 0, 0.05) 100%);
+  animation: boxWinGlow 1.5s ease-in-out infinite;
+}
+
+.mystery-box.revealed {
+  border-color: rgba(255, 255, 255, 0.3);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.02) 100%);
+}
+
+.mystery-box.faded {
+  animation: fadeOut 0.5s ease forwards;
+  cursor: default;
+  pointer-events: none;
+}
+
+.mystery-box-inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+.mystery-box-gift {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.mystery-box-emoji {
+  font-size: 2.5rem;
+  line-height: 1;
+}
+
+.mystery-box-qmark {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  opacity: 0.6;
+}
+
+.mystery-box-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  animation: bounceIn 0.4s ease;
+}
+
+.mystery-box-emoji-reveal {
+  font-size: 2.5rem;
+  line-height: 1;
+}
+
+.mystery-box-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--text);
+  text-align: center;
+  line-height: 1.2;
+  max-width: 80px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 360px) {
+  .mystery-grid {
+    max-width: 280px;
+    gap: 8px;
+  }
+
+  .mystery-box-emoji,
+  .mystery-box-emoji-reveal {
+    font-size: 2rem;
+  }
+
+  .mystery-box-label {
+    font-size: 0.6rem;
+  }
+}
+
+/* ---- QR Code in Result Screen ---- */
+.coupon-qr-section {
+  margin-top: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  position: relative;
+  z-index: 1;
+}
+
+.coupon-qr-image {
+  width: 160px;
+  height: 160px;
+  border-radius: 12px;
+  background: #fff;
+  padding: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+
+.coupon-qr-text {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}

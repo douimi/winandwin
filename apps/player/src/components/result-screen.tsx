@@ -76,6 +76,19 @@ export function ResultScreen({ result, merchantName }: Props) {
           </div>
         )}
 
+        {result.coupon && (
+          <div class="coupon-qr-section">
+            <img
+              class="coupon-qr-image"
+              src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(`https://winandwind.club/validate/${result.coupon.code}`)}`}
+              alt="QR Code for coupon validation"
+              width={160}
+              height={160}
+            />
+            <p class="coupon-qr-text">Staff: scan to validate</p>
+          </div>
+        )}
+
         {canShare() && (
           <button class="share-button" onClick={handleShare} type="button">
             Share your win

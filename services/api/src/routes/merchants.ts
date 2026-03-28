@@ -10,6 +10,7 @@ const updateMerchantSchema = z.object({
   category: merchantCategorySchema.optional(),
   timezone: z.string().max(50).optional(),
   phone: z.string().max(20).optional(),
+  validationPin: z.string().min(4).max(6).regex(/^\d+$/).optional(),
   address: z
     .object({
       street: z.string().max(200),
@@ -191,6 +192,7 @@ merchantsRouter.patch('/:id', async (c) => {
     if (parsed.data.category !== undefined) updates.category = parsed.data.category
     if (parsed.data.timezone !== undefined) updates.timezone = parsed.data.timezone
     if (parsed.data.phone !== undefined) updates.phone = parsed.data.phone
+    if (parsed.data.validationPin !== undefined) updates.validationPin = parsed.data.validationPin
     if (parsed.data.address !== undefined) updates.address = parsed.data.address
 
     if (Object.keys(updates).length === 0) {

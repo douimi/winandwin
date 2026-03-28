@@ -528,11 +528,16 @@ playRouter.post('/:slug/spin', async (c) => {
         completedActions: body.completedActions,
       })
 
+      // Points: +1 for play, +2 per completed action, +5 for win
+      const actionPoints = (body.completedActions?.length ?? 0) * 2
+      const winPoints = 1 + actionPoints + 5
+
       const playerUpdate = db
         .update(players)
         .set({
           totalPlays: sql`${players.totalPlays} + 1`,
           totalWins: sql`${players.totalWins} + 1`,
+          points: sql`${players.points} + ${winPoints}`,
           lastSeenAt: new Date(),
         })
         .where(eq(players.id, playerId))
@@ -572,6 +577,10 @@ playRouter.post('/:slug/spin', async (c) => {
     }
 
     // Lose outcome — record play and update player stats
+    // Points: +1 for play, +2 per completed action
+    const loseActionPoints = (body.completedActions?.length ?? 0) * 2
+    const losePoints = 1 + loseActionPoints
+
     const gamePlayInsert = db.insert(gamePlays).values({
       gameId: activeGame.id,
       merchantId: merchantData.id,
@@ -584,6 +593,7 @@ playRouter.post('/:slug/spin', async (c) => {
       .update(players)
       .set({
         totalPlays: sql`${players.totalPlays} + 1`,
+        points: sql`${players.points} + ${losePoints}`,
         lastSeenAt: new Date(),
       })
       .where(eq(players.id, playerId))

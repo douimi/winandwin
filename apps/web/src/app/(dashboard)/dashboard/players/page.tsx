@@ -61,8 +61,16 @@ export default function PlayersPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Players</h1>
-        <div className="text-sm text-muted-foreground">
-          {!loading && `${players.length} player${players.length !== 1 ? 's' : ''}`}
+        <div className="flex items-center gap-3">
+          <a
+            href="/dashboard/players/ranking"
+            className="inline-flex items-center gap-2 rounded-lg border bg-primary/5 px-3 py-1.5 text-sm font-medium text-primary hover:bg-primary/10 transition-colors"
+          >
+            {'\uD83C\uDFC6'} View Ranking
+          </a>
+          <div className="text-sm text-muted-foreground">
+            {!loading && `${players.length} player${players.length !== 1 ? 's' : ''}`}
+          </div>
         </div>
       </div>
 
