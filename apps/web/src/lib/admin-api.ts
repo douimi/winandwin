@@ -1,5 +1,5 @@
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8787'
-const ADMIN_KEY = process.env.ADMIN_API_KEY || ''
+// Route through Next.js API proxy to keep ADMIN_API_KEY server-side
+const ADMIN_PROXY_BASE = '/api/admin'
 
 export class AdminApiError extends Error {
   constructor(
@@ -18,11 +18,12 @@ export async function adminRequest<T>(
 ): Promise<T> {
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
-    'x-admin-key': ADMIN_KEY,
     ...(options.headers as Record<string, string> | undefined),
   }
 
-  const url = `${API_BASE}${path}`
+  // Map /api/v1/admin/... to the proxy at /api/admin/...
+  const proxyPath = path.replace('/api/v1/admin/', '')
+  const url = `${ADMIN_PROXY_BASE}/${proxyPath}`
 
   let res: Response
   try {
