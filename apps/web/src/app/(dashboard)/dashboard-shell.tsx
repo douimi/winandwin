@@ -22,6 +22,7 @@ const navItems = [
   { href: '/dashboard', label: 'Dashboard', icon: '\uD83D\uDCCA' },
   { href: '/dashboard/games', label: 'Games', icon: '\uD83C\uDFAE' },
   { href: '/dashboard/coupons', label: 'Coupons', icon: '\uD83C\uDF9F\uFE0F' },
+  { href: '/dashboard/players', label: 'Players', icon: '\uD83D\uDC65' },
   { href: '/dashboard/analytics', label: 'Analytics', icon: '\uD83D\uDCC8' },
   { href: '/dashboard/ctas', label: 'CTAs', icon: '\uD83D\uDD17' },
   { href: '/dashboard/settings', label: 'Settings', icon: '\u2699\uFE0F' },

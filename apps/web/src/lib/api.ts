@@ -457,6 +457,32 @@ export async function deleteCta(
 }
 
 // ---------------------------------------------------------------------------
+// Players
+// ---------------------------------------------------------------------------
+
+export interface PlayerData {
+  id: string
+  name: string | null
+  email: string | null
+  totalPlays: number
+  totalWins: number
+  lastSeenAt: string
+  createdAt: string
+}
+
+export async function fetchPlayers(
+  merchantId: string,
+  search?: string,
+  token?: string,
+): Promise<PlayerData[]> {
+  let path = `/api/v1/players?merchantId=${encodeURIComponent(merchantId)}`
+  if (search) {
+    path += `&search=${encodeURIComponent(search)}`
+  }
+  return request<PlayerData[]>(path, {}, token)
+}
+
+// ---------------------------------------------------------------------------
 // Usage
 // ---------------------------------------------------------------------------
 

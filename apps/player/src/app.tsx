@@ -3,6 +3,7 @@ import { fetchGameConfig, fetchPlayerState, spinGame } from './api'
 import { ActionScreen } from './components/action-screen'
 import { AlreadyPlayedScreen } from './components/already-played'
 import { LoadingScreen } from './components/loading-screen'
+import { RegisterScreen } from './components/register-screen'
 import { ResultScreen } from './components/result-screen'
 import { Wheel, buildWheelSegments, findTargetIndex } from './components/wheel'
 import { generateFingerprint } from './lib/fingerprint'
@@ -69,6 +70,8 @@ export function App() {
   const [error, setError] = useState<{ kind: ErrorKind; message: string } | null>(null)
   const [fingerprintId, setFingerprintId] = useState<string | null>(null)
   const [playerState, setPlayerState] = useState<PlayerState | null>(null)
+  const [playerName, setPlayerName] = useState<string | null>(null)
+  const [playerEmail, setPlayerEmail] = useState<string | null>(null)
   const [preCompletedAction] = useState(() => {
     const slug = window.location.pathname.replace(/^\//, '') || 'demo'
     return checkPendingAction(slug)
@@ -150,6 +153,12 @@ export function App() {
 
   function handleActionsComplete(actions: string[]) {
     setCompletedActions(actions)
+    setScreen('register')
+  }
+
+  function handleRegistration(name: string, email: string) {
+    setPlayerName(name)
+    setPlayerEmail(email)
     setScreen('game')
   }
 
@@ -160,7 +169,7 @@ export function App() {
     try {
       // Fetch result from API BEFORE animation (with timeout)
       const spinResult = await withTimeout(
-        spinGame(slug, fingerprintId, completedActions, IS_TEST_MODE),
+        spinGame(slug, fingerprintId, completedActions, IS_TEST_MODE, playerName ?? undefined, playerEmail ?? undefined),
       )
       setResult(spinResult)
 
@@ -229,6 +238,10 @@ export function App() {
     <div class="app-container">
       {screen === 'actions' && (
         <ActionScreen config={config} onComplete={handleActionsComplete} preCompleted={preCompletedAction} />
+      )}
+
+      {screen === 'register' && (
+        <RegisterScreen onRegister={handleRegistration} />
       )}
 
       {screen === 'game' && (

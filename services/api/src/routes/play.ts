@@ -1,14 +1,46 @@
 import { Hono } from 'hono'
 import { eq, and, sql, gte } from 'drizzle-orm'
-import { merchants, games, prizes, players, gamePlays, coupons, ctas } from '@winandwin/db/schema'
+import { merchants, games, prizes, players, gamePlays, coupons, ctas, platformSettings } from '@winandwin/db/schema'
 import { TIER_LIMITS } from '@winandwin/shared/constants'
+import type { Database } from '@winandwin/db'
 import {
   calculateCouponDates,
   determineGameOutcome,
   generateCouponCode,
   type PrizeConfig,
 } from '../lib/game-engine'
+import { sendCouponEmail } from '../lib/email'
 import type { AppEnv } from '../types'
+
+// Module-level cache for tier limits from DB
+let cachedTierLimits: Record<string, { monthlyPlays: number }> | null = null
+let tierLimitsCachedAt = 0
+const TIER_LIMITS_CACHE_TTL = 5 * 60 * 1000 // 5 minutes
+
+async function getTierLimits(db: Database): Promise<typeof TIER_LIMITS> {
+  const now = Date.now()
+  if (cachedTierLimits && now - tierLimitsCachedAt < TIER_LIMITS_CACHE_TTL) {
+    return { ...TIER_LIMITS, ...cachedTierLimits } as typeof TIER_LIMITS
+  }
+
+  try {
+    const result = await db
+      .select()
+      .from(platformSettings)
+      .where(eq(platformSettings.key, 'tier_limits'))
+      .limit(1)
+
+    if (result.length > 0 && result[0]!.value) {
+      cachedTierLimits = result[0]!.value as Record<string, { monthlyPlays: number }>
+      tierLimitsCachedAt = now
+      return { ...TIER_LIMITS, ...cachedTierLimits } as typeof TIER_LIMITS
+    }
+  } catch (err) {
+    console.error('Failed to fetch tier limits from DB, using defaults:', err)
+  }
+
+  return TIER_LIMITS
+}
 
 export const playRouter = new Hono<AppEnv>()
 
@@ -272,8 +304,9 @@ playRouter.post('/:slug/spin', async (c) => {
     const merchantData = merchantResult[0]!
 
     // Freemium limit check: count plays this month for the merchant
-    const tier = merchantData.subscriptionTier as keyof typeof TIER_LIMITS
-    const monthlyLimit = TIER_LIMITS[tier]?.monthlyPlays ?? 200
+    const dynamicTierLimits = await getTierLimits(db)
+    const tier = merchantData.subscriptionTier as keyof typeof dynamicTierLimits
+    const monthlyLimit = dynamicTierLimits[tier]?.monthlyPlays ?? 200
 
     if (monthlyLimit !== Number.POSITIVE_INFINITY) {
       const monthStart = new Date()
@@ -327,6 +360,8 @@ playRouter.post('/:slug/spin', async (c) => {
     const body = await c.req.json<{
       fingerprintId: string
       completedActions: string[]
+      playerName?: string
+      playerEmail?: string
     }>()
 
     // Validate at least one action completed
@@ -370,15 +405,20 @@ playRouter.post('/:slug/spin', async (c) => {
         .values({
           merchantId: merchantData.id,
           fingerprintId: body.fingerprintId,
+          name: body.playerName,
+          email: body.playerEmail,
         })
         .returning()
       playerId = newPlayer[0]!.id
     } else {
       playerId = player[0]!.id
-      // Update lastSeenAt
+      // Update lastSeenAt and name/email if provided
+      const updateSet: Record<string, unknown> = { lastSeenAt: new Date() }
+      if (body.playerName) updateSet.name = body.playerName
+      if (body.playerEmail) updateSet.email = body.playerEmail
       await db
         .update(players)
-        .set({ lastSeenAt: new Date() })
+        .set(updateSet)
         .where(eq(players.id, playerId))
     }
 
@@ -498,6 +538,20 @@ playRouter.post('/:slug/spin', async (c) => {
         .where(eq(players.id, playerId))
 
       const [couponResult] = await db.batch([couponInsert, prizeUpdate, gamePlayInsert, playerUpdate])
+
+      // Send coupon email (fire and forget -- don't block the response)
+      if (body.playerEmail) {
+        sendCouponEmail({
+          to: body.playerEmail,
+          playerName: body.playerName || 'Player',
+          merchantName: merchantData.name,
+          prizeName: result.prize.name,
+          prizeEmoji: result.prize.emoji,
+          couponCode: couponCode,
+          validFrom: validFrom.toISOString(),
+          validUntil: validUntil.toISOString(),
+        }, c.env.RESEND_API_KEY ?? '').catch(err => console.error('Email failed:', err))
+      }
 
       return c.json({
         success: true,

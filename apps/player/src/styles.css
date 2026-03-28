@@ -684,6 +684,105 @@ body {
   animation: none;
 }
 
+/* ---- Register Screen ---- */
+.register-screen {
+  padding-top: 2.5rem;
+  padding-bottom: 2rem;
+  position: relative;
+}
+
+.register-form {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1.5rem;
+  border-radius: var(--radius);
+  border: 1.5px solid var(--card-border);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.04) 100%);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: var(--shadow);
+}
+
+.register-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.register-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.register-input {
+  width: 100%;
+  padding: 0.7rem 0.85rem;
+  border-radius: var(--radius-xs);
+  border: 1.5px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  font-size: 0.9rem;
+  font-family: inherit;
+  outline: none;
+  transition: border-color var(--transition), box-shadow var(--transition);
+}
+
+.register-input::placeholder {
+  color: rgba(255, 255, 255, 0.35);
+}
+
+.register-input:focus {
+  border-color: rgba(255, 215, 0, 0.5);
+  box-shadow: 0 0 12px rgba(255, 215, 0, 0.1);
+}
+
+.register-input.invalid {
+  border-color: #f87171;
+  box-shadow: 0 0 12px rgba(248, 113, 113, 0.15);
+}
+
+.register-error {
+  font-size: 0.75rem;
+  color: #f87171;
+  font-weight: 500;
+}
+
+.register-hint {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  text-align: center;
+  margin-top: 0.25rem;
+}
+
+.register-submit {
+  width: 100%;
+  padding: 1rem;
+  border-radius: var(--radius-sm);
+  border: none;
+  background: linear-gradient(135deg, #fff 0%, #f0e6ff 100%);
+  color: var(--primary);
+  font-size: 1.15rem;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.3s ease;
+  min-height: 54px;
+  letter-spacing: 0.01em;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  animation: pulse 2s ease-in-out infinite;
+  margin-top: 0.5rem;
+}
+
+.register-submit:active {
+  transform: scale(0.96);
+  animation: none;
+}
+
 /* ---- Game Screen (Wheel) ---- */
 .game-screen {
   justify-content: center;

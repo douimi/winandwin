@@ -7,12 +7,12 @@ export async function fetchGameConfig(slug: string) {
   return json.data
 }
 
-export async function spinGame(slug: string, fingerprintId: string, completedActions: string[], testMode = false) {
+export async function spinGame(slug: string, fingerprintId: string, completedActions: string[], testMode = false, playerName?: string, playerEmail?: string) {
   const url = `${API_BASE}/api/v1/play/${slug}/spin${testMode ? '?testmode=unlimited' : ''}`
   const res = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ fingerprintId, completedActions }),
+    body: JSON.stringify({ fingerprintId, completedActions, playerName, playerEmail }),
   })
   const json = await res.json()
   if (!json.success) throw new Error(json.error?.message || 'Failed to play')

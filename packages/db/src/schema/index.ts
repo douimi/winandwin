@@ -5,6 +5,7 @@ export { ctas, ctaRelations } from './ctas'
 export { coupons, couponRelations } from './coupons'
 export { players, playerRelations } from './players'
 export { gamePlays, gamePlayRelations } from './game-plays'
+export { platformSettings } from './settings'
 export {
   users,
   userRelations,

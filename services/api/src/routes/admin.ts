@@ -1,6 +1,6 @@
 import { Hono } from 'hono'
 import { eq, and, gte, sql, count, desc, ilike } from 'drizzle-orm'
-import { merchants, games, gamePlays, players, coupons, ctas, users } from '@winandwin/db/schema'
+import { merchants, games, gamePlays, players, coupons, ctas, users, platformSettings } from '@winandwin/db/schema'
 import { TIER_LIMITS } from '@winandwin/shared/constants'
 import type { AppEnv } from '../types'
 
@@ -442,6 +442,59 @@ adminRouter.get('/merchants/:id/players', async (c) => {
     console.error('Error getting merchant players:', err)
     return c.json(
       { success: false, error: { code: 'INTERNAL_ERROR', message: 'Failed to get merchant players' } },
+      500,
+    )
+  }
+})
+
+// ---------------------------------------------------------------------------
+// GET /settings — All platform settings
+// ---------------------------------------------------------------------------
+adminRouter.get('/settings', async (c) => {
+  try {
+    const db = c.get('db')
+    const settings = await db.select().from(platformSettings)
+    return c.json({ success: true, data: settings })
+  } catch (err) {
+    console.error('Error getting settings:', err)
+    return c.json(
+      { success: false, error: { code: 'INTERNAL_ERROR', message: 'Failed to get settings' } },
+      500,
+    )
+  }
+})
+
+// ---------------------------------------------------------------------------
+// PATCH /settings/:key — Update a platform setting
+// ---------------------------------------------------------------------------
+adminRouter.patch('/settings/:key', async (c) => {
+  try {
+    const db = c.get('db')
+    const key = c.req.param('key')
+    const body = await c.req.json<{ value: unknown }>()
+
+    if (body.value === undefined) {
+      return c.json(
+        { success: false, error: { code: 'VALIDATION_ERROR', message: 'value is required' } },
+        400,
+      )
+    }
+
+    // Upsert: insert or update
+    const result = await db
+      .insert(platformSettings)
+      .values({ key, value: body.value, updatedAt: new Date() })
+      .onConflictDoUpdate({
+        target: platformSettings.key,
+        set: { value: body.value, updatedAt: new Date() },
+      })
+      .returning()
+
+    return c.json({ success: true, data: result[0] })
+  } catch (err) {
+    console.error('Error updating setting:', err)
+    return c.json(
+      { success: false, error: { code: 'INTERNAL_ERROR', message: 'Failed to update setting' } },
       500,
     )
   }

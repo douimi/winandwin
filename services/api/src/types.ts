@@ -5,6 +5,7 @@ export interface AppEnv {
     ENVIRONMENT: string
     DATABASE_URL: string
     ADMIN_API_KEY: string
+    RESEND_API_KEY?: string
     ALLOWED_ORIGINS?: string
     // GAME_CONFIG_CACHE: KVNamespace
     // GAME_SESSION: DurableObjectNamespace

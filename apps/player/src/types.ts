@@ -43,4 +43,4 @@ export interface PlayerState {
   } | null
 }
 
-export type PlayerScreen = 'loading' | 'actions' | 'game' | 'result' | 'already-played'
+export type PlayerScreen = 'loading' | 'actions' | 'register' | 'game' | 'result' | 'already-played'
