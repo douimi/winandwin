@@ -5,6 +5,8 @@ interface Props {
   config: GameConfig
   onComplete: (completedActions: string[]) => void
   preCompleted?: string | null
+  /** Actions already completed in previous sessions (from server) */
+  previouslyCompleted?: string[]
 }
 
 const ACTION_META: Record<string, { icon: string; label: string; hint: string }> = {
@@ -17,14 +19,19 @@ const ACTION_META: Record<string, { icon: string; label: string; hint: string }>
 
 const VERIFY_DURATION = 3000
 
-export function ActionScreen({ config, onComplete, preCompleted }: Props) {
+export function ActionScreen({ config, onComplete, preCompleted, previouslyCompleted }: Props) {
   const [completed, setCompleted] = useState<Set<string>>(() => {
     const initial = new Set<string>()
     // Auto-complete visit_stamp
     for (const a of config.requiredActions) {
       if (a.type === 'visit_stamp') initial.add(a.type)
     }
-    // Do NOT auto-complete preCompleted — we show verification first
+    // Auto-complete actions done in previous sessions
+    if (previouslyCompleted) {
+      for (const action of previouslyCompleted) {
+        initial.add(action)
+      }
+    }
     return initial
   })
   const [clicked, setClicked] = useState<Set<string>>(new Set())

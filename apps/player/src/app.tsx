@@ -8,7 +8,7 @@ import { ResultScreen } from './components/result-screen'
 import { MysteryBox } from './components/mystery-box'
 import { Slots } from './components/slots'
 import { Wheel, buildWheelSegments, findTargetIndex } from './components/wheel'
-import { generateFingerprint } from './lib/fingerprint'
+import { generateFingerprint, getHardwareFingerprint } from './lib/fingerprint'
 import type { GameConfig, PlayerScreen, PlayerState, SpinResult } from './types'
 
 /** Classify errors into user-friendly categories */
@@ -79,6 +79,7 @@ export function App() {
   const [targetIndex, setTargetIndex] = useState<number | null>(null)
   const [error, setError] = useState<{ kind: ErrorKind; message: string } | null>(null)
   const [fingerprintId, setFingerprintId] = useState<string | null>(null)
+  const [hardwareId, setHardwareId] = useState<string | null>(null)
   const [playerState, setPlayerState] = useState<PlayerState | null>(null)
   const [playerName, setPlayerName] = useState<string | null>(null)
   const [playerEmail, setPlayerEmail] = useState<string | null>(null)
@@ -111,16 +112,18 @@ export function App() {
 
     async function init() {
       try {
-        // Generate fingerprint first
+        // Generate fingerprints
         const fp = await generateFingerprint()
+        const hw = getHardwareFingerprint()
         if (cancelled) return
         setFingerprintId(fp)
+        setHardwareId(hw)
 
         // Fetch game config and player state in parallel (with timeout)
         const [gameConfig, state] = await withTimeout(
           Promise.all([
             fetchGameConfig(slug),
-            fetchPlayerState(slug, fp),
+            fetchPlayerState(slug, fp, hw),
           ]),
         )
         if (cancelled) return
@@ -179,7 +182,7 @@ export function App() {
     try {
       // Fetch result from API BEFORE animation (with timeout)
       const spinResult = await withTimeout(
-        spinGame(slug, fingerprintId, completedActions, IS_TEST_MODE, playerName ?? undefined, playerEmail ?? undefined),
+        spinGame(slug, fingerprintId, completedActions, IS_TEST_MODE, playerName ?? undefined, playerEmail ?? undefined, hardwareId ?? undefined),
       )
       setResult(spinResult)
 
@@ -266,7 +269,12 @@ export function App() {
   return (
     <div class="app-container">
       {screen === 'actions' && (
-        <ActionScreen config={config} onComplete={handleActionsComplete} preCompleted={preCompletedAction} />
+        <ActionScreen
+          config={config}
+          onComplete={handleActionsComplete}
+          preCompleted={preCompletedAction}
+          previouslyCompleted={playerState?.completedActionsEver}
+        />
       )}
 
       {screen === 'register' && (

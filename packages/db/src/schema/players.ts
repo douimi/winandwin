@@ -11,6 +11,7 @@ export const players = pgTable('players', {
     .notNull()
     .references(() => merchants.id, { onDelete: 'cascade' }),
   fingerprintId: text('fingerprint_id').notNull(),
+  hardwareId: text('hardware_id'),
   name: varchar('name', { length: 100 }),
   email: varchar('email', { length: 255 }),
   phone: varchar('phone', { length: 20 }),

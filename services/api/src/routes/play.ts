@@ -160,8 +160,9 @@ playRouter.get('/:slug/state', async (c) => {
       )
     }
 
-    // Find player by fingerprintId + merchantId
-    const playerResult = await db
+    // Find player by fingerprintId OR hardwareId (cross-browser detection)
+    const hardwareId = c.req.query('hardwareId')
+    let playerResult = await db
       .select()
       .from(players)
       .where(
@@ -172,14 +173,28 @@ playRouter.get('/:slug/state', async (c) => {
       )
       .limit(1)
 
+    // Cross-browser detection: if no match by fingerprint, try hardwareId
+    if (playerResult.length === 0 && hardwareId) {
+      playerResult = await db
+        .select()
+        .from(players)
+        .where(
+          and(
+            eq(players.merchantId, merchantData.id),
+            eq(players.hardwareId, hardwareId),
+          ),
+        )
+        .limit(1)
+    }
+
     if (playerResult.length === 0) {
-      // Player doesn't exist yet — return empty state
       const maxPlaysPerDay = activeGame.frequencyLimit?.maxPlaysPerDay ?? 1
       return c.json({
         success: true,
         data: {
           playerId: null,
           completedActionsToday: [],
+          completedActionsEver: [],
           playsToday: 0,
           maxPlaysPerDay,
           canPlay: true,
@@ -192,7 +207,7 @@ playRouter.get('/:slug/state', async (c) => {
     const playerData = playerResult[0]!
     const maxPlaysPerDay = activeGame.frequencyLimit?.maxPlaysPerDay ?? 1
 
-    // Query today's game_plays for this player
+    // Query today's game_plays
     const todayStart = new Date()
     todayStart.setUTCHours(0, 0, 0, 0)
 
@@ -207,10 +222,16 @@ playRouter.get('/:slug/state', async (c) => {
         ),
       )
 
+    // Also query ALL plays ever to get every action ever completed
+    const allPlays = await db
+      .select({ completedActions: gamePlays.completedActions })
+      .from(gamePlays)
+      .where(eq(gamePlays.playerId, playerData.id))
+
     const playsToday = todaysPlays.length
     const canPlay = playsToday < maxPlaysPerDay
 
-    // Extract completed actions from today's plays
+    // Extract actions completed TODAY
     const completedActionsToday: string[] = []
     for (const play of todaysPlays) {
       const actions = play.completedActions as string[] | null
@@ -218,6 +239,19 @@ playRouter.get('/:slug/state', async (c) => {
         for (const action of actions) {
           if (!completedActionsToday.includes(action)) {
             completedActionsToday.push(action)
+          }
+        }
+      }
+    }
+
+    // Extract ALL actions ever completed (for preventing repeat actions)
+    const completedActionsEver: string[] = []
+    for (const play of allPlays) {
+      const actions = play.completedActions as string[] | null
+      if (actions) {
+        for (const action of actions) {
+          if (!completedActionsEver.includes(action)) {
+            completedActionsEver.push(action)
           }
         }
       }
@@ -265,6 +299,7 @@ playRouter.get('/:slug/state', async (c) => {
       data: {
         playerId: playerData.id,
         completedActionsToday,
+        completedActionsEver,
         playsToday,
         maxPlaysPerDay,
         canPlay,
@@ -359,6 +394,7 @@ playRouter.post('/:slug/spin', async (c) => {
 
     const body = await c.req.json<{
       fingerprintId: string
+      hardwareId?: string
       completedActions: string[]
       playerName?: string
       playerEmail?: string
@@ -385,7 +421,7 @@ playRouter.post('/:slug/spin', async (c) => {
       )
     }
 
-    // Step c: Find or create player by fingerprintId
+    // Step c: Find or create player — check fingerprint first, then hardwareId for cross-browser
     let player = await db
       .select()
       .from(players)
@@ -397,6 +433,20 @@ playRouter.post('/:slug/spin', async (c) => {
       )
       .limit(1)
 
+    // Cross-browser detection: same hardware on different browser
+    if (player.length === 0 && body.hardwareId) {
+      player = await db
+        .select()
+        .from(players)
+        .where(
+          and(
+            eq(players.merchantId, merchantData.id),
+            eq(players.hardwareId, body.hardwareId),
+          ),
+        )
+        .limit(1)
+    }
+
     let playerId: string
 
     if (player.length === 0) {
@@ -405,6 +455,7 @@ playRouter.post('/:slug/spin', async (c) => {
         .values({
           merchantId: merchantData.id,
           fingerprintId: body.fingerprintId,
+          hardwareId: body.hardwareId,
           name: body.playerName,
           email: body.playerEmail,
         })
@@ -412,10 +463,11 @@ playRouter.post('/:slug/spin', async (c) => {
       playerId = newPlayer[0]!.id
     } else {
       playerId = player[0]!.id
-      // Update lastSeenAt and name/email if provided
+      // Update lastSeenAt, name/email, and hardwareId if provided
       const updateSet: Record<string, unknown> = { lastSeenAt: new Date() }
       if (body.playerName) updateSet.name = body.playerName
       if (body.playerEmail) updateSet.email = body.playerEmail
+      if (body.hardwareId) updateSet.hardwareId = body.hardwareId
       await db
         .update(players)
         .set(updateSet)

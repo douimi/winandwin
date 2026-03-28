@@ -32,6 +32,7 @@ export interface SpinResult {
 export interface PlayerState {
   playerId: string | null
   completedActionsToday: string[]
+  completedActionsEver: string[]
   playsToday: number
   maxPlaysPerDay: number
   canPlay: boolean
