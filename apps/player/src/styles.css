@@ -1677,3 +1677,199 @@ body {
   color: var(--text-muted);
   font-weight: 500;
 }
+
+/* ============================================
+   Welcome Screen
+   ============================================ */
+
+@keyframes playBtnPulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(255, 215, 0, 0.5), 0 8px 32px rgba(0, 0, 0, 0.2);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 0 16px rgba(255, 215, 0, 0), 0 8px 40px rgba(0, 0, 0, 0.3);
+    transform: scale(1.05);
+  }
+}
+
+@keyframes playBtnGlow {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.8; }
+}
+
+.welcome-screen {
+  justify-content: center;
+  min-height: 100vh;
+  min-height: 100dvh;
+  gap: 1.25rem;
+  text-align: center;
+  position: relative;
+}
+
+.welcome-merchant-logo {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  animation: bounceIn 0.6s ease;
+}
+
+.welcome-merchant-name {
+  font-size: 2rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  background: linear-gradient(180deg, #fff 30%, rgba(255, 255, 255, 0.8) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  position: relative;
+  z-index: 1;
+  animation: slideUp 0.5s ease;
+}
+
+.welcome-tagline {
+  font-size: 1rem;
+  color: var(--text-muted);
+  font-weight: 400;
+  max-width: 260px;
+  line-height: 1.4;
+  position: relative;
+  z-index: 1;
+  animation: slideUp 0.6s ease;
+}
+
+.welcome-play-btn {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  border: none;
+  background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+  color: #1a1a2e;
+  font-size: 1rem;
+  font-weight: 800;
+  cursor: pointer;
+  font-family: inherit;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  margin-top: 1.5rem;
+  position: relative;
+  z-index: 1;
+  animation: playBtnPulse 2s ease-in-out infinite;
+  transition: transform 0.15s ease;
+  -webkit-appearance: none;
+  appearance: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.welcome-play-btn::before {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--gold), var(--primary), var(--secondary), var(--gold));
+  background-size: 300% 300%;
+  animation: gradientShift 3s ease infinite;
+  z-index: -1;
+  opacity: 0.6;
+}
+
+.welcome-play-btn::after {
+  content: '';
+  position: absolute;
+  inset: -20px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 215, 0, 0.15) 0%, transparent 70%);
+  animation: playBtnGlow 2s ease-in-out infinite;
+  z-index: -2;
+  pointer-events: none;
+}
+
+.welcome-play-btn:active {
+  transform: scale(0.92);
+  animation: none;
+}
+
+.welcome-play-btn-icon {
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.welcome-play-btn-text {
+  font-size: 0.85rem;
+  font-weight: 800;
+  letter-spacing: 0.15em;
+}
+
+/* ============================================
+   Single Action Card (larger centered card)
+   ============================================ */
+
+.single-action-card {
+  min-height: 80px;
+  padding: 1.25rem 1.25rem;
+  border-width: 2px;
+}
+
+/* ============================================
+   Result Screen — Email Sent Confirmation
+   ============================================ */
+
+@keyframes envelopeBounce {
+  0%, 100% { transform: translateY(0); }
+  30% { transform: translateY(-8px); }
+  50% { transform: translateY(0); }
+  70% { transform: translateY(-4px); }
+}
+
+.result-email-sent {
+  width: 100%;
+  max-width: 360px;
+  padding: 1.5rem;
+  border-radius: var(--radius);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.04) 100%);
+  border: 1.5px solid rgba(255, 255, 255, 0.15);
+  text-align: center;
+  position: relative;
+  z-index: 1;
+  animation: slideUp 0.5s ease;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.email-icon-animation {
+  margin-bottom: 0.75rem;
+  animation: envelopeBounce 2s ease-in-out infinite;
+  display: inline-block;
+}
+
+.result-email-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  color: var(--text);
+}
+
+.result-email-text {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+  margin-bottom: 0.75rem;
+}
+
+.result-email-text strong {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.result-email-spam-note {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  opacity: 0.7;
+  font-style: italic;
+}

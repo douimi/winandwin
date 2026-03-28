@@ -1,5 +1,6 @@
 export interface GameConfig {
   merchantName: string
+  merchantLogo?: string
   game: {
     id: string
     type: 'wheel' | 'slots' | 'mystery_box'
@@ -44,4 +45,4 @@ export interface PlayerState {
   } | null
 }
 
-export type PlayerScreen = 'loading' | 'actions' | 'register' | 'game' | 'result' | 'already-played'
+export type PlayerScreen = 'loading' | 'welcome' | 'action' | 'actions' | 'register' | 'game' | 'result' | 'already-played'

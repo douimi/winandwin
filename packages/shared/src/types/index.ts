@@ -14,6 +14,10 @@ export interface Merchant {
   logoUrl?: string
   address: Address
   timezone: string
+  primaryColor?: string
+  secondaryColor?: string
+  backgroundUrl?: string
+  description?: string
   subscriptionTier: SubscriptionTier
   createdAt: Date
   updatedAt: Date

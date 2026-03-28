@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useState } from 'preact/hooks'
-import { fetchGameConfig, fetchPlayerState, spinGame } from './api'
+import { fetchGameConfig, fetchPlayerState, spinGame, updatePlayerInfo } from './api'
 import { ActionScreen } from './components/action-screen'
 import { AlreadyPlayedScreen } from './components/already-played'
 import { LoadingScreen } from './components/loading-screen'
 import { RegisterScreen } from './components/register-screen'
 import { ResultScreen } from './components/result-screen'
+import { WelcomeScreen } from './components/welcome-screen'
 import { MysteryBox } from './components/mystery-box'
 import { Slots } from './components/slots'
 import { Wheel, buildWheelSegments, findTargetIndex } from './components/wheel'
@@ -56,7 +57,7 @@ function checkPendingAction(slug: string): string | null {
       localStorage.removeItem('winandwin_pending_action')
       return pending.type
     }
-    // Expired — clean up
+    // Expired -- clean up
     localStorage.removeItem('winandwin_pending_action')
   } catch { /* ignore */ }
   return null
@@ -70,6 +71,32 @@ function MysteryBoxAutoSpin({ onSpin }: { onSpin: () => void }) {
   return null
 }
 
+/**
+ * Pick ONE action to show this visit.
+ * - Filter out actions in completedActionsEver
+ * - Sort remaining by weight (highest first)
+ * - Pick the first one
+ * - If all done, pick the one with highest weight
+ */
+function pickSingleAction(
+  requiredActions: GameConfig['requiredActions'],
+  completedActionsEver: string[],
+): GameConfig['requiredActions'][number] | null {
+  if (requiredActions.length === 0) return null
+
+  const sorted = [...requiredActions].sort((a, b) => b.weight - a.weight)
+
+  // Filter out already-completed
+  const remaining = sorted.filter((a) => !completedActionsEver.includes(a.type))
+
+  if (remaining.length > 0) {
+    return remaining[0]!
+  }
+
+  // All done -- pick highest weight
+  return sorted[0]!
+}
+
 export function App() {
   const [screen, setScreen] = useState<PlayerScreen>('loading')
   const [config, setConfig] = useState<GameConfig | null>(null)
@@ -81,8 +108,8 @@ export function App() {
   const [fingerprintId, setFingerprintId] = useState<string | null>(null)
   const [hardwareId, setHardwareId] = useState<string | null>(null)
   const [playerState, setPlayerState] = useState<PlayerState | null>(null)
-  const [playerName, setPlayerName] = useState<string | null>(null)
   const [playerEmail, setPlayerEmail] = useState<string | null>(null)
+  const [singleAction, setSingleAction] = useState<GameConfig['requiredActions'][number] | null>(null)
   const [preCompletedAction] = useState(() => {
     const slug = window.location.pathname.replace(/^\//, '') || 'demo'
     return checkPendingAction(slug)
@@ -135,10 +162,10 @@ export function App() {
 
           // Decide which screen to show based on server state
           if (IS_TEST_MODE) {
-            // Test mode: always start from the beginning (full flow)
-            setScreen('actions')
+            // Test mode: always start from welcome
+            setScreen('welcome')
           } else if (!state.canPlay && state.playsToday >= state.maxPlaysPerDay) {
-            // Player has already hit the daily limit — show already-played screen
+            // Player has already hit the daily limit
             setScreen('already-played')
           } else if (state.completedActionsToday.length > 0) {
             // Player has completed actions today but hasn't played yet
@@ -146,12 +173,12 @@ export function App() {
             setCompletedActions(state.completedActionsToday)
             setScreen('game')
           } else {
-            // New player or no actions today — show action screen
-            setScreen('actions')
+            // New player or no actions today -- show welcome
+            setScreen('welcome')
           }
         } else {
-          // No state returned (new player) — show actions
-          setScreen('actions')
+          // No state returned (new player) -- show welcome
+          setScreen('welcome')
         }
       } catch (err) {
         if (!cancelled) {
@@ -164,15 +191,42 @@ export function App() {
     return () => { cancelled = true }
   }, [slug])
 
-  function handleActionsComplete(actions: string[]) {
-    setCompletedActions(actions)
-    setScreen('register')
+  function handlePlayClick() {
+    if (!config) return
+
+    // Determine which single action to show
+    const completedEver = playerState?.completedActionsEver ?? []
+    const action = pickSingleAction(config.requiredActions, completedEver)
+
+    if (action) {
+      setSingleAction(action)
+      setScreen('action')
+    } else {
+      // No actions configured -- go straight to game
+      setScreen('game')
+    }
   }
 
-  function handleRegistration(name: string, email: string) {
-    setPlayerName(name)
-    setPlayerEmail(email)
+  function handleActionComplete(actions: string[]) {
+    setCompletedActions(actions)
     setScreen('game')
+  }
+
+  async function handleRegistration(name: string, email: string) {
+    if (!fingerprintId) return
+    setPlayerEmail(email)
+
+    try {
+      // Send name/email to API and trigger coupon email
+      await withTimeout(
+        updatePlayerInfo(slug, fingerprintId, name, email, hardwareId ?? undefined),
+      )
+    } catch (err) {
+      // Don't block the flow -- still show the result
+      console.error('Failed to update player info:', err)
+    }
+
+    setScreen('result')
   }
 
   async function handleSpin() {
@@ -182,7 +236,7 @@ export function App() {
     try {
       // Fetch result from API BEFORE animation (with timeout)
       const spinResult = await withTimeout(
-        spinGame(slug, fingerprintId, completedActions, IS_TEST_MODE, playerName ?? undefined, playerEmail ?? undefined, hardwareId ?? undefined),
+        spinGame(slug, fingerprintId, completedActions, IS_TEST_MODE, hardwareId ?? undefined),
       )
       setResult(spinResult)
 
@@ -201,7 +255,7 @@ export function App() {
           const idx = config.game.prizes.findIndex((p) => p.name === spinResult.prize?.name)
           setTargetIndex(idx >= 0 ? idx : 0)
         } else {
-          // Lose — use an index beyond prizes to signal loss
+          // Lose -- use an index beyond prizes to signal loss
           setTargetIndex(config.game.prizes.length)
         }
       } else if (config.game.type === 'mystery_box') {
@@ -221,7 +275,14 @@ export function App() {
 
   function handleSpinComplete(_targetIdx: number) {
     setSpinning(false)
-    setScreen('result')
+
+    if (result?.outcome === 'win') {
+      // Win: ask for name + email before showing result
+      setScreen('register')
+    } else {
+      // Lose: show result directly
+      setScreen('result')
+    }
   }
 
   const handleRetry = useCallback(() => {
@@ -236,7 +297,7 @@ export function App() {
   }, [])
 
   if (error) {
-    const icon = error.kind === 'network' ? '📡' : error.kind === 'timeout' ? '⏳' : '😕'
+    const icon = error.kind === 'network' ? '\uD83D\uDCE1' : error.kind === 'timeout' ? '\u23F3' : '\uD83D\uDE15'
     const title =
       error.kind === 'network'
         ? 'No Connection'
@@ -268,10 +329,24 @@ export function App() {
 
   return (
     <div class="app-container">
+      {screen === 'welcome' && (
+        <WelcomeScreen config={config} onPlay={handlePlayClick} />
+      )}
+
+      {screen === 'action' && singleAction && (
+        <ActionScreen
+          config={config}
+          onComplete={handleActionComplete}
+          preCompleted={preCompletedAction}
+          singleAction={singleAction}
+        />
+      )}
+
+      {/* Legacy multi-action screen (backward compat) */}
       {screen === 'actions' && (
         <ActionScreen
           config={config}
-          onComplete={handleActionsComplete}
+          onComplete={handleActionComplete}
           preCompleted={preCompletedAction}
           previouslyCompleted={playerState?.completedActionsEver}
         />
@@ -329,7 +404,11 @@ export function App() {
               branding={config.game.branding}
               onComplete={() => {
                 setSpinning(false)
-                setScreen('result')
+                if (result?.outcome === 'win') {
+                  setScreen('register')
+                } else {
+                  setScreen('result')
+                }
               }}
               targetIndex={targetIndex}
               isWin={result?.outcome === 'win'}
@@ -344,7 +423,7 @@ export function App() {
       )}
 
       {screen === 'result' && result && (
-        <ResultScreen result={result} merchantName={config.merchantName} />
+        <ResultScreen result={result} merchantName={config.merchantName} playerEmail={playerEmail} />
       )}
 
       {screen === 'already-played' && playerState && (

@@ -48,6 +48,10 @@ export const merchants = pgTable('merchants', {
   subscriptionTier: subscriptionTierEnum('subscription_tier').notNull().default('free'),
   stripeCustomerId: text('stripe_customer_id'),
   stripeSubscriptionId: text('stripe_subscription_id'),
+  primaryColor: varchar('primary_color', { length: 7 }).default('#6366f1'),
+  secondaryColor: varchar('secondary_color', { length: 7 }).default('#ec4899'),
+  backgroundUrl: text('background_url'),
+  description: text('description'),
   validationPin: varchar('validation_pin', { length: 6 }).notNull().default('0000'),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true })

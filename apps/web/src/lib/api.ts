@@ -205,6 +205,11 @@ export async function updateMerchant(
     timezone: string
     phone: string
     validationPin: string
+    primaryColor: string
+    secondaryColor: string
+    backgroundUrl: string
+    description: string
+    logoUrl: string
     address: {
       street: string
       city: string

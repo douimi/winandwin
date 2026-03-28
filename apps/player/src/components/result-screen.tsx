@@ -4,31 +4,11 @@ import { Confetti } from './confetti'
 interface Props {
   result: SpinResult
   merchantName: string
+  playerEmail?: string | null
 }
 
-function formatDate(dateStr: string): string {
-  const d = new Date(dateStr)
-  return d.toLocaleDateString('en', { month: 'short', day: 'numeric', year: 'numeric' })
-}
-
-function canShare(): boolean {
-  return typeof navigator !== 'undefined' && typeof navigator.share === 'function'
-}
-
-export function ResultScreen({ result, merchantName }: Props) {
+export function ResultScreen({ result, merchantName, playerEmail }: Props) {
   const isWin = result.outcome === 'win'
-
-  async function handleShare() {
-    if (!result.coupon || !canShare()) return
-    try {
-      await navigator.share({
-        title: `I won at ${merchantName}!`,
-        text: `I won ${result.prize?.name || 'a prize'} at ${merchantName}! Code: ${result.coupon.code}`,
-      })
-    } catch {
-      // User cancelled share
-    }
-  }
 
   if (isWin) {
     return (
@@ -40,59 +20,40 @@ export function ResultScreen({ result, merchantName }: Props) {
 
         <div class="result-banner">
           <div class="result-banner-inner">
-            <span class="result-banner-star">★</span>
+            <span class="result-banner-star">&#9733;</span>
             CONGRATULATIONS!
-            <span class="result-banner-star">★</span>
+            <span class="result-banner-star">&#9733;</span>
           </div>
         </div>
 
-        <div class="result-emoji">{result.prize?.emoji || '🎉'}</div>
+        <div class="result-emoji">{result.prize?.emoji || '&#127881;'}</div>
 
         <h1 class="result-title result-title-win">You Won!</h1>
 
         <div class="result-prize-card">
-          <div class="result-prize-emoji">{result.prize?.emoji || '🎁'}</div>
+          <div class="result-prize-emoji">{result.prize?.emoji || '&#127873;'}</div>
           <h2 class="result-prize-name">{result.prize?.name}</h2>
           {result.prize?.description && (
             <p class="result-prize-desc">{result.prize.description}</p>
           )}
         </div>
 
-        {result.coupon && (
-          <div class="coupon-card">
-            <div class="coupon-perforation coupon-perforation-left" />
-            <div class="coupon-perforation coupon-perforation-right" />
-            <div class="coupon-inner">
-              <p class="coupon-label">YOUR COUPON CODE</p>
-              <p class="coupon-code">{result.coupon.code}</p>
-              <div class="coupon-divider" />
-              <p class="coupon-validity">
-                Valid from {formatDate(result.coupon.validFrom)} to {formatDate(result.coupon.validUntil)}
-              </p>
-              <p class="coupon-instruction">
-                Show this to staff to redeem your prize
-              </p>
+        {playerEmail && (
+          <div class="result-email-sent">
+            <div class="email-icon-animation">
+              <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+                <rect x="4" y="10" width="40" height="28" rx="4" stroke="white" stroke-width="2.5" fill="rgba(255,255,255,0.1)" />
+                <path d="M4 14 L24 28 L44 14" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+              </svg>
             </div>
+            <h3 class="result-email-title">Your prize is on its way!</h3>
+            <p class="result-email-text">
+              Check your email at <strong>{playerEmail}</strong> for your coupon code.
+            </p>
+            <p class="result-email-spam-note">
+              Didn't receive it? Check your spam folder.
+            </p>
           </div>
-        )}
-
-        {result.coupon && (
-          <div class="coupon-qr-section">
-            <img
-              class="coupon-qr-image"
-              src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(`https://winandwind.club/validate/${result.coupon.code}`)}`}
-              alt="QR Code for coupon validation"
-              width={160}
-              height={160}
-            />
-            <p class="coupon-qr-text">Staff: scan to validate</p>
-          </div>
-        )}
-
-        {canShare() && (
-          <button class="share-button" onClick={handleShare} type="button">
-            Share your win
-          </button>
         )}
       </div>
     )
@@ -100,7 +61,7 @@ export function ResultScreen({ result, merchantName }: Props) {
 
   return (
     <div class="screen result-screen result-lose">
-      <div class="result-emoji result-emoji-lose">🍀</div>
+      <div class="result-emoji result-emoji-lose">&#127808;</div>
 
       <h1 class="result-title">Almost!</h1>
 
@@ -109,7 +70,7 @@ export function ResultScreen({ result, merchantName }: Props) {
       </p>
 
       <div class="lose-comeback">
-        <div class="lose-comeback-icon">🕐</div>
+        <div class="lose-comeback-icon">&#128336;</div>
         <span>Come back tomorrow for another chance!</span>
       </div>
     </div>

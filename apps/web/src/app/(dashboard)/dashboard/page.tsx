@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@winandwin/ui'
-import { fetchStatsOverview, fetchGames, fetchUsageStats, type StatsOverview, type GameWithStats, type UsageStats } from '@/lib/api'
+import { fetchStatsOverview, fetchGames, fetchUsageStats, fetchMerchant, type StatsOverview, type GameWithStats, type UsageStats } from '@/lib/api'
 import { requireSessionWithMerchant } from '@/lib/session'
 
 export default async function DashboardPage() {
@@ -9,17 +9,20 @@ export default async function DashboardPage() {
   let games: GameWithStats[] = []
   let usage: UsageStats | null = null
   let apiOffline = false
+  let merchantTier = 'free'
 
   if (merchantId) {
     try {
-      const [statsData, gamesData, usageData] = await Promise.all([
+      const [statsData, gamesData, usageData, merchantData] = await Promise.all([
         fetchStatsOverview(merchantId).catch(() => null),
         fetchGames(merchantId).catch(() => [] as GameWithStats[]),
         fetchUsageStats(merchantId).catch(() => null),
+        fetchMerchant(merchantId).catch(() => null),
       ])
       stats = statsData
       games = gamesData
       usage = usageData
+      if (merchantData) merchantTier = merchantData.subscriptionTier
     } catch {
       apiOffline = true
     }
@@ -66,6 +69,26 @@ export default async function DashboardPage() {
           </span>
         )}
       </div>
+
+      {merchantTier === 'free' && (
+        <Card className="border-indigo-300 bg-gradient-to-r from-indigo-50 to-purple-50">
+          <CardContent className="flex items-center gap-3 py-4">
+            <span className="text-2xl">{'\uD83D\uDE80'}</span>
+            <div className="flex-1">
+              <p className="font-medium text-indigo-900">Upgrade your plan to unlock more plays and features</p>
+              <p className="text-sm text-indigo-700">
+                You are on the Free tier (200 plays/month). Upgrade to get more plays, advanced analytics, and more.
+              </p>
+            </div>
+            <a
+              href="/dashboard/upgrade"
+              className="shrink-0 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 transition-colors"
+            >
+              Upgrade
+            </a>
+          </CardContent>
+        </Card>
+      )}
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {kpis.map((kpi) => (

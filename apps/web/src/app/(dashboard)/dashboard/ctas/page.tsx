@@ -122,6 +122,19 @@ export default function CtasPage() {
     }
   }
 
+  async function handleUpdateWeight(cta: CtaItem, weight: number) {
+    setActionLoading(cta.id)
+    try {
+      await updateCta(cta.id, { weight })
+      await loadCtas()
+      showSuccessFeedback(`Priority updated to ${weight}.`)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update priority')
+    } finally {
+      setActionLoading(null)
+    }
+  }
+
   async function handleSaveConfig(cta: CtaItem, config: Record<string, unknown>) {
     setActionLoading(cta.id)
     try {
@@ -199,6 +212,11 @@ export default function CtasPage() {
         At least one CTA must be enabled for your game to work.
       </p>
 
+      <div className="rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-800">
+        {'\u2139\uFE0F'} Players see one action per visit, in order of priority (highest first).
+        Use the weight field on each CTA to control the order.
+      </div>
+
       {successMessage && (
         <div className="rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">
           {successMessage}
@@ -244,6 +262,7 @@ export default function CtasPage() {
                 onToggle={() => handleToggleEnabled(cta)}
                 onDelete={() => handleDelete(cta)}
                 onSaveConfig={(config) => handleSaveConfig(cta, config)}
+                onUpdateWeight={(weight) => handleUpdateWeight(cta, weight)}
               />
             )
           })}
@@ -325,6 +344,7 @@ function CtaCard({
   onToggle,
   onDelete,
   onSaveConfig,
+  onUpdateWeight,
 }: {
   cta: CtaItem
   label: string
@@ -335,6 +355,7 @@ function CtaCard({
   onToggle: () => void
   onDelete: () => void
   onSaveConfig: (config: Record<string, unknown>) => void
+  onUpdateWeight: (weight: number) => void
 }) {
   const [editConfig, setEditConfig] = useState<Record<string, string>>(() => {
     const initial: Record<string, string> = {}
@@ -370,6 +391,22 @@ function CtaCard({
                 </span>
               </div>
               <p className="text-sm text-muted-foreground mt-1">{description}</p>
+              <div className="flex items-center gap-2 mt-2">
+                <Label className="text-xs text-muted-foreground">Priority:</Label>
+                <Input
+                  type="number"
+                  min={1}
+                  max={10}
+                  value={cta.weight}
+                  onChange={(e) => {
+                    const val = Number.parseInt(e.target.value, 10)
+                    if (val >= 1 && val <= 10) onUpdateWeight(val)
+                  }}
+                  className="h-7 w-16 text-xs text-center"
+                  disabled={cardLoading}
+                />
+                <span className="text-xs text-muted-foreground">(1-10, higher = shown first)</span>
+              </div>
             </div>
           </div>
           <div className="flex items-center gap-2 shrink-0">

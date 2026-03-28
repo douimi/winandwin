@@ -15,6 +15,7 @@ interface DashboardShellProps {
   user: User
   merchantName?: string
   merchantSlug?: string
+  merchantTier?: string
   children: React.ReactNode
 }
 
@@ -29,7 +30,7 @@ const navItems = [
   { href: '/dashboard/settings', label: 'Settings', icon: '\u2699\uFE0F' },
 ]
 
-export function DashboardShell({ user, merchantName, merchantSlug, children }: DashboardShellProps) {
+export function DashboardShell({ user, merchantName, merchantSlug, merchantTier, children }: DashboardShellProps) {
   const pathname = usePathname()
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
@@ -99,6 +100,18 @@ export function DashboardShell({ user, merchantName, merchantSlug, children }: D
                 d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
               />
             </svg>
+          </a>
+        )}
+
+        {merchantTier !== 'enterprise' && (
+          <a
+            href="/dashboard/upgrade"
+            className="mx-3 mt-2 flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-white transition-colors"
+            style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}
+            onClick={() => setSidebarOpen(false)}
+          >
+            <span className="text-base">{'\u2B06\uFE0F'}</span>
+            Upgrade Plan
           </a>
         )}
       </nav>

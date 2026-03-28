@@ -8,12 +8,14 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
   let merchantName: string | undefined
   let merchantSlug: string | undefined
+  let merchantTier: string | undefined
 
   if (merchantId) {
     try {
       const merchant = await fetchMerchant(merchantId)
       merchantName = merchant.name
       merchantSlug = merchant.slug
+      merchantTier = merchant.subscriptionTier
     } catch {
       // API may be offline during dev — proceed without merchant details
     }
@@ -25,6 +27,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
         user={session.user}
         merchantName={merchantName}
         merchantSlug={merchantSlug}
+        merchantTier={merchantTier}
       >
         {children}
       </DashboardShell>

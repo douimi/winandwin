@@ -6,20 +6,17 @@ import { Card, CardContent } from '@winandwin/ui'
 import { fetchAdminMerchants, type AdminMerchantRow } from '@/lib/admin-api'
 import { MerchantSearch } from './merchant-search'
 
-function TierBadge({ tier }: { tier: string }) {
-  const colors: Record<string, string> = {
-    free: 'bg-slate-700 text-slate-300',
-    starter: 'bg-blue-900/50 text-blue-300 ring-1 ring-blue-500/20',
-    pro: 'bg-purple-900/50 text-purple-300 ring-1 ring-purple-500/20',
-    enterprise: 'bg-amber-900/50 text-amber-300 ring-1 ring-amber-500/20',
-  }
+const TIER_GRADIENTS: Record<string, string> = {
+  free: 'from-slate-600 to-slate-500',
+  starter: 'from-blue-600 to-blue-500',
+  pro: 'from-purple-600 to-purple-500',
+  enterprise: 'from-amber-600 to-amber-500',
+}
 
+function TierBadge({ tier }: { tier: string }) {
+  const gradient = TIER_GRADIENTS[tier] ?? TIER_GRADIENTS.free
   return (
-    <span
-      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold capitalize ${
-        colors[tier] ?? colors.free
-      }`}
-    >
+    <span className={`inline-flex items-center rounded-full bg-gradient-to-r ${gradient} px-2.5 py-0.5 text-xs font-bold capitalize text-white shadow-sm`}>
       {tier}
     </span>
   )
@@ -61,7 +58,12 @@ export default function AdminMerchantsPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-slate-100">Merchants</h1>
+        <div>
+          <h1 className="text-2xl font-bold text-slate-100">Merchants</h1>
+          <p className="mt-1 text-sm text-slate-500">
+            {loading ? 'Loading...' : `${merchants.length} merchant${merchants.length !== 1 ? 's' : ''} found`}
+          </p>
+        </div>
         {error && (
           <span className="rounded-full bg-yellow-900/50 px-2.5 py-0.5 text-xs font-medium text-yellow-300">
             API offline
@@ -76,13 +78,13 @@ export default function AdminMerchantsPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-slate-800 text-left">
-                  <th className="px-4 py-3 font-medium text-slate-400">Name</th>
-                  <th className="px-4 py-3 font-medium text-slate-400">Category</th>
-                  <th className="px-4 py-3 font-medium text-slate-400">Tier</th>
-                  <th className="px-4 py-3 font-medium text-slate-400">Monthly Plays</th>
-                  <th className="px-4 py-3 font-medium text-slate-400">Status</th>
-                  <th className="px-4 py-3 font-medium text-slate-400">Created</th>
+                <tr className="border-b border-slate-700 text-left bg-slate-800/30">
+                  <th className="px-4 py-3.5 font-semibold text-slate-300">Name</th>
+                  <th className="px-4 py-3.5 font-semibold text-slate-300">Category</th>
+                  <th className="px-4 py-3.5 font-semibold text-slate-300">Tier</th>
+                  <th className="px-4 py-3.5 font-semibold text-slate-300">Monthly Plays</th>
+                  <th className="px-4 py-3.5 font-semibold text-slate-300">Status</th>
+                  <th className="px-4 py-3.5 font-semibold text-slate-300">Created</th>
                 </tr>
               </thead>
               <tbody>
@@ -100,7 +102,7 @@ export default function AdminMerchantsPage() {
                     </td>
                   </tr>
                 ) : (
-                  merchants.map((m) => {
+                  merchants.map((m, idx) => {
                     const usagePercent = m.monthlyLimit
                       ? Math.round((m.playsThisMonth / m.monthlyLimit) * 100)
                       : 0
@@ -109,7 +111,13 @@ export default function AdminMerchantsPage() {
                         ? 'text-red-400'
                         : usagePercent > 70
                           ? 'text-yellow-400'
-                          : 'text-green-400'
+                          : 'text-emerald-400'
+                    const barColor =
+                      usagePercent > 90
+                        ? 'bg-red-500'
+                        : usagePercent > 70
+                          ? 'bg-yellow-500'
+                          : 'bg-emerald-500'
                     const statusLabel = usagePercent > 90 ? 'At limit' : 'Active'
                     const statusStyle =
                       usagePercent > 90
@@ -119,10 +127,10 @@ export default function AdminMerchantsPage() {
                     return (
                       <tr
                         key={m.id}
-                        className="border-b border-slate-800/50 hover:bg-slate-800/30 transition-colors cursor-pointer"
+                        className={`border-b border-slate-800/50 hover:bg-indigo-500/5 transition-colors cursor-pointer ${idx % 2 === 1 ? 'bg-slate-800/10' : ''}`}
                         onClick={() => window.location.assign(`/admin/merchants/${m.id}`)}
                       >
-                        <td className="px-4 py-3">
+                        <td className="px-4 py-3.5">
                           <a
                             href={`/admin/merchants/${m.id}`}
                             className="font-medium text-slate-200 hover:text-indigo-300 transition-colors"
@@ -130,19 +138,19 @@ export default function AdminMerchantsPage() {
                           >
                             {m.name}
                           </a>
-                          <p className="text-xs text-slate-500">{m.email}</p>
+                          <p className="text-xs text-slate-500 mt-0.5">{m.email}</p>
                         </td>
-                        <td className="px-4 py-3">
+                        <td className="px-4 py-3.5">
                           <span className="inline-flex items-center rounded-full bg-slate-800 px-2.5 py-0.5 text-xs font-medium text-slate-300 capitalize">
                             {m.category}
                           </span>
                         </td>
-                        <td className="px-4 py-3">
+                        <td className="px-4 py-3.5">
                           <TierBadge tier={m.subscriptionTier} />
                         </td>
-                        <td className="px-4 py-3">
+                        <td className="px-4 py-3.5">
                           <div className="flex items-center gap-2">
-                            <span className={`font-medium ${usageColor}`}>
+                            <span className={`font-semibold ${usageColor}`}>
                               {m.playsThisMonth.toLocaleString()}
                             </span>
                             <span className="text-slate-600">/</span>
@@ -151,26 +159,20 @@ export default function AdminMerchantsPage() {
                             </span>
                           </div>
                           {m.monthlyLimit && (
-                            <div className="mt-1 h-1 w-full max-w-[80px] rounded-full bg-slate-800">
+                            <div className="mt-1.5 h-1.5 w-full max-w-[100px] rounded-full bg-slate-800">
                               <div
-                                className={`h-1 rounded-full transition-all ${
-                                  usagePercent > 90
-                                    ? 'bg-red-500'
-                                    : usagePercent > 70
-                                      ? 'bg-yellow-500'
-                                      : 'bg-green-500'
-                                }`}
+                                className={`h-1.5 rounded-full transition-all ${barColor}`}
                                 style={{ width: `${Math.min(usagePercent, 100)}%` }}
                               />
                             </div>
                           )}
                         </td>
-                        <td className="px-4 py-3">
-                          <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${statusStyle}`}>
+                        <td className="px-4 py-3.5">
+                          <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${statusStyle}`}>
                             {statusLabel}
                           </span>
                         </td>
-                        <td className="px-4 py-3 text-slate-500 text-xs">
+                        <td className="px-4 py-3.5 text-slate-400 text-xs">
                           {new Date(m.createdAt).toLocaleDateString()}
                         </td>
                       </tr>

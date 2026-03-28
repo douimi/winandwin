@@ -85,15 +85,24 @@ playRouter.get('/:slug', async (c) => {
       .from(ctas)
       .where(and(eq(ctas.merchantId, merchantData.id), eq(ctas.enabled, true)))
 
+    const gameBranding = activeGame.branding as Record<string, unknown> | null
+
     return c.json({
       success: true,
       data: {
         merchantName: merchantData.name,
+        merchantLogo: merchantData.logoUrl,
+        merchantDescription: merchantData.description,
         game: {
           id: activeGame.id,
           type: activeGame.type,
           name: activeGame.name,
-          branding: activeGame.branding,
+          branding: {
+            primaryColor: merchantData.primaryColor || (gameBranding?.primaryColor as string) || '#6366f1',
+            secondaryColor: merchantData.secondaryColor || (gameBranding?.secondaryColor as string) || '#ec4899',
+            backgroundUrl: merchantData.backgroundUrl || (gameBranding?.backgroundUrl as string) || null,
+            logoUrl: (gameBranding?.logoUrl as string) || null,
+          },
           prizes: activeGame.prizes.map((p) => ({
             id: p.id,
             name: p.name,
@@ -396,8 +405,6 @@ playRouter.post('/:slug/spin', async (c) => {
       fingerprintId: string
       hardwareId?: string
       completedActions: string[]
-      playerName?: string
-      playerEmail?: string
     }>()
 
     // Validate at least one action completed
@@ -456,17 +463,13 @@ playRouter.post('/:slug/spin', async (c) => {
           merchantId: merchantData.id,
           fingerprintId: body.fingerprintId,
           hardwareId: body.hardwareId,
-          name: body.playerName,
-          email: body.playerEmail,
         })
         .returning()
       playerId = newPlayer[0]!.id
     } else {
       playerId = player[0]!.id
-      // Update lastSeenAt, name/email, and hardwareId if provided
+      // Update lastSeenAt and hardwareId if provided
       const updateSet: Record<string, unknown> = { lastSeenAt: new Date() }
-      if (body.playerName) updateSet.name = body.playerName
-      if (body.playerEmail) updateSet.email = body.playerEmail
       if (body.hardwareId) updateSet.hardwareId = body.hardwareId
       await db
         .update(players)
@@ -596,19 +599,7 @@ playRouter.post('/:slug/spin', async (c) => {
 
       const [couponResult] = await db.batch([couponInsert, prizeUpdate, gamePlayInsert, playerUpdate])
 
-      // Send coupon email (fire and forget -- don't block the response)
-      if (body.playerEmail) {
-        sendCouponEmail({
-          to: body.playerEmail,
-          playerName: body.playerName || 'Player',
-          merchantName: merchantData.name,
-          prizeName: result.prize.name,
-          prizeEmoji: result.prize.emoji,
-          couponCode: couponCode,
-          validFrom: validFrom.toISOString(),
-          validUntil: validUntil.toISOString(),
-        }, c.env.RESEND_API_KEY ?? '').catch(err => console.error('Email failed:', err))
-      }
+      // Email is now sent via the separate /register endpoint after the player fills in their details
 
       return c.json({
         success: true,
@@ -663,6 +654,123 @@ playRouter.post('/:slug/spin', async (c) => {
     console.error('Error playing game:', err)
     return c.json(
       { success: false, error: { code: 'INTERNAL_ERROR', message: 'Failed to play game' } },
+      500,
+    )
+  }
+})
+
+// POST /api/v1/play/:slug/register — Register player name/email and send coupon email
+playRouter.post('/:slug/register', async (c) => {
+  try {
+    const db = c.get('db')
+    const slug = c.req.param('slug')
+
+    const body = await c.req.json<{
+      fingerprintId: string
+      hardwareId?: string
+      name: string
+      email: string
+    }>()
+
+    if (!body.fingerprintId || !body.name || !body.email) {
+      return c.json(
+        { success: false, error: { code: 'VALIDATION_ERROR', message: 'fingerprintId, name, and email are required' } },
+        400,
+      )
+    }
+
+    // Look up merchant by slug
+    const merchantResult = await db
+      .select()
+      .from(merchants)
+      .where(eq(merchants.slug, slug))
+      .limit(1)
+
+    if (merchantResult.length === 0) {
+      return c.json(
+        { success: false, error: { code: 'NOT_FOUND', message: 'Merchant not found' } },
+        404,
+      )
+    }
+
+    const merchantData = merchantResult[0]!
+
+    // Find player by fingerprintId or hardwareId
+    let playerResult = await db
+      .select()
+      .from(players)
+      .where(
+        and(
+          eq(players.merchantId, merchantData.id),
+          eq(players.fingerprintId, body.fingerprintId),
+        ),
+      )
+      .limit(1)
+
+    if (playerResult.length === 0 && body.hardwareId) {
+      playerResult = await db
+        .select()
+        .from(players)
+        .where(
+          and(
+            eq(players.merchantId, merchantData.id),
+            eq(players.hardwareId, body.hardwareId),
+          ),
+        )
+        .limit(1)
+    }
+
+    if (playerResult.length === 0) {
+      return c.json(
+        { success: false, error: { code: 'NOT_FOUND', message: 'Player not found' } },
+        404,
+      )
+    }
+
+    const playerData = playerResult[0]!
+
+    // Update player name and email
+    await db
+      .update(players)
+      .set({ name: body.name, email: body.email, lastSeenAt: new Date() })
+      .where(eq(players.id, playerData.id))
+
+    // Find the most recent coupon for this player
+    const recentCoupon = await db
+      .select()
+      .from(coupons)
+      .where(eq(coupons.playerId, playerData.id))
+      .orderBy(sql`${coupons.createdAt} DESC`)
+      .limit(1)
+
+    let emailSent = false
+
+    if (recentCoupon.length > 0) {
+      const couponData = recentCoupon[0]!
+
+      // Look up the prize name from the coupon
+      sendCouponEmail({
+        to: body.email,
+        playerName: body.name,
+        merchantName: merchantData.name,
+        prizeName: couponData.prizeName,
+        prizeEmoji: undefined,
+        couponCode: couponData.code,
+        validFrom: couponData.validFrom.toISOString(),
+        validUntil: couponData.validUntil.toISOString(),
+      }, c.env.RESEND_API_KEY ?? '').catch(err => console.error('Email failed:', err))
+
+      emailSent = true
+    }
+
+    return c.json({
+      success: true,
+      data: { emailSent },
+    })
+  } catch (err) {
+    console.error('Error registering player:', err)
+    return c.json(
+      { success: false, error: { code: 'INTERNAL_ERROR', message: 'Failed to register' } },
       500,
     )
   }

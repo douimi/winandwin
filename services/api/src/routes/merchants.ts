@@ -11,6 +11,11 @@ const updateMerchantSchema = z.object({
   timezone: z.string().max(50).optional(),
   phone: z.string().max(20).optional(),
   validationPin: z.string().min(4).max(6).regex(/^\d+$/).optional(),
+  primaryColor: z.string().regex(/^#[0-9a-fA-F]{6}$/).optional(),
+  secondaryColor: z.string().regex(/^#[0-9a-fA-F]{6}$/).optional(),
+  backgroundUrl: z.string().url().or(z.literal('')).optional(),
+  description: z.string().max(500).optional(),
+  logoUrl: z.string().url().or(z.literal('')).optional(),
   address: z
     .object({
       street: z.string().max(200),
@@ -193,6 +198,11 @@ merchantsRouter.patch('/:id', async (c) => {
     if (parsed.data.timezone !== undefined) updates.timezone = parsed.data.timezone
     if (parsed.data.phone !== undefined) updates.phone = parsed.data.phone
     if (parsed.data.validationPin !== undefined) updates.validationPin = parsed.data.validationPin
+    if (parsed.data.primaryColor !== undefined) updates.primaryColor = parsed.data.primaryColor
+    if (parsed.data.secondaryColor !== undefined) updates.secondaryColor = parsed.data.secondaryColor
+    if (parsed.data.backgroundUrl !== undefined) updates.backgroundUrl = parsed.data.backgroundUrl || null
+    if (parsed.data.description !== undefined) updates.description = parsed.data.description || null
+    if (parsed.data.logoUrl !== undefined) updates.logoUrl = parsed.data.logoUrl || null
     if (parsed.data.address !== undefined) updates.address = parsed.data.address
 
     if (Object.keys(updates).length === 0) {

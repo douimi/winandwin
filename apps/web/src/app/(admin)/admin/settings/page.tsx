@@ -20,11 +20,11 @@ interface PlatformSetting {
   updatedAt: string
 }
 
-const tierAccentColors: Record<string, { border: string; badge: string; bg: string }> = {
-  free: { border: 'border-slate-700', badge: 'bg-slate-700 text-slate-300', bg: 'bg-slate-900' },
-  starter: { border: 'border-blue-800/50', badge: 'bg-blue-900/50 text-blue-300', bg: 'bg-slate-900' },
-  pro: { border: 'border-purple-800/50', badge: 'bg-purple-900/50 text-purple-300', bg: 'bg-slate-900' },
-  enterprise: { border: 'border-amber-800/50', badge: 'bg-amber-900/50 text-amber-300', bg: 'bg-slate-900' },
+const tierAccentColors: Record<string, { gradient: string; border: string; badge: string; icon: string }> = {
+  free: { gradient: 'from-slate-600 to-slate-500', border: 'border-slate-700', badge: 'bg-gradient-to-r from-slate-600 to-slate-500 text-white', icon: '\uD83C\uDD93' },
+  starter: { gradient: 'from-blue-600 to-blue-500', border: 'border-blue-800/50', badge: 'bg-gradient-to-r from-blue-600 to-blue-500 text-white', icon: '\uD83D\uDE80' },
+  pro: { gradient: 'from-purple-600 to-purple-500', border: 'border-purple-800/50', badge: 'bg-gradient-to-r from-purple-600 to-purple-500 text-white', icon: '\u2B50' },
+  enterprise: { gradient: 'from-amber-600 to-amber-500', border: 'border-amber-800/50', badge: 'bg-gradient-to-r from-amber-600 to-amber-500 text-white', icon: '\uD83D\uDC8E' },
 }
 
 async function adminRequest<T>(path: string, options: RequestInit = {}): Promise<T> {
@@ -57,19 +57,17 @@ export default function AdminSettingsPage() {
     try {
       const data = await adminRequest<PlatformSetting[]>('/api/v1/admin/settings')
       setSettings(data)
-
       const tierSetting = data.find((s) => s.key === 'tier_limits')
       if (tierSetting) {
         setTierLimits(tierSetting.value as TierLimits)
       }
     } catch {
-      // Settings may not exist yet, fall back to constants
+      // Settings may not exist yet
     } finally {
       setLoading(false)
     }
   }
 
-  // Get effective tier limits: from DB or fallback to constants
   const effectiveTiers = tierLimits || {
     free: { monthlyPlays: (TIER_LIMITS as Record<string, { monthlyPlays: number }>).free?.monthlyPlays ?? 200 },
     starter: { monthlyPlays: (TIER_LIMITS as Record<string, { monthlyPlays: number }>).starter?.monthlyPlays ?? 2000 },
@@ -98,7 +96,6 @@ export default function AdminSettingsPage() {
     setFeedback(null)
 
     try {
-      // Build updated tier limits
       const updated: Record<string, Record<string, number>> = {}
       for (const tier of ['free', 'starter', 'pro', 'enterprise']) {
         const existing = effectiveTiers[tier as keyof typeof effectiveTiers] || { monthlyPlays: 200 }
@@ -129,7 +126,7 @@ export default function AdminSettingsPage() {
     return (
       <div className="space-y-8">
         <h1 className="text-2xl font-bold text-slate-100">Platform Settings</h1>
-        <Card>
+        <Card className="border-slate-800 bg-slate-900">
           <CardContent className="flex items-center justify-center py-12">
             <p className="text-sm text-slate-400">Loading settings...</p>
           </CardContent>
@@ -141,9 +138,12 @@ export default function AdminSettingsPage() {
   return (
     <div className="space-y-8">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-slate-100">Platform Settings</h1>
+        <div>
+          <h1 className="text-2xl font-bold text-slate-100">Platform Settings</h1>
+          <p className="mt-1 text-sm text-slate-500">Configure tier limits and platform-wide settings</p>
+        </div>
         {hasChanges && (
-          <Button onClick={handleSave} disabled={saving}>
+          <Button onClick={handleSave} disabled={saving} className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold shadow-lg">
             {saving ? 'Saving...' : 'Save Changes'}
           </Button>
         )}
@@ -162,32 +162,36 @@ export default function AdminSettingsPage() {
       {/* Tier Cards Grid */}
       <div className="grid gap-6 sm:grid-cols-2">
         {(['free', 'starter', 'pro', 'enterprise'] as const).map((name) => {
-          const defaultAccent = { border: 'border-slate-700', badge: 'bg-slate-700 text-slate-300', bg: 'bg-slate-900' }
-          const accent = tierAccentColors[name] ?? defaultAccent
+          const accent = (tierAccentColors[name] ?? tierAccentColors.free)!
           const monthlyPlays = getMonthlyPlays(name)
           const isEdited = `${name}.monthlyPlays` in editedValues
 
           return (
-            <Card key={name} className={`${accent.border} ${accent.bg} overflow-hidden`}>
+            <Card key={name} className={`${accent.border} bg-slate-900 overflow-hidden`}>
+              {/* Gradient header strip */}
+              <div className={`h-1.5 bg-gradient-to-r ${accent.gradient}`} />
               <CardHeader className="pb-4">
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-slate-100 capitalize">{name}</CardTitle>
-                  <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold capitalize ${accent.badge}`}>
+                  <div className="flex items-center gap-3">
+                    <span className="text-2xl">{accent.icon}</span>
+                    <CardTitle className="text-slate-100 capitalize text-lg">{name}</CardTitle>
+                  </div>
+                  <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-bold capitalize shadow-sm ${accent.badge}`}>
                     {name}
                   </span>
                 </div>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  <div className="flex items-center justify-between border-b border-slate-800/50 pb-2">
-                    <span className="text-sm text-slate-400">Monthly Plays</span>
+                  <div className="flex items-center justify-between rounded-lg bg-slate-800/30 px-4 py-3">
+                    <span className="text-sm font-medium text-slate-300">Monthly Plays Limit</span>
                     <input
                       type="number"
                       value={monthlyPlays}
                       onChange={(e) => handleMonthlyPlaysChange(name, e.target.value)}
-                      className={`w-28 rounded border px-2 py-1 text-right text-sm font-medium ${
+                      className={`w-28 rounded-lg border px-3 py-1.5 text-right text-sm font-semibold transition-colors ${
                         isEdited
-                          ? 'border-indigo-500 bg-indigo-950/30 text-indigo-300'
+                          ? 'border-indigo-500 bg-indigo-950/30 text-indigo-300 shadow-sm shadow-indigo-500/10'
                           : 'border-slate-700 bg-slate-800 text-slate-200'
                       }`}
                       min={0}

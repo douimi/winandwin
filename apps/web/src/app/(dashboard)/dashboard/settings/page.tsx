@@ -23,6 +23,14 @@ export default function SettingsPage() {
   const [validationPin, setValidationPin] = useState('0000')
   const [savingPin, setSavingPin] = useState(false)
 
+  // Brand Identity state
+  const [primaryColor, setPrimaryColor] = useState('#6366f1')
+  const [secondaryColor, setSecondaryColor] = useState('#ec4899')
+  const [logoUrl, setLogoUrl] = useState('')
+  const [backgroundUrl, setBackgroundUrl] = useState('')
+  const [description, setDescription] = useState('')
+  const [savingBrand, setSavingBrand] = useState(false)
+
   const loadMerchant = useCallback(async () => {
     if (!merchantId) {
       setLoading(false)
@@ -36,6 +44,11 @@ export default function SettingsPage() {
       setTimezone(merchant.timezone)
       setPhone(merchant.phone ?? '')
       setValidationPin((merchant as unknown as Record<string, string>).validationPin ?? '0000')
+      setPrimaryColor((merchant as unknown as Record<string, string>).primaryColor ?? '#6366f1')
+      setSecondaryColor((merchant as unknown as Record<string, string>).secondaryColor ?? '#ec4899')
+      setLogoUrl((merchant as unknown as Record<string, string>).logoUrl ?? '')
+      setBackgroundUrl((merchant as unknown as Record<string, string>).backgroundUrl ?? '')
+      setDescription((merchant as unknown as Record<string, string>).description ?? '')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load settings')
     } finally {
@@ -187,27 +200,154 @@ export default function SettingsPage() {
         </CardContent>
       </Card>
 
-      {/* Branding */}
+      {/* Brand Identity */}
       <Card>
         <CardHeader>
-          <CardTitle>{'\uD83C\uDFA8'} Branding</CardTitle>
+          <CardTitle>{'\uD83C\uDFA8'} Brand Identity</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <p className="text-sm text-muted-foreground">
-            Branding colors are configured per game. Go to your{' '}
-            <a href="/dashboard/games" className="text-primary underline">
-              Games
-            </a>{' '}
-            page to customize colors for each game.
+        <CardContent>
+          <p className="text-sm text-muted-foreground mb-4">
+            Customize how your game page looks to players. These settings apply across all your games.
           </p>
-          <div className="space-y-2">
-            <Label>Logo</Label>
-            <div className="flex h-24 items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/30">
-              <p className="text-sm text-muted-foreground">
-                Logo upload — coming soon
+          <form
+            onSubmit={async (e) => {
+              e.preventDefault()
+              if (!merchantId) return
+              setSavingBrand(true)
+              setError(null)
+              try {
+                await updateMerchant(merchantId, {
+                  primaryColor,
+                  secondaryColor,
+                  logoUrl: logoUrl || '',
+                  backgroundUrl: backgroundUrl || '',
+                  description: description || '',
+                })
+                showSuccess('Brand identity saved successfully.')
+              } catch (err) {
+                setError(err instanceof Error ? err.message : 'Failed to save brand identity')
+              } finally {
+                setSavingBrand(false)
+              }
+            }}
+            className="space-y-4"
+          >
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="primaryColor">Primary Color</Label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="color"
+                    id="primaryColorPicker"
+                    value={primaryColor}
+                    onChange={(e) => setPrimaryColor(e.target.value)}
+                    className="h-10 w-10 cursor-pointer rounded border border-input p-0.5"
+                  />
+                  <Input
+                    id="primaryColor"
+                    value={primaryColor}
+                    onChange={(e) => setPrimaryColor(e.target.value)}
+                    placeholder="#6366f1"
+                    pattern="^#[0-9a-fA-F]{6}$"
+                    maxLength={7}
+                    className="flex-1 font-mono"
+                  />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="secondaryColor">Secondary Color</Label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="color"
+                    id="secondaryColorPicker"
+                    value={secondaryColor}
+                    onChange={(e) => setSecondaryColor(e.target.value)}
+                    className="h-10 w-10 cursor-pointer rounded border border-input p-0.5"
+                  />
+                  <Input
+                    id="secondaryColor"
+                    value={secondaryColor}
+                    onChange={(e) => setSecondaryColor(e.target.value)}
+                    placeholder="#ec4899"
+                    pattern="^#[0-9a-fA-F]{6}$"
+                    maxLength={7}
+                    className="flex-1 font-mono"
+                  />
+                </div>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="logoUrl">Logo URL</Label>
+              <Input
+                id="logoUrl"
+                type="url"
+                value={logoUrl}
+                onChange={(e) => setLogoUrl(e.target.value)}
+                placeholder="https://example.com/logo.png"
+              />
+              <p className="text-xs text-muted-foreground">
+                Paste a URL to your logo image. File upload coming soon.
               </p>
             </div>
-          </div>
+            <div className="space-y-2">
+              <Label htmlFor="backgroundUrl">Background Image URL</Label>
+              <Input
+                id="backgroundUrl"
+                type="url"
+                value={backgroundUrl}
+                onChange={(e) => setBackgroundUrl(e.target.value)}
+                placeholder="https://example.com/background.jpg"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="description">Business Description</Label>
+              <textarea
+                id="description"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="A short description shown on the player welcome screen..."
+                maxLength={500}
+                rows={3}
+                className="flex w-full rounded-lg border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              />
+              <p className="text-xs text-muted-foreground text-right">
+                {description.length}/500 characters
+              </p>
+            </div>
+            {/* Preview */}
+            <div className="rounded-lg border p-4">
+              <p className="text-xs font-medium text-muted-foreground mb-2">Preview</p>
+              <div
+                className="flex items-center gap-3 rounded-lg p-3"
+                style={{ background: `linear-gradient(135deg, ${primaryColor}15, ${secondaryColor}15)` }}
+              >
+                {logoUrl ? (
+                  <img
+                    src={logoUrl}
+                    alt="Logo preview"
+                    className="h-10 w-10 rounded-full object-cover border"
+                    onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
+                  />
+                ) : (
+                  <div
+                    className="flex h-10 w-10 items-center justify-center rounded-full text-white text-sm font-bold"
+                    style={{ backgroundColor: primaryColor }}
+                  >
+                    {name.charAt(0).toUpperCase() || '?'}
+                  </div>
+                )}
+                <div>
+                  <p className="font-medium" style={{ color: primaryColor }}>{name || 'Your Business'}</p>
+                  {description && (
+                    <p className="text-xs text-muted-foreground line-clamp-1">{description}</p>
+                  )}
+                </div>
+              </div>
+            </div>
+            <Button type="submit" disabled={savingBrand}>
+              {savingBrand ? 'Saving...' : 'Save Brand Identity'}
+            </Button>
+          </form>
         </CardContent>
       </Card>
 

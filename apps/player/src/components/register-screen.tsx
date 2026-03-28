@@ -38,10 +38,10 @@ export function RegisterScreen({ onRegister }: Props) {
     <div class="screen register-screen">
       <div class="action-header">
         <div class="action-merchant-badge">
-          <span style={{ fontSize: '2.5rem' }}>🎰</span>
+          <span style={{ fontSize: '2.5rem' }}>&#127881;</span>
         </div>
-        <h1 class="action-merchant-name">Almost there!</h1>
-        <p class="action-subtitle">Enter your details to spin the wheel</p>
+        <h1 class="action-merchant-name">Congratulations!</h1>
+        <p class="action-subtitle">Enter your details to receive your prize by email</p>
       </div>
 
       <form class="register-form" onSubmit={handleSubmit}>
@@ -86,7 +86,7 @@ export function RegisterScreen({ onRegister }: Props) {
         <p class="register-hint">Your coupon will be sent to this email</p>
 
         <button type="submit" class="register-submit">
-          Continue to Game
+          Claim My Prize
         </button>
       </form>
     </div>

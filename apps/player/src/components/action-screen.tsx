@@ -1,32 +1,308 @@
 import { useEffect, useRef, useState } from 'preact/hooks'
 import type { GameConfig } from '../types'
 
+interface SingleActionProps {
+  config: GameConfig
+  singleAction: GameConfig['requiredActions'][number]
+  onComplete: (completedActions: string[]) => void
+  preCompleted?: string | null
+}
+
 interface Props {
   config: GameConfig
   onComplete: (completedActions: string[]) => void
   preCompleted?: string | null
   /** Actions already completed in previous sessions (from server) */
   previouslyCompleted?: string[]
+  /** If set, show only this single action */
+  singleAction?: GameConfig['requiredActions'][number]
 }
 
 const ACTION_META: Record<string, { icon: string; label: string; hint: string }> = {
-  google_review: { icon: '⭐', label: 'Leave us a Google Review', hint: 'Proof may be requested' },
-  instagram_follow: { icon: '📸', label: 'Follow us on Instagram', hint: 'Proof may be requested' },
-  email_collect: { icon: '✉️', label: 'Share your email', hint: '' },
-  visit_stamp: { icon: '📍', label: 'Visit stamp', hint: '' },
-  receipt_photo: { icon: '🧾', label: 'Photograph your receipt', hint: '' },
+  google_review: { icon: '\u2B50', label: 'Leave us a Google Review', hint: 'Proof may be requested' },
+  instagram_follow: { icon: '\uD83D\uDCF8', label: 'Follow us on Instagram', hint: 'Proof may be requested' },
+  email_collect: { icon: '\u2709\uFE0F', label: 'Share your email', hint: '' },
+  visit_stamp: { icon: '\uD83D\uDCCD', label: 'Visit stamp', hint: '' },
+  receipt_photo: { icon: '\uD83E\uDDFE', label: 'Photograph your receipt', hint: '' },
 }
 
 const VERIFY_DURATION = 3000
 
-export function ActionScreen({ config, onComplete, preCompleted, previouslyCompleted }: Props) {
+function SingleActionScreen({ config, singleAction, onComplete, preCompleted }: SingleActionProps) {
+  const [completed, setCompleted] = useState(false)
+  const [clicked, setClicked] = useState(false)
+  const [email, setEmail] = useState('')
+  const [emailError, setEmailError] = useState(false)
+  const [emailExpanded, setEmailExpanded] = useState(false)
+  const [verifying, setVerifying] = useState(false)
+  const [verifyDone, setVerifyDone] = useState(false)
+  const receiptRef = useRef<HTMLInputElement>(null)
+
+  // Auto-complete visit_stamp immediately
+  useEffect(() => {
+    if (singleAction.type === 'visit_stamp' && !completed) {
+      setCompleted(true)
+      // Auto-proceed after a short delay
+      setTimeout(() => onComplete([singleAction.type]), 500)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // On mount, if preCompleted matches, start verification
+  useEffect(() => {
+    if (preCompleted && preCompleted === singleAction.type && !completed) {
+      startVerification()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  function startVerification() {
+    setVerifying(true)
+    setVerifyDone(false)
+
+    setTimeout(() => {
+      setVerifyDone(true)
+      setTimeout(() => {
+        markComplete()
+        setVerifying(false)
+        setVerifyDone(false)
+      }, 800)
+    }, VERIFY_DURATION)
+  }
+
+  function markComplete() {
+    setCompleted(true)
+    // Auto-proceed after marking complete
+    setTimeout(() => onComplete([singleAction.type]), 600)
+  }
+
+  function handleCardClick() {
+    if (completed || verifying) return
+
+    switch (singleAction.type) {
+      case 'google_review': {
+        const url = singleAction.config?.googlePlaceUrl
+        if (url) {
+          localStorage.setItem('winandwin_pending_action', JSON.stringify({
+            type: singleAction.type,
+            slug: window.location.pathname.replace(/^\//, ''),
+            timestamp: Date.now(),
+          }))
+          window.location.href = url
+        } else {
+          setClicked(true)
+        }
+        break
+      }
+      case 'instagram_follow': {
+        const handle = singleAction.config?.instagramHandle
+        if (handle) {
+          localStorage.setItem('winandwin_pending_action', JSON.stringify({
+            type: singleAction.type,
+            slug: window.location.pathname.replace(/^\//, ''),
+            timestamp: Date.now(),
+          }))
+          window.location.href = `https://instagram.com/${handle}`
+        } else {
+          setClicked(true)
+        }
+        break
+      }
+      case 'email_collect': {
+        setEmailExpanded(true)
+        break
+      }
+      case 'receipt_photo': {
+        receiptRef.current?.click()
+        break
+      }
+      case 'visit_stamp': {
+        break
+      }
+    }
+  }
+
+  function handleConfirmClick() {
+    setClicked(false)
+    startVerification()
+  }
+
+  function handleEmailSubmit() {
+    const isValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+    if (!isValid) {
+      setEmailError(true)
+      return
+    }
+    setEmailError(false)
+    markComplete()
+  }
+
+  function handleReceiptChange(e: Event) {
+    const input = e.target as HTMLInputElement
+    if (input.files && input.files.length > 0) {
+      markComplete()
+    }
+  }
+
+  function getActionLabel() {
+    const meta = ACTION_META[singleAction.type]
+    return meta?.label || singleAction.label
+  }
+
+  function getActionIcon() {
+    return ACTION_META[singleAction.type]?.icon || '\uD83D\uDCCB'
+  }
+
+  const isDone = completed
+  const isVerifying = verifying
+  const isVerifyDone = verifyDone
+  const showConfirm = !isDone && !isVerifying && clicked && (singleAction.type === 'google_review' || singleAction.type === 'instagram_follow')
+  const showEmail = singleAction.type === 'email_collect' && emailExpanded && !isDone
+
+  return (
+    <div class="screen action-screen">
+      <div class="action-bg-pattern" />
+
+      <div class="action-header">
+        <div class="action-merchant-badge">
+          <h1 class="action-merchant-name">{config.merchantName}</h1>
+        </div>
+        <p class="action-subtitle">
+          Complete this action to play!
+        </p>
+      </div>
+
+      <div class="action-list">
+        <div class="action-card-wrapper">
+          <button
+            class={`single-action-card action-card${isDone ? ' completed' : ''}${isVerifying ? ' verifying-card' : ''}`}
+            onClick={handleCardClick}
+            type="button"
+          >
+            <span class="action-card-icon-circle">
+              <span class="action-card-icon">
+                {isDone ? '\u2705' : getActionIcon()}
+              </span>
+            </span>
+            <span class="action-card-label">
+              {getActionLabel()}
+              {ACTION_META[singleAction.type]?.hint && !isDone && (
+                <span class="action-card-hint">{ACTION_META[singleAction.type]!.hint}</span>
+              )}
+            </span>
+            {singleAction.weight > 1 && (
+              <span class="action-card-weight">+{singleAction.weight}pts</span>
+            )}
+            <span class="action-card-check">
+              {isDone ? '\u2713' : ''}
+            </span>
+
+            {isVerifying && (
+              <div class="action-verifying">
+                <div class="verify-content">
+                  <div class={`verify-spinner${isVerifyDone ? ' done' : ''}`}>
+                    {isVerifyDone ? (
+                      <svg class="verify-checkmark" viewBox="0 0 24 24" width="28" height="28">
+                        <path d="M5 13l4 4L19 7" fill="none" stroke="#4ade80" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+                      </svg>
+                    ) : (
+                      <div class="verify-spin-icon" />
+                    )}
+                  </div>
+                  <span class="verify-text">
+                    {isVerifyDone ? 'Action verified!' : 'Verifying your action...'}
+                  </span>
+                </div>
+                <div class="verify-progress-track">
+                  <div class={`verify-progress${isVerifyDone ? ' complete' : ''}`} />
+                </div>
+              </div>
+            )}
+          </button>
+
+          <div class={`action-confirm-row${showConfirm ? ' open' : ''}`}>
+            <button
+              class="action-confirm-btn"
+              onClick={handleConfirmClick}
+              type="button"
+            >
+              {singleAction.type === 'google_review' ? "I've left my review" : "I've followed"}
+            </button>
+          </div>
+
+          {singleAction.type === 'email_collect' && (
+            <div class={`action-email-row${showEmail ? ' open' : ''}`}>
+              <div class="action-email-form">
+                <input
+                  type="email"
+                  class={`action-email-input${emailError ? ' invalid' : ''}`}
+                  placeholder="you@email.com"
+                  value={email}
+                  onInput={(e) => {
+                    setEmail((e.target as HTMLInputElement).value)
+                    setEmailError(false)
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') handleEmailSubmit()
+                  }}
+                />
+                <button
+                  class="action-email-submit"
+                  onClick={handleEmailSubmit}
+                  type="button"
+                >
+                  Submit
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Hidden receipt file input */}
+      <input
+        ref={receiptRef}
+        class="receipt-file-input"
+        type="file"
+        accept="image/*"
+        capture="environment"
+        onChange={handleReceiptChange}
+      />
+    </div>
+  )
+}
+
+export function ActionScreen({ config, onComplete, preCompleted, previouslyCompleted, singleAction }: Props) {
+  // If singleAction is provided, render the simplified single-action view
+  if (singleAction) {
+    return (
+      <SingleActionScreen
+        config={config}
+        singleAction={singleAction}
+        onComplete={onComplete}
+        preCompleted={preCompleted}
+      />
+    )
+  }
+
+  // Legacy multi-action view (kept for backward compat)
+  return (
+    <MultiActionScreen
+      config={config}
+      onComplete={onComplete}
+      preCompleted={preCompleted}
+      previouslyCompleted={previouslyCompleted}
+    />
+  )
+}
+
+/** Original multi-action screen (backward compat) */
+function MultiActionScreen({ config, onComplete, preCompleted, previouslyCompleted }: Omit<Props, 'singleAction'>) {
   const [completed, setCompleted] = useState<Set<string>>(() => {
     const initial = new Set<string>()
-    // Auto-complete visit_stamp
     for (const a of config.requiredActions) {
       if (a.type === 'visit_stamp') initial.add(a.type)
     }
-    // Auto-complete actions done in previous sessions
     if (previouslyCompleted) {
       for (const action of previouslyCompleted) {
         initial.add(action)
@@ -44,7 +320,6 @@ export function ActionScreen({ config, onComplete, preCompleted, previouslyCompl
 
   const canPlay = completed.size >= config.minActionsRequired
 
-  // On mount, if preCompleted is set, start verification animation
   useEffect(() => {
     if (preCompleted && !completed.has(preCompleted)) {
       startVerification(preCompleted)
@@ -58,7 +333,6 @@ export function ActionScreen({ config, onComplete, preCompleted, previouslyCompl
 
     setTimeout(() => {
       setVerifyDone(type)
-      // After a brief pause showing the checkmark, mark complete
       setTimeout(() => {
         markComplete(type)
         setVerifying(null)
@@ -82,7 +356,6 @@ export function ActionScreen({ config, onComplete, preCompleted, previouslyCompl
       case 'google_review': {
         const url = action.config?.googlePlaceUrl
         if (url) {
-          // Save pending action so we auto-complete when user returns
           localStorage.setItem('winandwin_pending_action', JSON.stringify({
             type: action.type,
             slug: window.location.pathname.replace(/^\//, ''),
@@ -90,7 +363,6 @@ export function ActionScreen({ config, onComplete, preCompleted, previouslyCompl
           }))
           window.location.href = url
         } else {
-          // No URL configured — allow manual confirmation
           setClicked((prev) => new Set(prev).add(action.type))
         }
         break
@@ -118,7 +390,6 @@ export function ActionScreen({ config, onComplete, preCompleted, previouslyCompl
         break
       }
       case 'visit_stamp': {
-        // Already auto-completed
         break
       }
     }
@@ -151,18 +422,16 @@ export function ActionScreen({ config, onComplete, preCompleted, previouslyCompl
   }
 
   function getActionLabel(action: typeof config.requiredActions[number]) {
-    // Use custom label from config if available, otherwise use our defaults
     const meta = ACTION_META[action.type]
     return meta?.label || action.label
   }
 
   function getActionIcon(type: string) {
-    return ACTION_META[type]?.icon || '📋'
+    return ACTION_META[type]?.icon || '\uD83D\uDCCB'
   }
 
   return (
     <div class="screen action-screen">
-      {/* Background sparkle dots */}
       <div class="action-bg-pattern" />
 
       <div class="action-header">
@@ -192,7 +461,7 @@ export function ActionScreen({ config, onComplete, preCompleted, previouslyCompl
               >
                 <span class="action-card-icon-circle">
                   <span class="action-card-icon">
-                    {isDone ? '✅' : getActionIcon(action.type)}
+                    {isDone ? '\u2705' : getActionIcon(action.type)}
                   </span>
                 </span>
                 <span class="action-card-label">
@@ -205,10 +474,9 @@ export function ActionScreen({ config, onComplete, preCompleted, previouslyCompl
                   <span class="action-card-weight">+{action.weight}pts</span>
                 )}
                 <span class="action-card-check">
-                  {isDone ? '✓' : ''}
+                  {isDone ? '\u2713' : ''}
                 </span>
 
-                {/* Verification overlay */}
                 {isVerifying && (
                   <div class="action-verifying">
                     <div class="verify-content">
@@ -232,7 +500,6 @@ export function ActionScreen({ config, onComplete, preCompleted, previouslyCompl
                 )}
               </button>
 
-              {/* Confirm button for review/follow */}
               <div class={`action-confirm-row${showConfirm ? ' open' : ''}`}>
                 <button
                   class="action-confirm-btn"
@@ -243,7 +510,6 @@ export function ActionScreen({ config, onComplete, preCompleted, previouslyCompl
                 </button>
               </div>
 
-              {/* Email input */}
               {action.type === 'email_collect' && (
                 <div class={`action-email-row${showEmail ? ' open' : ''}`}>
                   <div class="action-email-form">
@@ -295,7 +561,7 @@ export function ActionScreen({ config, onComplete, preCompleted, previouslyCompl
           onClick={() => canPlay && onComplete(Array.from(completed))}
           type="button"
         >
-          {canPlay ? '🎮  Play Now!' : `Complete ${config.minActionsRequired - completed.size} more`}
+          {canPlay ? '\uD83C\uDFAE  Play Now!' : `Complete ${config.minActionsRequired - completed.size} more`}
         </button>
       </div>
     </div>
