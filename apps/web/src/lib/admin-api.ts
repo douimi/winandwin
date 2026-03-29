@@ -1,9 +1,4 @@
-// Client-side: route through Next.js API proxy to keep ADMIN_API_KEY hidden
-// Server-side: call the Cloudflare API directly with the admin key
-const IS_SERVER = typeof window === 'undefined'
 const ADMIN_PROXY_BASE = '/api/admin'
-const API_DIRECT_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8787'
-const ADMIN_KEY = process.env.ADMIN_API_KEY || ''
 
 export class AdminApiError extends Error {
   constructor(
@@ -25,17 +20,9 @@ export async function adminRequest<T>(
     ...(options.headers as Record<string, string> | undefined),
   }
 
-  let url: string
-  if (IS_SERVER) {
-    // Server-side (server actions, RSC): call API directly with admin key
-    const apiPath = path.startsWith('/api/v1/admin/') ? path : `/api/v1/admin/${path.replace('/api/v1/admin/', '')}`
-    url = `${API_DIRECT_BASE}${apiPath}`
-    headers['x-admin-key'] = ADMIN_KEY
-  } else {
-    // Client-side: route through Next.js proxy (which adds the key)
-    const proxyPath = path.replace('/api/v1/admin/', '')
-    url = `${ADMIN_PROXY_BASE}/${proxyPath}`
-  }
+  // Always go through the Next.js proxy — it adds the admin key server-side
+  const proxyPath = path.replace('/api/v1/admin/', '')
+  const url = `${ADMIN_PROXY_BASE}/${proxyPath}`
 
   let res: Response
   try {
