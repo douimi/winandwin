@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { Button, Card, CardContent, Input, Label } from '@winandwin/ui'
 
 function useIsLoggedIn() {
-  const [loggedIn, setLoggedIn] = useState(false)
+  const [loggedIn, setLoggedIn] = useState<boolean | null>(null) // null = loading
   useEffect(() => {
     fetch('/api/auth/check')
       .then((r) => r.json())
@@ -270,20 +270,26 @@ export default function HomePage() {
             <a href="#plans" className="transition-colors hover:text-gray-900">Plans</a>
             <a href="#contact" className="transition-colors hover:text-gray-900">Contact</a>
           </nav>
-          <div className="flex gap-3">
-            {isLoggedIn ? (
-              <a href="/dashboard">
-                <Button className="bg-gradient-to-r from-[#6366f1] to-[#ec4899] font-semibold shadow-lg shadow-indigo-500/25 hover:shadow-xl">
+          <div className="flex gap-3" style={{ minWidth: 140 }}>
+            {isLoggedIn === null ? (
+              /* Loading — show a subtle placeholder to prevent layout shift */
+              <div className="h-10 w-32 animate-pulse rounded-lg bg-gray-100" />
+            ) : isLoggedIn ? (
+              <a href="/dashboard" onClick={(e) => {
+                const btn = (e.currentTarget.firstChild as HTMLElement)
+                if (btn) btn.style.transform = 'scale(0.95)'
+              }}>
+                <Button className="bg-gradient-to-r from-[#6366f1] to-[#ec4899] font-semibold shadow-lg shadow-indigo-500/25 hover:shadow-xl active:scale-95 transition-transform">
                   My Dashboard
                 </Button>
               </a>
             ) : (
               <>
                 <a href="/sign-in">
-                  <Button variant="ghost" className="hidden sm:inline-flex">Sign In</Button>
+                  <Button variant="ghost" className="hidden sm:inline-flex active:scale-95 transition-transform">Sign In</Button>
                 </a>
                 <a href="#contact">
-                  <Button className="bg-gradient-to-r from-[#6366f1] to-[#ec4899] font-semibold shadow-lg shadow-indigo-500/25 hover:shadow-xl">
+                  <Button className="bg-gradient-to-r from-[#6366f1] to-[#ec4899] font-semibold shadow-lg shadow-indigo-500/25 hover:shadow-xl active:scale-95 transition-transform">
                     Contact Us
                   </Button>
                 </a>
