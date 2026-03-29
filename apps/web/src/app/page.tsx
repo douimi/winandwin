@@ -1,113 +1,277 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
-import { Button, Input, Label } from '@winandwin/ui'
+import { useState } from 'react'
+import { Button, Card, CardContent, Input, Label } from '@winandwin/ui'
 
-/* ─── Floating emoji background ─── */
-const FLOAT_EMOJIS = [
-  { emoji: '\uD83C\uDFA1', delay: 0, x: 5, size: 32 },
-  { emoji: '\uD83C\uDFB0', delay: 2, x: 15, size: 28 },
-  { emoji: '\uD83D\uDCE6', delay: 4, x: 25, size: 24 },
-  { emoji: '\uD83C\uDF81', delay: 1, x: 35, size: 30 },
-  { emoji: '\u2B50', delay: 3, x: 48, size: 26 },
-  { emoji: '\uD83C\uDF89', delay: 5, x: 58, size: 32 },
-  { emoji: '\uD83C\uDFA1', delay: 2.5, x: 68, size: 22 },
-  { emoji: '\uD83C\uDFB0', delay: 0.5, x: 78, size: 28 },
-  { emoji: '\uD83C\uDF81', delay: 3.5, x: 88, size: 26 },
-  { emoji: '\u2B50', delay: 1.5, x: 95, size: 20 },
+/* ─────────────────────────  CSS Animations (inline style tag)  ───────────────────────── */
+const GLOBAL_STYLES = `
+  html { scroll-behavior: smooth; }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-20px); }
+  }
+  @keyframes gradientShift {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+  @keyframes spinSlow {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+  @keyframes bounceIn {
+    0% { transform: scale(0.5); opacity: 0; }
+    60% { transform: scale(1.1); }
+    100% { transform: scale(1); opacity: 1; }
+  }
+  @keyframes slideUp {
+    from { transform: translateY(40px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+  @keyframes slotScroll {
+    0% { transform: translateY(0); }
+    100% { transform: translateY(-60px); }
+  }
+  @keyframes boxBounce {
+    0%, 100% { transform: scale(1); }
+    25% { transform: scale(1.15) rotate(-3deg); }
+    50% { transform: scale(0.95) rotate(3deg); }
+    75% { transform: scale(1.1) rotate(-2deg); }
+  }
+  @keyframes phoneWheel {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  .animate-slideUp { animation: slideUp 0.7s ease-out both; }
+  .animate-slideUp-d1 { animation: slideUp 0.7s ease-out 0.15s both; }
+  .animate-slideUp-d2 { animation: slideUp 0.7s ease-out 0.3s both; }
+  .animate-slideUp-d3 { animation: slideUp 0.7s ease-out 0.45s both; }
+  .animate-slideUp-d4 { animation: slideUp 0.7s ease-out 0.6s both; }
+  .animate-slideUp-d5 { animation: slideUp 0.7s ease-out 0.75s both; }
+
+  .game-card { transition: transform 0.3s ease, box-shadow 0.3s ease; }
+  .game-card:hover { transform: translateY(-8px); box-shadow: 0 25px 50px -12px rgba(0,0,0,0.15); }
+
+  .game-card:hover .wheel-spin { animation: spinSlow 1s linear infinite; }
+  .game-card:hover .slot-scroll { animation: slotScroll 0.4s linear infinite; }
+  .game-card:hover .box-bounce { animation: boxBounce 0.6s ease-in-out infinite; }
+
+  .plan-card { transition: transform 0.3s ease, box-shadow 0.3s ease; }
+  .plan-card:hover { transform: translateY(-4px); box-shadow: 0 20px 40px -12px rgba(99,102,241,0.2); }
+`
+
+/* ─────────────────────────  Floating emojis data  ───────────────────────── */
+const FLOATING_EMOJIS = [
+  { emoji: '🎡', x: 5, delay: 0, dur: 6, size: 34 },
+  { emoji: '🎰', x: 14, delay: 1.5, dur: 7, size: 28 },
+  { emoji: '📦', x: 24, delay: 3, dur: 5.5, size: 26 },
+  { emoji: '🎁', x: 36, delay: 0.8, dur: 6.5, size: 30 },
+  { emoji: '⭐', x: 47, delay: 2.2, dur: 5, size: 24 },
+  { emoji: '🎉', x: 57, delay: 4, dur: 7.5, size: 32 },
+  { emoji: '🏆', x: 67, delay: 1, dur: 6, size: 28 },
+  { emoji: '🎡', x: 76, delay: 3.5, dur: 5.5, size: 22 },
+  { emoji: '🎰', x: 85, delay: 2, dur: 7, size: 26 },
+  { emoji: '⭐', x: 93, delay: 0.5, dur: 6.5, size: 20 },
 ]
 
+/* ─────────────────────────  SVG Wheel for phone mockup  ───────────────────────── */
+function PhoneWheelSVG() {
+  const segments = [
+    { color: '#f59e0b', emoji: '🎁' },
+    { color: '#6366f1', emoji: '⭐' },
+    { color: '#10b981', emoji: '🎉' },
+    { color: '#ec4899', emoji: '🏆' },
+    { color: '#f97316', emoji: '🎁' },
+    { color: '#8b5cf6', emoji: '⭐' },
+    { color: '#14b8a6', emoji: '🎉' },
+    { color: '#ef4444', emoji: '🏆' },
+  ]
+  const n = segments.length
+  const r = 100
+  const cx = 110
+  const cy = 110
+
+  return (
+    <svg viewBox="0 0 220 220" className="w-full h-full">
+      {segments.map((seg, i) => {
+        const startAngle = (i * 360) / n
+        const endAngle = ((i + 1) * 360) / n
+        const startRad = (startAngle * Math.PI) / 180
+        const endRad = (endAngle * Math.PI) / 180
+        const x1 = cx + r * Math.cos(startRad)
+        const y1 = cy + r * Math.sin(startRad)
+        const x2 = cx + r * Math.cos(endRad)
+        const y2 = cy + r * Math.sin(endRad)
+        const midAngle = ((startAngle + endAngle) / 2) * (Math.PI / 180)
+        const tx = cx + r * 0.6 * Math.cos(midAngle)
+        const ty = cy + r * 0.6 * Math.sin(midAngle)
+
+        return (
+          <g key={i}>
+            <path
+              d={`M${cx},${cy} L${x1},${y1} A${r},${r} 0 0,1 ${x2},${y2} Z`}
+              fill={seg.color}
+              stroke="white"
+              strokeWidth="2"
+            />
+            <text x={tx} y={ty} textAnchor="middle" dominantBaseline="central" fontSize="18">
+              {seg.emoji}
+            </text>
+          </g>
+        )
+      })}
+      <circle cx={cx} cy={cy} r="14" fill="white" stroke="#6366f1" strokeWidth="3" />
+      <text x={cx} y={cy} textAnchor="middle" dominantBaseline="central" fontSize="10" fontWeight="bold" fill="#6366f1">
+        SPIN
+      </text>
+    </svg>
+  )
+}
+
+/* ─────────────────────────  Contact Form (client component)  ───────────────────────── */
+function ContactForm() {
+  const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
+  const [form, setForm] = useState({
+    businessName: '',
+    name: '',
+    email: '',
+    phone: '',
+    businessType: '',
+    message: '',
+  })
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    setForm(prev => ({ ...prev, [e.target.name]: e.target.value }))
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setStatus('loading')
+    try {
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form),
+      })
+      if (!res.ok) throw new Error('Failed')
+      setStatus('success')
+    } catch {
+      setStatus('error')
+    }
+  }
+
+  if (status === 'success') {
+    return (
+      <div className="flex flex-col items-center justify-center py-16 text-center">
+        <div
+          className="flex h-20 w-20 items-center justify-center rounded-full bg-emerald-100 text-4xl"
+          style={{ animation: 'bounceIn 0.6s ease-out both' }}
+        >
+          ✓
+        </div>
+        <h3 className="mt-6 text-2xl font-bold text-gray-900">Thanks! We'll reach out within 24 hours.</h3>
+        <p className="mt-2 text-gray-500">Check your inbox for a confirmation email.</p>
+      </div>
+    )
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-5">
+      <div className="grid gap-5 sm:grid-cols-2">
+        <div className="space-y-1.5">
+          <Label htmlFor="businessName">Business Name *</Label>
+          <Input id="businessName" name="businessName" required value={form.businessName} onChange={handleChange} placeholder="e.g. Café Parisien" />
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="name">Your Name *</Label>
+          <Input id="name" name="name" required value={form.name} onChange={handleChange} placeholder="Jean Dupont" />
+        </div>
+      </div>
+      <div className="grid gap-5 sm:grid-cols-2">
+        <div className="space-y-1.5">
+          <Label htmlFor="email">Email *</Label>
+          <Input id="email" name="email" type="email" required value={form.email} onChange={handleChange} placeholder="jean@cafe.fr" />
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="phone">Phone (optional)</Label>
+          <Input id="phone" name="phone" type="tel" value={form.phone} onChange={handleChange} placeholder="+33 6 12 34 56 78" />
+        </div>
+      </div>
+      <div className="space-y-1.5">
+        <Label htmlFor="businessType">Business Type *</Label>
+        <select
+          id="businessType"
+          name="businessType"
+          required
+          value={form.businessType}
+          onChange={handleChange}
+          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+        >
+          <option value="">Select your business type</option>
+          <option value="restaurant">Restaurant</option>
+          <option value="cafe">Cafe</option>
+          <option value="bar">Bar</option>
+          <option value="retail">Retail</option>
+          <option value="salon">Salon</option>
+          <option value="gym">Gym</option>
+          <option value="hotel">Hotel</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+      <div className="space-y-1.5">
+        <Label htmlFor="message">Message (optional)</Label>
+        <textarea
+          id="message"
+          name="message"
+          value={form.message}
+          onChange={handleChange}
+          rows={3}
+          placeholder="Tell us about your business and goals..."
+          className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+        />
+      </div>
+      {status === 'error' && (
+        <p className="text-sm text-red-600">Something went wrong. Please try again.</p>
+      )}
+      <Button
+        type="submit"
+        disabled={status === 'loading'}
+        className="w-full bg-gradient-to-r from-[#6366f1] to-[#ec4899] py-3 text-base font-semibold shadow-lg shadow-indigo-500/25 transition-all hover:shadow-xl hover:shadow-indigo-500/30"
+        size="lg"
+      >
+        {status === 'loading' ? 'Sending...' : 'Get Started'}
+      </Button>
+    </form>
+  )
+}
+
+/* ═══════════════════════════  MAIN PAGE  ═══════════════════════════ */
 export default function HomePage() {
   return (
-    <div className="min-h-screen bg-white" style={{ scrollBehavior: 'smooth' }}>
-      <style>{`
-        html { scroll-behavior: smooth; }
-        @keyframes float {
-          0%, 100% { transform: translateY(0) rotate(0deg); opacity: 0.15; }
-          25% { transform: translateY(-30px) rotate(5deg); opacity: 0.25; }
-          50% { transform: translateY(-15px) rotate(-3deg); opacity: 0.2; }
-          75% { transform: translateY(-40px) rotate(8deg); opacity: 0.18; }
-        }
-        @keyframes floatUp {
-          0% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
-          10% { opacity: 0.2; }
-          90% { opacity: 0.2; }
-          100% { transform: translateY(-100px) rotate(360deg); opacity: 0; }
-        }
-        @keyframes bounce {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-8px); }
-        }
-        @keyframes fadeInUp {
-          from { opacity: 0; transform: translateY(30px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes slideInLeft {
-          from { opacity: 0; transform: translateX(-40px); }
-          to { opacity: 1; transform: translateX(0); }
-        }
-        @keyframes slideInRight {
-          from { opacity: 0; transform: translateX(40px); }
-          to { opacity: 1; transform: translateX(0); }
-        }
-        @keyframes pulse-glow {
-          0%, 100% { box-shadow: 0 0 20px rgba(99, 102, 241, 0.3); }
-          50% { box-shadow: 0 0 40px rgba(99, 102, 241, 0.6); }
-        }
-        @keyframes countUp {
-          from { opacity: 0; transform: scale(0.5); }
-          to { opacity: 1; transform: scale(1); }
-        }
-        @keyframes tilt3d {
-          0%, 100% { transform: perspective(600px) rotateY(0deg) rotateX(0deg); }
-        }
-        .animate-fadeInUp { animation: fadeInUp 0.8s ease-out forwards; }
-        .animate-fadeInUp-d1 { animation: fadeInUp 0.8s ease-out 0.1s forwards; opacity: 0; }
-        .animate-fadeInUp-d2 { animation: fadeInUp 0.8s ease-out 0.2s forwards; opacity: 0; }
-        .animate-fadeInUp-d3 { animation: fadeInUp 0.8s ease-out 0.3s forwards; opacity: 0; }
-        .animate-fadeInUp-d4 { animation: fadeInUp 0.8s ease-out 0.4s forwards; opacity: 0; }
-        .animate-fadeInUp-d5 { animation: fadeInUp 0.8s ease-out 0.5s forwards; opacity: 0; }
-        .animate-fadeInUp-d6 { animation: fadeInUp 0.8s ease-out 0.6s forwards; opacity: 0; }
-        .animate-fadeInUp-d7 { animation: fadeInUp 0.8s ease-out 0.7s forwards; opacity: 0; }
-        .animate-fadeInUp-d8 { animation: fadeInUp 0.8s ease-out 0.8s forwards; opacity: 0; }
-        .animate-slideInLeft { animation: slideInLeft 0.8s ease-out forwards; }
-        .animate-slideInRight { animation: slideInRight 0.8s ease-out 0.3s forwards; opacity: 0; }
-        .hover-bounce:hover { animation: bounce 0.5s ease-in-out; }
-        .hover-tilt { transition: transform 0.3s ease; }
-        .hover-tilt:hover { transform: perspective(600px) rotateY(5deg) rotateX(5deg) translateY(-5px); }
-        .game-card-glow:hover { box-shadow: 0 20px 60px -15px rgba(99, 102, 241, 0.25); }
-        .gradient-border { background: linear-gradient(135deg, #6366f1, #ec4899); padding: 2px; border-radius: 1rem; }
-        .gradient-border > div { background: white; border-radius: calc(1rem - 2px); }
-      `}</style>
+    <div className="min-h-screen bg-white">
+      <style>{GLOBAL_STYLES}</style>
 
-      {/* Header */}
+      {/* ───── Header / Nav ───── */}
       <header className="sticky top-0 z-50 border-b bg-white/80 backdrop-blur-md">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
           <span className="bg-gradient-to-r from-[#6366f1] to-[#ec4899] bg-clip-text text-xl font-extrabold tracking-tight text-transparent">
             Win &amp; Win
           </span>
-          <nav className="hidden items-center gap-8 text-sm font-medium text-muted-foreground md:flex">
-            <a href="#how-it-works" className="transition-colors hover:text-foreground">
-              How It Works
-            </a>
-            <a href="#games" className="transition-colors hover:text-foreground">
-              Games
-            </a>
-            <a href="#features" className="transition-colors hover:text-foreground">
-              Features
-            </a>
-            <a href="#contact" className="transition-colors hover:text-foreground">
-              Contact
-            </a>
+          <nav className="hidden items-center gap-8 text-sm font-medium text-gray-500 md:flex">
+            <a href="#how-it-works" className="transition-colors hover:text-gray-900">How It Works</a>
+            <a href="#games" className="transition-colors hover:text-gray-900">Games</a>
+            <a href="#features" className="transition-colors hover:text-gray-900">Features</a>
+            <a href="#plans" className="transition-colors hover:text-gray-900">Plans</a>
+            <a href="#contact" className="transition-colors hover:text-gray-900">Contact</a>
           </nav>
           <div className="flex gap-3">
             <a href="/sign-in">
-              <Button variant="ghost" className="hidden sm:inline-flex">
-                Sign In
-              </Button>
+              <Button variant="ghost" className="hidden sm:inline-flex">Sign In</Button>
             </a>
             <a href="#contact">
-              <Button className="bg-gradient-to-r from-[#6366f1] to-[#ec4899] font-semibold shadow-lg shadow-[#6366f1]/25 hover:shadow-xl hover:shadow-[#6366f1]/30">
+              <Button className="bg-gradient-to-r from-[#6366f1] to-[#ec4899] font-semibold shadow-lg shadow-indigo-500/25 hover:shadow-xl">
                 Contact Us
               </Button>
             </a>
@@ -115,19 +279,30 @@ export default function HomePage() {
         </div>
       </header>
 
-      {/* Hero */}
+      {/* ═══════════════════════  SECTION 1: HERO  ═══════════════════════ */}
       <section className="relative overflow-hidden">
-        {/* Animated floating emojis */}
+        {/* Animated gradient background */}
+        <div
+          className="pointer-events-none absolute inset-0"
+          style={{
+            background: 'linear-gradient(135deg, #ede9fe 0%, #fce7f3 25%, #fef3c7 50%, #d1fae5 75%, #ede9fe 100%)',
+            backgroundSize: '400% 400%',
+            animation: 'gradientShift 15s ease infinite',
+          }}
+        />
+
+        {/* Floating emojis */}
         <div className="pointer-events-none absolute inset-0 overflow-hidden">
-          {FLOAT_EMOJIS.map((item, i) => (
+          {FLOATING_EMOJIS.map((item, i) => (
             <span
               key={i}
               className="absolute"
               style={{
                 left: `${item.x}%`,
-                top: '50%',
+                top: '40%',
                 fontSize: `${item.size}px`,
-                animation: `float 6s ease-in-out ${item.delay}s infinite`,
+                opacity: 0.2,
+                animation: `float ${item.dur}s ease-in-out ${item.delay}s infinite`,
               }}
             >
               {item.emoji}
@@ -135,539 +310,330 @@ export default function HomePage() {
           ))}
         </div>
 
-        {/* Background gradients */}
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-[#6366f1]/5 via-transparent to-[#ec4899]/5" />
-        <div className="pointer-events-none absolute -top-40 right-0 h-96 w-96 rounded-full bg-[#6366f1]/10 blur-3xl" />
-        <div className="pointer-events-none absolute -bottom-40 left-0 h-96 w-96 rounded-full bg-[#ec4899]/10 blur-3xl" />
-        <div className="pointer-events-none absolute top-1/2 left-1/2 h-64 w-64 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#8b5cf6]/5 blur-3xl" />
-
-        <div className="relative mx-auto max-w-7xl px-6 pb-20 pt-20 lg:pt-32">
-          <div className="grid items-center gap-16 lg:grid-cols-2">
-            {/* Left - Copy */}
-            <div className="text-center lg:text-left animate-slideInLeft">
-              <div className="inline-flex items-center gap-2 rounded-full border border-[#6366f1]/20 bg-[#6366f1]/5 px-4 py-1.5 text-sm font-medium text-[#6366f1]">
-                <span className="relative flex h-2 w-2">
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#6366f1] opacity-75" />
-                  <span className="relative inline-flex h-2 w-2 rounded-full bg-[#6366f1]" />
+        <div className="relative mx-auto max-w-7xl px-6 pb-24 pt-20 lg:pt-32">
+          <div className="grid items-center gap-12 lg:grid-cols-2">
+            {/* Left — Copy */}
+            <div className="text-center lg:text-left animate-slideUp">
+              <h1 className="text-4xl font-extrabold leading-[1.1] tracking-tight sm:text-5xl lg:text-6xl">
+                <span
+                  className="bg-clip-text text-transparent"
+                  style={{ backgroundImage: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 40%, #ec4899 100%)' }}
+                >
+                  Your Customers Play.
                 </span>
-                Gamification marketing for restaurants &amp; businesses
-              </div>
-
-              <h1 className="mt-6 text-4xl font-extrabold leading-[1.1] tracking-tight sm:text-5xl lg:text-6xl">
-                Turn Your Customers Into{' '}
-                <span className="bg-gradient-to-r from-[#6366f1] via-[#8b5cf6] to-[#ec4899] bg-clip-text text-transparent">
-                  Loyal Fans
-                </span>
-                {' '}&mdash; With Games They Love
+                <br />
+                Your Business Wins.
               </h1>
-
-              <p className="mt-6 max-w-lg text-lg leading-relaxed text-muted-foreground sm:text-xl">
-                Deploy QR-code games in your restaurant or shop. Collect Google reviews, grow social
-                media, and drive repeat visits with smart, time-limited prizes.
+              <p className="mt-6 max-w-lg text-lg leading-relaxed text-gray-600 sm:text-xl lg:mx-0 mx-auto">
+                Deploy QR code games at your business. Collect reviews, grow followers, drive return visits — all while your customers have fun.
               </p>
-
-              <div className="mt-8 flex flex-col items-center gap-4 sm:flex-row lg:items-start">
-                <a href="#contact">
+              <div className="mt-8 flex flex-col items-center gap-4 sm:flex-row lg:justify-start justify-center">
+                <a href="#plans">
                   <Button
                     size="lg"
-                    className="bg-gradient-to-r from-[#6366f1] to-[#ec4899] px-8 text-base font-semibold shadow-lg shadow-[#6366f1]/25 transition-all hover:shadow-xl hover:shadow-[#6366f1]/30 hover:scale-105"
+                    className="bg-gradient-to-r from-[#6366f1] to-[#ec4899] px-8 text-base font-semibold shadow-lg shadow-indigo-500/25 transition-all hover:shadow-xl hover:scale-105"
                   >
+                    See Plans
+                  </Button>
+                </a>
+                <a href="#contact">
+                  <Button size="lg" variant="outline" className="px-8 text-base font-semibold transition-all hover:scale-105">
                     Contact Us
                   </Button>
                 </a>
-                <a href="#how-it-works">
-                  <Button size="lg" variant="outline" className="px-8 text-base font-semibold transition-all hover:scale-105">
-                    See How It Works
-                  </Button>
-                </a>
-              </div>
-
-              {/* Stats */}
-              <div className="mt-12 grid grid-cols-3 gap-4 rounded-2xl border bg-white/60 p-6 shadow-sm backdrop-blur-sm">
-                <StatItem value="+200" label="reviews / month" delay={0} />
-                <StatItem value="+25%" label="return rate" delay={0.2} border />
-                <StatItem value="<10 min" label="setup time" delay={0.4} />
               </div>
             </div>
 
-            {/* Right - Phone Mockup */}
-            <div className="flex justify-center animate-slideInRight">
+            {/* Right — Phone mockup */}
+            <div className="hidden md:flex justify-center animate-slideUp-d2">
               <div className="relative">
+                {/* Phone frame */}
                 <div
-                  className="relative h-[580px] w-[290px] overflow-hidden rounded-[3rem] border-[8px] border-gray-900 bg-gradient-to-b from-[#6366f1] to-[#4f46e5] shadow-2xl shadow-[#6366f1]/30"
-                  style={{ animation: 'pulse-glow 3s ease-in-out infinite' }}
+                  className="relative h-[560px] w-[280px] overflow-hidden rounded-[3rem] border-[6px] border-gray-900 bg-gradient-to-b from-indigo-600 to-purple-700 shadow-2xl"
                 >
-                  <div className="absolute left-1/2 top-0 z-10 h-6 w-28 -translate-x-1/2 rounded-b-2xl bg-gray-900" />
-                  <div className="flex h-full flex-col items-center px-4 pt-12">
-                    <div className="text-center text-xs font-semibold tracking-widest text-white/60">
-                      TAP TO SPIN
-                    </div>
-                    <div className="mt-2 text-center text-sm font-bold text-white">
-                      Win a prize!
-                    </div>
+                  {/* Notch */}
+                  <div className="absolute top-0 left-1/2 -translate-x-1/2 h-6 w-28 rounded-b-2xl bg-gray-900 z-10" />
 
-                    {/* Wheel */}
-                    <div className="mt-6 flex items-center justify-center">
-                      <svg width="200" height="200" viewBox="0 0 200 200" className="animate-[spin_8s_linear_infinite]">
-                        <circle cx="100" cy="100" r="95" fill="none" stroke="white" strokeWidth="2" opacity="0.3" />
-                        <path d="M100,100 L100,5 A95,95 0 0,1 182,52 Z" fill="#f472b6" />
-                        <path d="M100,100 L182,52 A95,95 0 0,1 182,148 Z" fill="#818cf8" />
-                        <path d="M100,100 L182,148 A95,95 0 0,1 100,195 Z" fill="#f472b6" />
-                        <path d="M100,100 L100,195 A95,95 0 0,1 18,148 Z" fill="#a78bfa" />
-                        <path d="M100,100 L18,148 A95,95 0 0,1 18,52 Z" fill="#f472b6" />
-                        <path d="M100,100 L18,52 A95,95 0 0,1 100,5 Z" fill="#818cf8" />
-                        <circle cx="100" cy="100" r="18" fill="white" />
-                        <text x="100" y="105" textAnchor="middle" fontSize="16" fill="#6366f1" fontWeight="bold">GO</text>
-                        <text x="125" y="45" textAnchor="middle" fontSize="10" fill="white" fontWeight="bold" transform="rotate(30 125 45)">10%</text>
-                        <text x="165" y="100" textAnchor="middle" fontSize="10" fill="white" fontWeight="bold" transform="rotate(90 165 100)">FREE</text>
-                        <text x="125" y="160" textAnchor="middle" fontSize="10" fill="white" fontWeight="bold" transform="rotate(150 125 160)">5%</text>
-                        <text x="75" y="160" textAnchor="middle" fontSize="10" fill="white" fontWeight="bold" transform="rotate(210 75 160)">20%</text>
-                        <text x="35" y="100" textAnchor="middle" fontSize="10" fill="white" fontWeight="bold" transform="rotate(270 35 100)">GIFT</text>
-                        <text x="75" y="45" textAnchor="middle" fontSize="10" fill="white" fontWeight="bold" transform="rotate(330 75 45)">15%</text>
-                      </svg>
+                  {/* Screen content */}
+                  <div className="flex flex-col items-center justify-center h-full px-6 pt-8">
+                    <p className="text-white/90 font-bold text-lg mb-2">Spin to Win!</p>
+                    <div
+                      className="w-44 h-44"
+                      style={{ animation: 'phoneWheel 8s linear infinite' }}
+                    >
+                      <PhoneWheelSVG />
                     </div>
-
-                    <div className="mt-6 w-full space-y-2">
-                      <div className="flex items-center gap-2 rounded-xl bg-white/10 px-3 py-2 text-xs text-white">
-                        <span>{'\uD83C\uDF81'}</span><span>Free dessert</span>
-                        <span className="ml-auto rounded-full bg-white/20 px-2 py-0.5 text-[10px]">10%</span>
-                      </div>
-                      <div className="flex items-center gap-2 rounded-xl bg-white/10 px-3 py-2 text-xs text-white">
-                        <span>{'\u2615'}</span><span>Free coffee</span>
-                        <span className="ml-auto rounded-full bg-white/20 px-2 py-0.5 text-[10px]">25%</span>
-                      </div>
-                      <div className="flex items-center gap-2 rounded-xl bg-white/10 px-3 py-2 text-xs text-white">
-                        <span>{'\uD83D\uDCB0'}</span><span>20% off next visit</span>
-                        <span className="ml-auto rounded-full bg-white/20 px-2 py-0.5 text-[10px]">15%</span>
-                      </div>
-                    </div>
-
-                    <div className="mt-auto mb-4 flex w-full items-center justify-center gap-1 text-[10px] text-white/40">
-                      Powered by <span className="font-bold text-white/60">Win &amp; Win</span>
+                    <div className="mt-4 w-0 h-0 border-l-[10px] border-r-[10px] border-t-[16px] border-l-transparent border-r-transparent border-t-amber-400" style={{ marginTop: '-8px' }} />
+                    <p className="mt-4 text-white/80 text-sm text-center">Tap the wheel to win a prize!</p>
+                    <div className="mt-4 rounded-full bg-white/20 px-6 py-2 text-white font-semibold text-sm">
+                      🎉 You won 10% off!
                     </div>
                   </div>
                 </div>
 
-                <div className="absolute -right-4 -top-4 h-20 w-20 rounded-full bg-[#ec4899]/20 blur-xl" />
-                <div className="absolute -bottom-4 -left-4 h-20 w-20 rounded-full bg-[#6366f1]/20 blur-xl" />
+                {/* Glow behind phone */}
+                <div className="absolute -inset-8 rounded-full bg-indigo-400/20 blur-3xl -z-10" />
+              </div>
+            </div>
+          </div>
+
+          {/* Trust bar */}
+          <div className="mt-16 text-center animate-slideUp-d3">
+            <p className="text-sm font-medium text-gray-500 mb-4">Trusted by 500+ businesses across France</p>
+            <div className="flex flex-wrap items-center justify-center gap-6 text-3xl opacity-40">
+              <span title="Restaurant">🍽️</span>
+              <span title="Cafe">☕</span>
+              <span title="Bar">🍸</span>
+              <span title="Retail">🛍️</span>
+              <span title="Salon">💇</span>
+              <span title="Gym">🏋️</span>
+              <span title="Hotel">🏨</span>
+              <span title="Bakery">🥐</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════════════  SECTION 2: HOW IT WORKS  ═══════════════════════ */}
+      <section id="how-it-works" className="py-24 bg-gray-50/80">
+        <div className="mx-auto max-w-5xl px-6">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl font-extrabold tracking-tight sm:text-4xl">How It Works</h2>
+            <p className="mt-3 text-lg text-gray-500">Three simple steps to gamify your business</p>
+          </div>
+
+          {/* Timeline connector */}
+          <div className="relative">
+            {/* Horizontal line (desktop) */}
+            <div className="hidden md:block absolute top-16 left-[16%] right-[16%] h-1 rounded-full bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400" />
+
+            <div className="grid gap-10 md:grid-cols-3">
+              {[
+                { emoji: '🎮', title: 'Create Your Game', desc: 'Choose Wheel of Fortune, Slots, or Mystery Box. Set your prizes and branding in minutes.', color: 'bg-indigo-100 text-indigo-600', delay: 'animate-slideUp-d1' },
+                { emoji: '📱', title: 'Share Your QR Code', desc: 'Print it on table tents, menus, or receipts. Customers scan with any phone.', color: 'bg-purple-100 text-purple-600', delay: 'animate-slideUp-d2' },
+                { emoji: '🎉', title: 'Customers Play & Win', desc: 'They complete an action (Google review, Instagram follow), play your game, and win prizes.', color: 'bg-pink-100 text-pink-600', delay: 'animate-slideUp-d3' },
+              ].map((step, i) => (
+                <div key={i} className={`relative flex flex-col items-center text-center ${step.delay}`}>
+                  {/* Circle with emoji */}
+                  <div
+                    className={`relative z-10 flex h-32 w-32 items-center justify-center rounded-full text-5xl ${step.color} shadow-lg`}
+                    style={{ animation: `float 4s ease-in-out ${i * 0.5}s infinite` }}
+                  >
+                    {step.emoji}
+                  </div>
+                  {/* Step number */}
+                  <div className="mt-4 flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-r from-indigo-500 to-pink-500 text-sm font-bold text-white">
+                    {i + 1}
+                  </div>
+                  <h3 className="mt-3 text-xl font-bold text-gray-900">{step.title}</h3>
+                  <p className="mt-2 text-gray-500 leading-relaxed max-w-xs">{step.desc}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ═══════════════════════  SECTION 3: GAME SHOWCASE  ═══════════════════════ */}
+      <section id="games" className="py-24">
+        <div className="mx-auto max-w-6xl px-6">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl font-extrabold tracking-tight sm:text-4xl">Three Games. Endless Fun.</h2>
+            <p className="mt-3 text-lg text-gray-500">Each one designed to delight your customers</p>
+          </div>
+
+          <div className="grid gap-8 md:grid-cols-3">
+            {/* Wheel of Fortune */}
+            <div className="game-card rounded-2xl overflow-hidden shadow-lg animate-slideUp-d1">
+              <div className="h-52 flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}>
+                <div className="wheel-spin w-32 h-32">
+                  <PhoneWheelSVG />
+                </div>
+              </div>
+              <div className="p-6 bg-white">
+                <h3 className="text-xl font-bold flex items-center gap-2">🎡 Wheel of Fortune</h3>
+                <p className="mt-2 text-gray-500">The classic spin-to-win. Customers love the anticipation!</p>
+              </div>
+            </div>
+
+            {/* Slot Machine */}
+            <div className="game-card rounded-2xl overflow-hidden shadow-lg animate-slideUp-d2">
+              <div className="h-52 flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #f59e0b, #f97316)' }}>
+                <div className="flex gap-3">
+                  {['🍒', '⭐', '🎁'].map((emoji, j) => (
+                    <div key={j} className="w-16 h-20 rounded-lg bg-white/20 backdrop-blur-sm flex items-center justify-center overflow-hidden">
+                      <div className="slot-scroll text-3xl" style={{ animationDelay: `${j * 0.1}s` }}>
+                        {emoji}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="p-6 bg-white">
+                <h3 className="text-xl font-bold flex items-center gap-2">🎰 Slot Machine</h3>
+                <p className="mt-2 text-gray-500">Match symbols to win. Pure casino-style excitement!</p>
+              </div>
+            </div>
+
+            {/* Mystery Box */}
+            <div className="game-card rounded-2xl overflow-hidden shadow-lg animate-slideUp-d3">
+              <div className="h-52 flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #10b981, #14b8a6)' }}>
+                <div className="flex gap-4">
+                  {['🎁', '📦', '🎁'].map((emoji, j) => (
+                    <div
+                      key={j}
+                      className={`text-4xl ${j === 1 ? 'box-bounce' : ''}`}
+                      style={j === 1 ? { animationDelay: '0s' } : {}}
+                    >
+                      {emoji}
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="p-6 bg-white">
+                <h3 className="text-xl font-bold flex items-center gap-2">📦 Mystery Box</h3>
+                <p className="mt-2 text-gray-500">Tap to reveal. Simple, fun, and addictive!</p>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* How It Works */}
-      <section id="how-it-works" className="bg-gradient-to-b from-muted/30 to-white py-24">
-        <div className="mx-auto max-w-7xl px-6">
-          <div className="text-center animate-fadeInUp">
-            <h2 className="text-3xl font-extrabold tracking-tight sm:text-4xl">
-              Up and Running in{' '}
-              <span className="bg-gradient-to-r from-[#6366f1] to-[#ec4899] bg-clip-text text-transparent">
-                3 Simple Steps
-              </span>
-            </h2>
-            <p className="mx-auto mt-4 max-w-2xl text-lg text-muted-foreground">
-              No technical skills needed. Go from sign-up to first player in under 10 minutes.
-            </p>
+      {/* ═══════════════════════  SECTION 4: FEATURES  ═══════════════════════ */}
+      <section id="features" className="py-24 bg-gray-50/80">
+        <div className="mx-auto max-w-6xl px-6">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl font-extrabold tracking-tight sm:text-4xl">Everything You Need to Engage Customers</h2>
+            <p className="mt-3 text-lg text-gray-500">Powerful features, simple to use</p>
           </div>
 
-          <div className="mt-16 grid gap-8 md:grid-cols-3">
-            <StepCard
-              number={1}
-              icon={'\uD83C\uDFAE'}
-              title="Create Your Game"
-              description="Configure prizes, branding, and rules in minutes. Choose from Wheel of Fortune, Slot Machine, or Mystery Box."
-              delay="animate-fadeInUp-d2"
-            />
-            <StepCard
-              number={2}
-              icon={'\uD83D\uDCF1'}
-              title="Print QR Code"
-              description="Place on tables, counters, or menus. Customers scan and play instantly -- no app download needed."
-              delay="animate-fadeInUp-d4"
-            />
-            <StepCard
-              number={3}
-              icon={'\uD83C\uDF89'}
-              title="Customers Play & Win"
-              description="They engage, you grow. Collect Google reviews, gain followers, and drive return visits automatically."
-              delay="animate-fadeInUp-d6"
-            />
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {[
+              { emoji: '⭐', title: 'Google Reviews', desc: 'Customers leave reviews before playing. Watch your rating climb.', bg: 'bg-amber-50', ring: 'bg-amber-100' },
+              { emoji: '📱', title: 'Social Growth', desc: 'Require Instagram follows or shares. Turn players into followers.', bg: 'bg-blue-50', ring: 'bg-blue-100' },
+              { emoji: '🎟️', title: 'Smart Coupons', desc: 'Time-limited prizes that drive return visits. Sent by email.', bg: 'bg-purple-50', ring: 'bg-purple-100' },
+              { emoji: '📊', title: 'Live Analytics', desc: 'Track plays, wins, and redemptions in real-time.', bg: 'bg-emerald-50', ring: 'bg-emerald-100' },
+              { emoji: '🛡️', title: 'Fraud Protection', desc: 'Device fingerprinting prevents cheating. One play per customer.', bg: 'bg-red-50', ring: 'bg-red-100' },
+              { emoji: '🎨', title: 'Your Brand', desc: 'Customize colors, logo, and theme to match your business.', bg: 'bg-pink-50', ring: 'bg-pink-100' },
+            ].map((feature, i) => (
+              <div
+                key={i}
+                className={`rounded-2xl border border-gray-100 ${feature.bg} p-6 transition-all hover:shadow-md hover:-translate-y-1`}
+                style={{ animation: `slideUp 0.7s ease-out ${0.1 * i}s both` }}
+              >
+                <div className={`flex h-14 w-14 items-center justify-center rounded-full ${feature.ring} text-2xl`}>
+                  {feature.emoji}
+                </div>
+                <h3 className="mt-4 text-lg font-bold text-gray-900">{feature.title}</h3>
+                <p className="mt-1.5 text-sm text-gray-500 leading-relaxed">{feature.desc}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* Game Types */}
-      <section id="games" className="py-24">
-        <div className="mx-auto max-w-7xl px-6">
-          <div className="text-center animate-fadeInUp">
-            <h2 className="text-3xl font-extrabold tracking-tight sm:text-4xl">
-              Games Your Customers Will{' '}
-              <span className="bg-gradient-to-r from-[#6366f1] to-[#ec4899] bg-clip-text text-transparent">
-                Love to Play
-              </span>
-            </h2>
-            <p className="mx-auto mt-4 max-w-2xl text-lg text-muted-foreground">
-              Three interactive game types, each designed to maximize engagement and delight.
-            </p>
+      {/* ═══════════════════════  SECTION 5: PLANS  ═══════════════════════ */}
+      <section id="plans" className="py-24">
+        <div className="mx-auto max-w-5xl px-6">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl font-extrabold tracking-tight sm:text-4xl">Choose Your Plan</h2>
+            <p className="mt-3 text-lg text-gray-500">Simple pricing, powerful results</p>
           </div>
 
-          <div className="mt-16 grid gap-8 md:grid-cols-3">
-            <GameCard
-              emoji={'\uD83C\uDFA1'}
-              title="Wheel of Fortune"
-              description="The classic spin-to-win experience. Customers spin the wheel and land on exciting prizes. Highly visual and addictive."
-              gradient="from-[#6366f1] to-[#818cf8]"
-              delay="animate-fadeInUp-d2"
-            />
-            <GameCard
-              emoji={'\uD83C\uDFB0'}
-              title="Slot Machine"
-              description="Match symbols to win rewards. The anticipation of each reel stopping creates unforgettable excitement."
-              gradient="from-[#ec4899] to-[#f472b6]"
-              delay="animate-fadeInUp-d4"
-            />
-            <GameCard
-              emoji={'\uD83D\uDCE6'}
-              title="Mystery Box"
-              description="Tap to reveal a hidden prize. Simple, elegant, and perfect for quick interactions at the counter."
-              gradient="from-[#8b5cf6] to-[#a78bfa]"
-              delay="animate-fadeInUp-d6"
-            />
+          <div className="grid gap-8 md:grid-cols-3">
+            {/* Starter */}
+            <div className="plan-card rounded-2xl border border-gray-200 bg-white p-8">
+              <h3 className="text-lg font-bold text-gray-900">Starter</h3>
+              <div className="mt-4 flex items-baseline gap-1">
+                <span className="text-4xl font-extrabold text-gray-900">49€</span>
+                <span className="text-gray-500">/mo</span>
+              </div>
+              <ul className="mt-6 space-y-3 text-sm text-gray-600">
+                {['1 game', '1 QR code', 'Up to 500 plays/mo', 'Basic analytics', 'Email support'].map((f, i) => (
+                  <li key={i} className="flex items-center gap-2"><span className="text-emerald-500 font-bold">✓</span> {f}</li>
+                ))}
+              </ul>
+              <a href="#contact" className="block mt-8">
+                <Button variant="outline" className="w-full font-semibold">Contact Us</Button>
+              </a>
+            </div>
+
+            {/* Pro — highlighted */}
+            <div className="plan-card relative rounded-2xl bg-white p-8 shadow-xl ring-2 ring-indigo-500">
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-gradient-to-r from-indigo-500 to-pink-500 px-4 py-1 text-xs font-bold text-white">
+                Most Popular
+              </div>
+              <h3 className="text-lg font-bold text-gray-900">Pro</h3>
+              <div className="mt-4 flex items-baseline gap-1">
+                <span className="text-4xl font-extrabold text-gray-900">149€</span>
+                <span className="text-gray-500">/mo</span>
+              </div>
+              <ul className="mt-6 space-y-3 text-sm text-gray-600">
+                {['3 games', '3 QR codes', 'Unlimited plays', 'Advanced analytics', 'Priority support', 'Custom branding', 'Smart coupons'].map((f, i) => (
+                  <li key={i} className="flex items-center gap-2"><span className="text-emerald-500 font-bold">✓</span> {f}</li>
+                ))}
+              </ul>
+              <a href="#contact" className="block mt-8">
+                <Button className="w-full bg-gradient-to-r from-[#6366f1] to-[#ec4899] font-semibold shadow-lg shadow-indigo-500/25">
+                  Contact Us
+                </Button>
+              </a>
+            </div>
+
+            {/* Enterprise */}
+            <div className="plan-card rounded-2xl border border-gray-200 bg-white p-8">
+              <h3 className="text-lg font-bold text-gray-900">Enterprise</h3>
+              <div className="mt-4 flex items-baseline gap-1">
+                <span className="text-4xl font-extrabold text-gray-900">Custom</span>
+              </div>
+              <ul className="mt-6 space-y-3 text-sm text-gray-600">
+                {['Unlimited games', 'Unlimited QR codes', 'Unlimited plays', 'White-label solution', 'Dedicated account manager', 'API access', 'Custom integrations'].map((f, i) => (
+                  <li key={i} className="flex items-center gap-2"><span className="text-emerald-500 font-bold">✓</span> {f}</li>
+                ))}
+              </ul>
+              <a href="#contact" className="block mt-8">
+                <Button variant="outline" className="w-full font-semibold">Contact Us</Button>
+              </a>
+            </div>
           </div>
+
+          <p className="mt-8 text-center text-sm text-gray-400">All plans include a 14-day free trial. No credit card required.</p>
         </div>
       </section>
 
-      {/* Features */}
-      <section id="features" className="bg-gradient-to-b from-muted/30 to-white py-24">
-        <div className="mx-auto max-w-7xl px-6">
-          <div className="text-center animate-fadeInUp">
-            <h2 className="text-3xl font-extrabold tracking-tight sm:text-4xl">
-              Everything You Need to{' '}
-              <span className="bg-gradient-to-r from-[#6366f1] to-[#ec4899] bg-clip-text text-transparent">
-                Grow Your Business
-              </span>
-            </h2>
-            <p className="mx-auto mt-4 max-w-2xl text-lg text-muted-foreground">
-              Powerful features that work together to drive real business results.
-            </p>
+      {/* ═══════════════════════  SECTION 6: CONTACT  ═══════════════════════ */}
+      <section id="contact" className="py-24 bg-gray-50/80">
+        <div className="mx-auto max-w-2xl px-6">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-extrabold tracking-tight sm:text-4xl">Ready to Get Started?</h2>
+            <p className="mt-3 text-lg text-gray-500">Fill out the form and we'll set you up within 24 hours.</p>
           </div>
 
-          <div className="mt-16 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            <FeatureCard icon={'\u2B50'} title="Collect Google Reviews" description="Deep-link customers to your Google review page before they play. Track new reviews and watch your rating climb." delay="animate-fadeInUp-d1" />
-            <FeatureCard icon={'\uD83D\uDCF1'} title="Grow Social Media" description="Require Instagram follows or story shares as entry conditions. Turn every player into a follower." delay="animate-fadeInUp-d2" />
-            <FeatureCard icon={'\uD83C\uDF9F\uFE0F'} title="Smart Coupons" description="Time-limited, device-bound, fraud-proof coupons that expire to drive urgency and return visits." delay="animate-fadeInUp-d3" />
-            <FeatureCard icon={'\uD83D\uDCCA'} title="Real-Time Analytics" description="Track plays, wins, redemptions, and conversion rates. Know exactly what's working and optimize." delay="animate-fadeInUp-d4" />
-            <FeatureCard icon={'\uD83D\uDDA8\uFE0F'} title="QR Code Materials" description="Download print-ready posters, table tents, and stickers. Professional designs ready to deploy." delay="animate-fadeInUp-d5" />
-            <FeatureCard icon={'\uD83D\uDEE1\uFE0F'} title="Anti-Fraud Protection" description="Device fingerprinting prevents abuse. One play per customer, no cheating, no duplicate entries." delay="animate-fadeInUp-d6" />
-          </div>
+          <Card className="shadow-xl border-0">
+            <CardContent className="p-8">
+              <ContactForm />
+            </CardContent>
+          </Card>
         </div>
       </section>
 
-      {/* Contact Form */}
-      <section id="contact" className="py-24">
-        <div className="mx-auto max-w-3xl px-6">
-          <div className="text-center animate-fadeInUp">
-            <h2 className="text-3xl font-extrabold tracking-tight sm:text-4xl">
-              Get Started{' '}
-              <span className="bg-gradient-to-r from-[#6366f1] to-[#ec4899] bg-clip-text text-transparent">
-                Today
-              </span>
-            </h2>
-            <p className="mx-auto mt-4 max-w-xl text-lg text-muted-foreground">
-              Tell us about your business and we&apos;ll get you set up with a personalized demo.
-            </p>
-          </div>
-
-          <div className="mt-12 animate-fadeInUp-d2">
-            <ContactForm />
-          </div>
-        </div>
-      </section>
-
-      {/* Final CTA */}
-      <section className="bg-gradient-to-r from-[#6366f1] via-[#8b5cf6] to-[#ec4899] py-20">
-        <div className="mx-auto max-w-3xl px-6 text-center">
-          <h2 className="text-3xl font-extrabold text-white sm:text-4xl">
-            Ready to Transform Your Business?
-          </h2>
-          <p className="mx-auto mt-4 max-w-xl text-lg text-white/80">
-            Join hundreds of businesses already using Win &amp; Win to boost reviews, grow
-            followers, and increase repeat visits.
-          </p>
-          <a href="#contact" className="mt-8 inline-block">
-            <Button
-              size="lg"
-              className="bg-white px-8 text-base font-semibold text-[#6366f1] shadow-lg hover:bg-white/90 transition-all hover:scale-105"
-            >
-              Contact Us
-            </Button>
-          </a>
-        </div>
-      </section>
-
-      {/* Footer */}
+      {/* ═══════════════════════  SECTION 7: FOOTER  ═══════════════════════ */}
       <footer className="border-t bg-white py-12">
         <div className="mx-auto max-w-7xl px-6">
-          <div className="flex flex-col items-center justify-between gap-6 sm:flex-row">
-            <div>
-              <span className="bg-gradient-to-r from-[#6366f1] to-[#ec4899] bg-clip-text text-lg font-extrabold text-transparent">
-                Win &amp; Win
-              </span>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Gamification marketing for physical businesses.
-              </p>
+          <div className="flex flex-col items-center gap-6 text-center">
+            <span className="bg-gradient-to-r from-[#6366f1] to-[#ec4899] bg-clip-text text-2xl font-extrabold tracking-tight text-transparent">
+              Win &amp; Win
+            </span>
+            <div className="flex gap-6 text-sm text-gray-500">
+              <a href="#" className="hover:text-gray-900 transition-colors">Terms</a>
+              <a href="#" className="hover:text-gray-900 transition-colors">Privacy</a>
+              <a href="#contact" className="hover:text-gray-900 transition-colors">Contact</a>
             </div>
-            <div className="flex items-center gap-6 text-sm text-muted-foreground">
-              <a href="#" className="transition-colors hover:text-foreground">
-                Terms
-              </a>
-              <a href="#" className="transition-colors hover:text-foreground">
-                Privacy
-              </a>
-              <a href="#contact" className="transition-colors hover:text-foreground">
-                Contact
-              </a>
-            </div>
-          </div>
-          <div className="mt-8 border-t pt-8 text-center text-sm text-muted-foreground">
-            <p>&copy; {new Date().getFullYear()} Win &amp; Win. All rights reserved.</p>
-            <p className="mt-1">Made with {'\u2764\uFE0F'} in France</p>
+            <p className="text-sm text-gray-400">Made with ❤️ in France</p>
+            <p className="text-xs text-gray-300">© 2026 Win & Win. All rights reserved.</p>
           </div>
         </div>
       </footer>
     </div>
-  )
-}
-
-/* ─── Sub-components ─── */
-
-function StatItem({ value, label, delay, border }: { value: string; label: string; delay: number; border?: boolean }) {
-  return (
-    <div className={`text-center ${border ? 'border-x' : ''}`} style={{ animation: `countUp 0.6s ease-out ${delay}s forwards` }}>
-      <div className="text-2xl font-extrabold bg-gradient-to-r from-[#6366f1] to-[#8b5cf6] bg-clip-text text-transparent sm:text-3xl">
-        {value}
-      </div>
-      <div className="mt-1 text-xs text-muted-foreground sm:text-sm">{label}</div>
-    </div>
-  )
-}
-
-function StepCard({
-  number,
-  icon,
-  title,
-  description,
-  delay,
-}: {
-  number: number
-  icon: string
-  title: string
-  description: string
-  delay: string
-}) {
-  return (
-    <div className={`relative rounded-2xl border bg-white p-8 text-center shadow-sm transition-all hover:shadow-lg hover:-translate-y-2 hover-bounce cursor-default ${delay}`}>
-      {/* Connector line */}
-      {number < 3 && (
-        <div className="absolute -right-4 top-1/2 hidden h-0.5 w-8 bg-gradient-to-r from-[#6366f1] to-[#ec4899] md:block" />
-      )}
-      <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-r from-[#6366f1] to-[#ec4899] text-lg font-bold text-white shadow-lg shadow-[#6366f1]/25">
-        {number}
-      </div>
-      <div className="mt-4 text-4xl" style={{ animation: `bounce 2s ease-in-out ${number * 0.3}s infinite` }}>
-        {icon}
-      </div>
-      <h3 className="mt-3 text-lg font-bold">{title}</h3>
-      <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{description}</p>
-    </div>
-  )
-}
-
-function GameCard({
-  emoji,
-  title,
-  description,
-  gradient,
-  delay,
-}: {
-  emoji: string
-  title: string
-  description: string
-  gradient: string
-  delay: string
-}) {
-  return (
-    <div className={`group relative overflow-hidden rounded-2xl border bg-white p-8 shadow-sm transition-all duration-300 hover-tilt game-card-glow ${delay}`}>
-      <div className="absolute inset-0 bg-gradient-to-br from-transparent to-[#6366f1]/5 opacity-0 transition-opacity group-hover:opacity-100" />
-      <div className="relative">
-        <div className={`flex h-20 w-20 items-center justify-center rounded-2xl bg-gradient-to-br ${gradient} text-5xl shadow-lg`}>
-          <span className="drop-shadow-lg">{emoji}</span>
-        </div>
-        <h3 className="mt-5 text-xl font-bold">{title}</h3>
-        <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{description}</p>
-        <div className="mt-5">
-          <span className="inline-flex items-center gap-1 text-sm font-semibold text-[#6366f1] transition-all group-hover:gap-2">
-            Learn more
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="transition-transform group-hover:translate-x-1">
-              <path d="M6 12l4-4-4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-          </span>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-function FeatureCard({
-  icon,
-  title,
-  description,
-  delay,
-}: {
-  icon: string
-  title: string
-  description: string
-  delay: string
-}) {
-  return (
-    <div className={`gradient-border transition-all hover:-translate-y-1 hover:shadow-lg ${delay}`}>
-      <div className="rounded-[calc(1rem-2px)] bg-white p-6">
-        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-[#6366f1]/10 to-[#ec4899]/10 text-2xl">
-          {icon}
-        </div>
-        <h3 className="mt-4 font-bold">{title}</h3>
-        <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{description}</p>
-      </div>
-    </div>
-  )
-}
-
-function ContactForm() {
-  const [formState, setFormState] = useState<'idle' | 'submitting' | 'success' | 'error'>('idle')
-  const [errorMsg, setErrorMsg] = useState('')
-  const formRef = useRef<HTMLFormElement>(null)
-
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault()
-    setFormState('submitting')
-    setErrorMsg('')
-
-    const formData = new FormData(e.currentTarget)
-    const body = {
-      businessName: formData.get('businessName') as string,
-      contactName: formData.get('contactName') as string,
-      email: formData.get('email') as string,
-      phone: formData.get('phone') as string,
-      businessType: formData.get('businessType') as string,
-      message: formData.get('message') as string,
-    }
-
-    try {
-      const res = await fetch('/api/contact', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-      })
-
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}))
-        throw new Error(data.error || 'Something went wrong')
-      }
-
-      setFormState('success')
-      formRef.current?.reset()
-    } catch (err) {
-      setFormState('error')
-      setErrorMsg(err instanceof Error ? err.message : 'Something went wrong')
-    }
-  }
-
-  if (formState === 'success') {
-    return (
-      <div className="rounded-2xl border-2 border-green-200 bg-green-50 p-12 text-center">
-        <div className="text-5xl">{'\uD83C\uDF89'}</div>
-        <h3 className="mt-4 text-2xl font-bold text-green-800">Thanks! We&apos;ll reach out within 24 hours.</h3>
-        <p className="mt-2 text-green-600">
-          Check your email for a confirmation. We&apos;re excited to help you grow your business!
-        </p>
-        <button
-          type="button"
-          onClick={() => setFormState('idle')}
-          className="mt-6 text-sm font-medium text-green-700 underline hover:text-green-900"
-        >
-          Submit another request
-        </button>
-      </div>
-    )
-  }
-
-  return (
-    <form ref={formRef} onSubmit={handleSubmit} className="rounded-2xl border bg-white p-8 shadow-lg shadow-[#6366f1]/5">
-      <div className="grid gap-6 sm:grid-cols-2">
-        <div className="space-y-2">
-          <Label htmlFor="businessName">Business Name *</Label>
-          <Input id="businessName" name="businessName" required placeholder="Restaurant Le Petit" />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="contactName">Contact Name *</Label>
-          <Input id="contactName" name="contactName" required placeholder="Jean Dupont" />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="email">Email *</Label>
-          <Input id="email" name="email" type="email" required placeholder="jean@restaurant.com" />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="phone">Phone</Label>
-          <Input id="phone" name="phone" type="tel" placeholder="+33 6 12 34 56 78" />
-        </div>
-        <div className="space-y-2 sm:col-span-2">
-          <Label htmlFor="businessType">Business Type</Label>
-          <select
-            id="businessType"
-            name="businessType"
-            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-          >
-            <option value="">Select your business type...</option>
-            <option value="restaurant">Restaurant</option>
-            <option value="cafe">Cafe</option>
-            <option value="bar">Bar</option>
-            <option value="retail">Retail Store</option>
-            <option value="salon">Hair / Beauty Salon</option>
-            <option value="gym">Gym / Fitness</option>
-            <option value="hotel">Hotel</option>
-            <option value="entertainment">Entertainment</option>
-            <option value="other">Other</option>
-          </select>
-        </div>
-        <div className="space-y-2 sm:col-span-2">
-          <Label htmlFor="message">Message</Label>
-          <textarea
-            id="message"
-            name="message"
-            rows={4}
-            placeholder="Tell us about your business and what you're looking for..."
-            className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-          />
-        </div>
-      </div>
-
-      {formState === 'error' && (
-        <div className="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-600">
-          {errorMsg || 'Something went wrong. Please try again.'}
-        </div>
-      )}
-
-      <div className="mt-6">
-        <Button
-          type="submit"
-          size="lg"
-          disabled={formState === 'submitting'}
-          className="w-full bg-gradient-to-r from-[#6366f1] to-[#ec4899] text-base font-semibold shadow-lg shadow-[#6366f1]/25 transition-all hover:shadow-xl hover:shadow-[#6366f1]/30 hover:scale-[1.02] disabled:opacity-50"
-        >
-          {formState === 'submitting' ? 'Sending...' : 'Get Started'}
-        </Button>
-      </div>
-    </form>
   )
 }
