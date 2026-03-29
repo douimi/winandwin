@@ -49,12 +49,12 @@ export function DashboardShell({ user, merchantName, merchantSlug, merchantTier,
 
   const sidebarContent = (
     <div className="flex flex-col h-full">
-      <div className="border-b px-4 py-3">
+      <div className="border-b px-4 py-4">
         <a href="/dashboard" className="block">
-          <img src="/logo.svg" alt="Win & Win" className="h-8 w-auto" />
+          <img src="/logo.svg" alt="Win & Win" className="h-14 w-auto max-w-[220px]" />
         </a>
         {merchantName && (
-          <p className="mt-1 text-xs text-muted-foreground truncate">{merchantName}</p>
+          <p className="mt-2 text-xs text-muted-foreground truncate">{merchantName}</p>
         )}
       </div>
       <nav className="flex-1 space-y-1 p-4">
