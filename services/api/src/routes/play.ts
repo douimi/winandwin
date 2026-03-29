@@ -112,6 +112,8 @@ playRouter.get('/:slug', async (c) => {
       monthlyLimitReached = (monthlyPlaysResult[0]?.count ?? 0) >= monthlyLimit
     }
 
+    c.header('Cache-Control', 'public, max-age=60, s-maxage=300')
+
     return c.json({
       success: true,
       data: {
