@@ -38,13 +38,13 @@ export function AdminShell({ user, children }: AdminShellProps) {
   const sidebarContent = (
     <>
       {/* Logo */}
-      <div className="flex h-16 items-center px-6 border-b border-gray-200">
-        <div className="min-w-0 flex-1">
-          <img src="/logo.svg" alt="Win & Win" className="h-16" />
-          <span className="block text-[10px] font-semibold uppercase tracking-widest text-gray-400">
-            Admin
-          </span>
-        </div>
+      <div className="border-b border-gray-200 px-4 py-3">
+        <a href="/admin" className="block">
+          <img src="/logo.svg" alt="Win & Win" className="h-8 w-auto" />
+        </a>
+        <span className="mt-1 inline-flex items-center rounded-full bg-indigo-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-indigo-700">
+          Admin
+        </span>
       </div>
 
       {/* Navigation */}
