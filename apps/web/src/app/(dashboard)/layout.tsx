@@ -4,7 +4,7 @@ import { DashboardShell } from './dashboard-shell'
 import { fetchMerchant } from '@/lib/api'
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const { session, merchantId } = await requireSessionWithMerchant()
+  const { session, merchantId, isAdmin } = await requireSessionWithMerchant()
 
   let merchantName: string | undefined
   let merchantSlug: string | undefined
@@ -28,6 +28,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
         merchantName={merchantName}
         merchantSlug={merchantSlug}
         merchantTier={merchantTier}
+        isAdmin={isAdmin}
       >
         {children}
       </DashboardShell>

@@ -25,23 +25,27 @@ export async function requireSession() {
  * Queries the user row because better-auth does not expose custom columns
  * on the session object by default.
  */
-export async function getMerchantId(userId: string): Promise<string | null> {
+export async function getUserInfo(userId: string): Promise<{ merchantId: string | null; isAdmin: boolean }> {
   const db = getDb()
   const row = await db
-    .select({ merchantId: users.merchantId })
+    .select({ merchantId: users.merchantId, isAdmin: users.isAdmin })
     .from(users)
     .where(eq(users.id, userId))
     .then((rows) => rows[0])
-  return row?.merchantId ?? null
+  return { merchantId: row?.merchantId ?? null, isAdmin: row?.isAdmin ?? false }
+}
+
+/** @deprecated Use getUserInfo instead */
+export async function getMerchantId(userId: string): Promise<string | null> {
+  const info = await getUserInfo(userId)
+  return info.merchantId
 }
 
 /**
- * Convenience: require session + resolve merchantId in one call.
- * Redirects to /sign-in if no session, returns merchantId (may be null if
- * merchant not yet created).
+ * Convenience: require session + resolve merchantId + isAdmin in one call.
  */
 export async function requireSessionWithMerchant() {
   const session = await requireSession()
-  const merchantId = await getMerchantId(session.user.id)
-  return { session, merchantId }
+  const { merchantId, isAdmin } = await getUserInfo(session.user.id)
+  return { session, merchantId, isAdmin }
 }

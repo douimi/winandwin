@@ -16,6 +16,7 @@ interface DashboardShellProps {
   merchantName?: string
   merchantSlug?: string
   merchantTier?: string
+  isAdmin?: boolean
   children: React.ReactNode
 }
 
@@ -30,7 +31,7 @@ const navItems = [
   { href: '/dashboard/settings', label: 'Settings', icon: '\u2699\uFE0F' },
 ]
 
-export function DashboardShell({ user, merchantName, merchantSlug, merchantTier, children }: DashboardShellProps) {
+export function DashboardShell({ user, merchantName, merchantSlug, merchantTier, isAdmin, children }: DashboardShellProps) {
   const pathname = usePathname()
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
@@ -125,6 +126,14 @@ export function DashboardShell({ user, merchantName, merchantSlug, merchantTier,
             <p className="truncate text-xs text-muted-foreground">{user.email}</p>
           </div>
         </div>
+        {isAdmin && (
+          <a
+            href="/admin"
+            className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg bg-indigo-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-indigo-700 transition-colors"
+          >
+            🛡️ Super Admin
+          </a>
+        )}
         <button
           type="button"
           onClick={() =>
