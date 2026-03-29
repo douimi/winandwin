@@ -1,4 +1,5 @@
 import { useRef, useState } from 'preact/hooks'
+import type { BusinessTheme } from '../lib/business-themes'
 
 interface WheelProps {
   prizes: { id: string; name: string; emoji?: string }[]
@@ -16,6 +17,8 @@ interface WheelProps {
   wheelCenter?: string
   /** Atmosphere wheel text color */
   wheelText?: string
+  /** Business theme for themed text */
+  businessTheme?: BusinessTheme
 }
 
 export interface WheelSegment {
@@ -31,6 +34,8 @@ export interface WheelSegment {
  */
 export function buildWheelSegments(
   prizes: { id: string; name: string; emoji?: string }[],
+  tryAgainText = 'Try Again',
+  tryAgainEmoji = '\u{1F340}',
 ): WheelSegment[] {
   if (prizes.length === 0) return []
 
@@ -44,8 +49,8 @@ export function buildWheelSegments(
     // "Try Again" segment after each prize
     segments.push({
       id: `try-again-${i}`,
-      name: 'Try Again',
-      emoji: '🍀',
+      name: tryAgainText,
+      emoji: tryAgainEmoji,
       isPrize: false,
     })
   }
@@ -60,8 +65,8 @@ export function buildWheelSegments(
     } else {
       segments.push({
         id: `try-again-extra-${idx}`,
-        name: 'Try Again',
-        emoji: '🍀',
+        name: tryAgainText,
+        emoji: tryAgainEmoji,
         isPrize: false,
       })
     }
@@ -131,12 +136,16 @@ function darken(color: string, amount = 0.25): string {
   return color
 }
 
-export function Wheel({ prizes, branding, onSpinComplete, spinning, onSpin, targetIndex, wheelColors, wheelBorder, wheelCenter, wheelText }: WheelProps) {
+export function Wheel({ prizes, branding, onSpinComplete, spinning, onSpin, targetIndex, wheelColors, wheelBorder, wheelCenter, wheelText, businessTheme }: WheelProps) {
   const [rotation, setRotation] = useState(0)
   const hasSpun = useRef(false)
 
-  // Build display segments with "Try Again" interleaved
-  const segments = buildWheelSegments(prizes)
+  // Build display segments with themed "Try Again" text
+  const segments = buildWheelSegments(
+    prizes,
+    businessTheme?.tryAgainText,
+    businessTheme?.tryAgainEmoji,
+  )
   const segmentAngle = 360 / segments.length
 
   function handleSpin() {
@@ -312,7 +321,7 @@ export function Wheel({ prizes, branding, onSpinComplete, spinning, onSpin, targ
             {/* Center hub */}
             <circle cx={CENTER} cy={CENTER} r={30} fill={wheelCenter || 'url(#hub-grad)'} stroke={wheelCenter ? darken(wheelCenter, 0.2) : '#c0c0c0'} stroke-width="2" filter="url(#hub-shadow)" />
             <circle cx={CENTER} cy={CENTER} r={26} fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="1" />
-            <text x={CENTER} y={CENTER} text-anchor="middle" dominant-baseline="central" fill={wheelText || '#6366f1'} font-size="12" font-weight="800" letter-spacing="2">SPIN</text>
+            <text x={CENTER} y={CENTER} text-anchor="middle" dominant-baseline="central" fill={wheelText || '#6366f1'} font-size={businessTheme ? '18' : '12'} font-weight="800" letter-spacing={businessTheme ? '0' : '2'}>{businessTheme?.spinButtonIcon || 'SPIN'}</text>
           </svg>
         </div>
       </div>
@@ -323,7 +332,7 @@ export function Wheel({ prizes, branding, onSpinComplete, spinning, onSpin, targ
         disabled={spinning}
         type="button"
       >
-        {spinning ? 'Spinning...' : 'SPIN!'}
+        {spinning ? 'Spinning...' : (businessTheme?.spinButtonText || 'SPIN!')}
       </button>
     </div>
   )

@@ -102,6 +102,7 @@ playRouter.get('/:slug', async (c) => {
         merchantName: merchantData.name,
         merchantLogo: merchantData.logoUrl,
         merchantDescription: merchantData.description,
+        merchantCategory: merchantData.category,
         game: {
           id: activeGame.id,
           type: activeGame.type,

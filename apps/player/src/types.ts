@@ -2,6 +2,7 @@ export interface GameConfig {
   merchantName: string
   merchantLogo?: string
   merchantDescription?: string
+  merchantCategory?: string
   atmosphere?: string
   customColors?: { c1: string; c2: string; c3: string }
   game: {

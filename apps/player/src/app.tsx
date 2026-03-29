@@ -12,6 +12,7 @@ import { Wheel, buildWheelSegments, findTargetIndex } from './components/wheel'
 import { generateFingerprint, getHardwareFingerprint } from './lib/fingerprint'
 import { getAtmosphere } from './lib/atmospheres'
 import type { AtmosphereTheme } from './lib/atmospheres'
+import { getBusinessTheme } from './lib/business-themes'
 import type { GameConfig, PlayerScreen, PlayerState, SpinResult } from './types'
 
 /** Classify errors into user-friendly categories */
@@ -138,6 +139,12 @@ export function App() {
 
   // Get the atmosphere theme from config
   const theme = useMemo(() => getAtmosphere(config?.atmosphere || 'joyful', config?.customColors), [config?.atmosphere, config?.customColors])
+
+  // Get the business theme from merchant category
+  const bizTheme = useMemo(
+    () => getBusinessTheme(config?.merchantCategory || 'other'),
+    [config?.merchantCategory],
+  )
 
   // Apply atmosphere theme + branding colors from config
   useEffect(() => {
@@ -297,7 +304,7 @@ export function App() {
       setResult(spinResult)
 
       if (config.game.type === 'wheel') {
-        const segments = buildWheelSegments(config.game.prizes)
+        const segments = buildWheelSegments(config.game.prizes, bizTheme.tryAgainText, bizTheme.tryAgainEmoji)
         const idx = findTargetIndex(segments, spinResult.outcome, spinResult.prize?.name)
         setTargetIndex(idx)
       }
@@ -337,7 +344,7 @@ export function App() {
 
       if (config.game.type === 'wheel') {
         // Find the correct display segment index (wheel has interleaved "Try Again" segments)
-        const segments = buildWheelSegments(config.game.prizes)
+        const segments = buildWheelSegments(config.game.prizes, bizTheme.tryAgainText, bizTheme.tryAgainEmoji)
         const idx = findTargetIndex(
           segments,
           spinResult.outcome,
@@ -437,7 +444,7 @@ export function App() {
       )}
 
       {screen === 'welcome' && (
-        <WelcomeScreen config={config} onPlay={handlePlayClick} />
+        <WelcomeScreen config={config} onPlay={handlePlayClick} businessTheme={bizTheme} />
       )}
 
       {screen === 'action' && singleAction && (
@@ -465,6 +472,26 @@ export function App() {
 
       {screen === 'game' && config.game.type === 'wheel' && (
         <div class="screen game-screen immersive-wheel-screen">
+          {/* Floating themed emojis */}
+          <div class="themed-bg-emojis">
+            {bizTheme.bgEmojis.map((emoji, i) => (
+              <span
+                key={`biz-emoji-${i}`}
+                class="themed-emoji"
+                style={{
+                  left: `${[5, 85, 10, 90, 15, 80, 25, 70][i % 8]}%`,
+                  top: `${[10, 20, 40, 55, 70, 85, 30, 65][i % 8]}%`,
+                  '--float-duration': `${5 + (i % 4) * 1.5}s`,
+                  '--float-delay': `${i * 0.7}s`,
+                  '--emoji-size': `${1.2 + (i % 3) * 0.4}rem`,
+                  opacity: 0.08 + (i % 3) * 0.03,
+                } as Record<string, string | number>}
+              >
+                {emoji}
+              </span>
+            ))}
+          </div>
+
           {/* Sparkle particles in background */}
           <div class="game-sparkles">
             <div class="sparkle s1" />
@@ -493,13 +520,11 @@ export function App() {
 
           {/* Game title */}
           <h1 class="immersive-game-title" style={{ fontSize: theme.titleSize, fontWeight: theme.fontWeight }}>
-            {config.game.name}
+            {config.game.name || bizTheme.defaultTitle}
           </h1>
 
           {/* Subtitle */}
-          {config.merchantDescription && (
-            <p class="immersive-subtitle">{config.merchantDescription}</p>
-          )}
+          <p class="immersive-subtitle">{config.merchantDescription || bizTheme.defaultSubtitle}</p>
 
           {/* THE WHEEL — the hero of the page */}
           <Wheel
@@ -513,6 +538,7 @@ export function App() {
             wheelBorder={theme.wheelBorder}
             wheelCenter={theme.wheelCenter}
             wheelText={theme.wheelText}
+            businessTheme={bizTheme}
           />
 
           {/* Powered by */}
@@ -591,11 +617,11 @@ export function App() {
       )}
 
       {screen === 'result' && result && (
-        <ResultScreen result={result} merchantName={config.merchantName} playerEmail={playerEmail} />
+        <ResultScreen result={result} merchantName={config.merchantName} playerEmail={playerEmail} businessTheme={bizTheme} />
       )}
 
       {screen === 'already-played' && playerState && (
-        <AlreadyPlayedScreen playerState={playerState} merchantName={config.merchantName} />
+        <AlreadyPlayedScreen playerState={playerState} merchantName={config.merchantName} businessTheme={bizTheme} />
       )}
     </div>
   )

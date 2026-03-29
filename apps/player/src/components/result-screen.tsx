@@ -1,13 +1,15 @@
 import type { SpinResult } from '../types'
+import type { BusinessTheme } from '../lib/business-themes'
 import { Confetti } from './confetti'
 
 interface Props {
   result: SpinResult
   merchantName: string
   playerEmail?: string | null
+  businessTheme?: BusinessTheme
 }
 
-export function ResultScreen({ result, merchantName, playerEmail }: Props) {
+export function ResultScreen({ result, merchantName, playerEmail, businessTheme }: Props) {
   const isWin = result.outcome === 'win'
 
   if (isWin) {
@@ -28,7 +30,7 @@ export function ResultScreen({ result, merchantName, playerEmail }: Props) {
 
         <div class="result-emoji">{result.prize?.emoji || '\u{1F389}'}</div>
 
-        <h1 class="result-title result-title-win">You Won!</h1>
+        <h1 class="result-title result-title-win">{businessTheme?.winTitle || 'You Won!'}</h1>
 
         <div class="result-prize-card">
           <div class="result-prize-emoji">{result.prize?.emoji || '\u{1F381}'}</div>
@@ -63,19 +65,19 @@ export function ResultScreen({ result, merchantName, playerEmail }: Props) {
     <div class="screen result-screen result-lose">
       <div class="result-emoji result-emoji-lose">{'\u{1F340}'}</div>
 
-      <h1 class="result-title">So Close!</h1>
+      <h1 class="result-title">{businessTheme?.loseTitle || 'So Close!'}</h1>
 
       <p class="lose-message">
-        {result.message || "Almost there! You didn't win this time, but luck could be on your side next time!"}
+        {result.message || businessTheme?.loseMessage || "Almost there! You didn't win this time, but luck could be on your side next time!"}
       </p>
 
       <div class="lose-comeback">
         <div class="lose-comeback-icon">{'\u{1F31F}'}</div>
-        <span>Come back tomorrow for another chance!</span>
+        <span>{businessTheme?.loseMessage || 'Come back tomorrow for another chance!'}</span>
       </div>
 
       <p class="lose-encourage">
-        {'\u{1F60A}'} Better luck next time at {merchantName}!
+        {businessTheme?.accentEmoji || '\u{1F60A}'} Better luck next time at {merchantName}!
       </p>
     </div>
   )

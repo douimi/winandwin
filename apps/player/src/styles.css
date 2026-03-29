@@ -2399,3 +2399,28 @@ button:active {
 .welcome-screen .welcome-play-inner {
   color: var(--atm-button-text, #fff);
 }
+
+/* ============================================
+   Business Theme — Floating Emojis
+   ============================================ */
+
+.themed-bg-emojis {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.themed-emoji {
+  position: absolute;
+  opacity: 0.1;
+  pointer-events: none;
+  animation: float var(--float-duration, 6s) ease-in-out infinite;
+  animation-delay: var(--float-delay, 0s);
+  font-size: var(--emoji-size, 1.5rem);
+}
+
+.welcome-accent-emoji {
+  font-size: inherit;
+}

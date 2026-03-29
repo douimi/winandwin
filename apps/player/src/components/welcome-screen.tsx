@@ -1,12 +1,18 @@
 import type { GameConfig } from '../types'
+import type { BusinessTheme } from '../lib/business-themes'
 
 interface Props {
   config: GameConfig
   onPlay: () => void
+  businessTheme?: BusinessTheme
 }
 
-export function WelcomeScreen({ config, onPlay }: Props) {
+export function WelcomeScreen({ config, onPlay, businessTheme }: Props) {
   const initial = config.merchantName?.charAt(0)?.toUpperCase() || '?'
+
+  const tagline = ('merchantDescription' in config && config.merchantDescription)
+    ? String(config.merchantDescription)
+    : (businessTheme?.defaultSubtitle || 'Play and win exclusive prizes!')
 
   return (
     <div class="screen welcome-screen">
@@ -39,15 +45,14 @@ export function WelcomeScreen({ config, onPlay }: Props) {
         )}
       </div>
 
-      {/* Merchant name */}
-      <h1 class="welcome-merchant-name">{config.merchantName}</h1>
+      {/* Merchant name with accent emoji */}
+      <h1 class="welcome-merchant-name">
+        {businessTheme && <span class="welcome-accent-emoji">{businessTheme.accentEmoji} </span>}
+        {config.merchantName}
+      </h1>
 
       {/* Tagline */}
-      <p class="welcome-tagline">
-        {'merchantDescription' in config && config.merchantDescription
-          ? String(config.merchantDescription)
-          : 'Play and win exclusive prizes!'}
-      </p>
+      <p class="welcome-tagline">{tagline}</p>
 
       {/* PLAY button */}
       <button class="welcome-play-btn" onClick={onPlay} type="button">

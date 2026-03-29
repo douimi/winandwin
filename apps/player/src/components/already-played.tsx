@@ -1,8 +1,10 @@
 import type { PlayerState } from '../types'
+import type { BusinessTheme } from '../lib/business-themes'
 
 interface Props {
   playerState: PlayerState
   merchantName: string
+  businessTheme?: BusinessTheme
 }
 
 function formatDate(dateStr: string): string {
@@ -13,7 +15,7 @@ function formatDate(dateStr: string): string {
   })
 }
 
-export function AlreadyPlayedScreen({ playerState, merchantName }: Props) {
+export function AlreadyPlayedScreen({ playerState, merchantName, businessTheme }: Props) {
   const won = playerState.lastPlayResult === 'win'
   const coupon = playerState.lastCoupon
   const validationUrl = coupon
@@ -74,8 +76,8 @@ export function AlreadyPlayedScreen({ playerState, merchantName }: Props) {
             You've used your play for today at {merchantName}.
           </p>
           <div class="already-played-encourage">
-            <span class="already-played-encourage-icon">{'\u{1F340}'}</span>
-            <span>Come back tomorrow for another chance to win!</span>
+            <span class="already-played-encourage-icon">{businessTheme?.accentEmoji || '\u{1F340}'}</span>
+            <span>{businessTheme?.loseMessage || 'Come back tomorrow for another chance to win!'}</span>
           </div>
         </>
       )}
