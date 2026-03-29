@@ -76,9 +76,9 @@ function MysteryBoxAutoSpin({ onSpin }: { onSpin: () => void }) {
 /**
  * Pick ONE action to show this visit.
  * - Filter out actions in completedActionsEver
- * - Sort remaining by weight (highest first)
+ * - Sort remaining by weight ASCENDING (weight = display order: 1 first, 2 second, etc.)
  * - Pick the first one
- * - If all done, pick the one with highest weight
+ * - If all done, pick the one with lowest weight
  */
 function pickSingleAction(
   requiredActions: GameConfig['requiredActions'],
@@ -86,7 +86,8 @@ function pickSingleAction(
 ): GameConfig['requiredActions'][number] | null {
   if (requiredActions.length === 0) return null
 
-  const sorted = [...requiredActions].sort((a, b) => b.weight - a.weight)
+  // Sort by weight ascending: weight 1 is shown first, weight 2 second, etc.
+  const sorted = [...requiredActions].sort((a, b) => a.weight - b.weight)
 
   // Filter out already-completed
   const remaining = sorted.filter((a) => !completedActionsEver.includes(a.type))
@@ -192,14 +193,14 @@ export function App() {
             }
           }
 
-          // If returning from a CTA (preCompletedAction), auto-show the action overlay
-          const pendingCta = checkPendingAction(slug)
-          if (pendingCta && gameConfig.game.type === 'wheel') {
-            // Go to game screen with the action overlay auto-shown for verification
-            const completedEver = state?.completedActionsEver ?? []
-            const action = pickSingleAction(gameConfig.requiredActions, completedEver)
-            if (action && action.type === pendingCta) {
-              setSingleAction(action)
+          // If returning from a CTA (preCompletedAction already captured from localStorage)
+          if (preCompletedAction && gameConfig.game.type === 'wheel') {
+            // Find the matching action and auto-show the overlay for verification
+            const matchingAction = gameConfig.requiredActions.find(
+              (a: { type: string }) => a.type === preCompletedAction
+            )
+            if (matchingAction) {
+              setSingleAction(matchingAction)
               setShowActionOverlay(true)
             }
             setScreen('game')

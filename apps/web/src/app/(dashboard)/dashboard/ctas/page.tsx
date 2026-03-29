@@ -213,8 +213,8 @@ export default function CtasPage() {
       </p>
 
       <div className="rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-800">
-        {'\u2139\uFE0F'} Players see one action per visit, in order of priority (highest first).
-        Use the weight field on each CTA to control the order.
+        {'\u2139\uFE0F'} Players see one action per visit, in display order.
+        Set the order number on each CTA: 1 = shown first, 2 = shown second, etc.
       </div>
 
       {successMessage && (
