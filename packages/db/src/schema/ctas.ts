@@ -8,6 +8,13 @@ export const ctaTypeEnum = pgEnum('cta_type', [
   'email_collect',
   'visit_stamp',
   'receipt_photo',
+  'tripadvisor_review',
+  'facebook_like',
+  'tiktok_follow',
+  'book_appointment',
+  'whatsapp_join',
+  'refer_friend',
+  'survey_feedback',
 ])
 
 export const ctas = pgTable('ctas', {

@@ -24,6 +24,13 @@ const ACTION_META: Record<string, { icon: string; label: string; hint: string }>
   email_collect: { icon: '\u2709\uFE0F', label: 'Share your email', hint: '' },
   visit_stamp: { icon: '\uD83D\uDCCD', label: 'Visit stamp', hint: '' },
   receipt_photo: { icon: '\uD83E\uDDFE', label: 'Photograph your receipt', hint: '' },
+  tripadvisor_review: { icon: '\uD83C\uDFE8', label: 'Leave a TripAdvisor Review', hint: 'Proof may be requested' },
+  facebook_like: { icon: '\uD83D\uDC4D', label: 'Like us on Facebook', hint: 'Proof may be requested' },
+  tiktok_follow: { icon: '\uD83C\uDFB5', label: 'Follow us on TikTok', hint: 'Proof may be requested' },
+  book_appointment: { icon: '\uD83D\uDCC5', label: 'Book an appointment', hint: '' },
+  whatsapp_join: { icon: '\uD83D\uDCAC', label: 'Join our WhatsApp group', hint: '' },
+  refer_friend: { icon: '\uD83D\uDC65', label: 'Refer a friend', hint: '' },
+  survey_feedback: { icon: '\uD83D\uDCCB', label: 'Share your feedback', hint: '' },
 }
 
 const VERIFY_DURATION = 3000
@@ -119,6 +126,94 @@ function SingleActionScreen({ config, singleAction, onComplete, preCompleted }: 
       case 'visit_stamp': {
         break
       }
+      case 'tripadvisor_review': {
+        const url = singleAction.config?.tripadvisorUrl
+        if (url) {
+          localStorage.setItem('winandwin_pending_action', JSON.stringify({
+            type: singleAction.type,
+            slug: window.location.pathname.replace(/^\//, ''),
+            timestamp: Date.now(),
+          }))
+          window.location.href = url
+        } else {
+          setClicked(true)
+        }
+        break
+      }
+      case 'facebook_like': {
+        const url = singleAction.config?.facebookUrl
+        if (url) {
+          localStorage.setItem('winandwin_pending_action', JSON.stringify({
+            type: singleAction.type,
+            slug: window.location.pathname.replace(/^\//, ''),
+            timestamp: Date.now(),
+          }))
+          window.location.href = url
+        } else {
+          setClicked(true)
+        }
+        break
+      }
+      case 'tiktok_follow': {
+        const handle = singleAction.config?.tiktokHandle
+        if (handle) {
+          localStorage.setItem('winandwin_pending_action', JSON.stringify({
+            type: singleAction.type,
+            slug: window.location.pathname.replace(/^\//, ''),
+            timestamp: Date.now(),
+          }))
+          window.location.href = `https://tiktok.com/@${handle}`
+        } else {
+          setClicked(true)
+        }
+        break
+      }
+      case 'book_appointment': {
+        const url = singleAction.config?.bookingUrl
+        if (url) {
+          localStorage.setItem('winandwin_pending_action', JSON.stringify({
+            type: singleAction.type,
+            slug: window.location.pathname.replace(/^\//, ''),
+            timestamp: Date.now(),
+          }))
+          window.location.href = url
+        } else {
+          setClicked(true)
+        }
+        break
+      }
+      case 'whatsapp_join': {
+        const url = singleAction.config?.whatsappUrl
+        if (url) {
+          localStorage.setItem('winandwin_pending_action', JSON.stringify({
+            type: singleAction.type,
+            slug: window.location.pathname.replace(/^\//, ''),
+            timestamp: Date.now(),
+          }))
+          window.location.href = url
+        } else {
+          setClicked(true)
+        }
+        break
+      }
+      case 'refer_friend': {
+        const shareUrl = window.location.href
+        if (navigator.share) {
+          navigator.share({
+            title: config.merchantName,
+            text: `Play and win prizes at ${config.merchantName}!`,
+            url: shareUrl,
+          }).then(() => markComplete()).catch(() => setClicked(true))
+        } else {
+          navigator.clipboard?.writeText(shareUrl).then(() => markComplete())
+          setClicked(true)
+        }
+        break
+      }
+      case 'survey_feedback': {
+        setEmailExpanded(true)
+        break
+      }
     }
   }
 
@@ -156,8 +251,9 @@ function SingleActionScreen({ config, singleAction, onComplete, preCompleted }: 
   const isDone = completed
   const isVerifying = verifying
   const isVerifyDone = verifyDone
-  const showConfirm = !isDone && !isVerifying && clicked && (singleAction.type === 'google_review' || singleAction.type === 'instagram_follow')
-  const showEmail = singleAction.type === 'email_collect' && emailExpanded && !isDone
+  const needsConfirm = ['google_review', 'tripadvisor_review', 'instagram_follow', 'facebook_like', 'tiktok_follow', 'book_appointment', 'whatsapp_join']
+  const showConfirm = !isDone && !isVerifying && clicked && needsConfirm.includes(singleAction.type)
+  const showEmail = (singleAction.type === 'email_collect' || singleAction.type === 'survey_feedback') && emailExpanded && !isDone
 
   return (
     <div class="screen action-screen">
@@ -231,11 +327,19 @@ function SingleActionScreen({ config, singleAction, onComplete, preCompleted }: 
               onClick={handleConfirmClick}
               type="button"
             >
-              {singleAction.type === 'google_review' ? "I've left my review" : "I've followed"}
+              {singleAction.type === 'google_review' || singleAction.type === 'tripadvisor_review'
+                ? "I've left my review"
+                : singleAction.type === 'facebook_like'
+                  ? "I've liked the page"
+                  : singleAction.type === 'book_appointment'
+                    ? "I've booked"
+                    : singleAction.type === 'whatsapp_join'
+                      ? "I've joined"
+                      : "I've followed"}
             </button>
           </div>
 
-          {singleAction.type === 'email_collect' && (
+          {(singleAction.type === 'email_collect' || singleAction.type === 'survey_feedback') && (
             <div class={`action-email-row${showEmail ? ' open' : ''}`}>
               <div class="action-email-form">
                 <input
@@ -397,6 +501,94 @@ function MultiActionScreen({ config, onComplete, preCompleted, previouslyComplet
       case 'visit_stamp': {
         break
       }
+      case 'tripadvisor_review': {
+        const url = action.config?.tripadvisorUrl
+        if (url) {
+          localStorage.setItem('winandwin_pending_action', JSON.stringify({
+            type: action.type,
+            slug: window.location.pathname.replace(/^\//, ''),
+            timestamp: Date.now(),
+          }))
+          window.location.href = url
+        } else {
+          setClicked((prev) => new Set(prev).add(action.type))
+        }
+        break
+      }
+      case 'facebook_like': {
+        const url = action.config?.facebookUrl
+        if (url) {
+          localStorage.setItem('winandwin_pending_action', JSON.stringify({
+            type: action.type,
+            slug: window.location.pathname.replace(/^\//, ''),
+            timestamp: Date.now(),
+          }))
+          window.location.href = url
+        } else {
+          setClicked((prev) => new Set(prev).add(action.type))
+        }
+        break
+      }
+      case 'tiktok_follow': {
+        const handle = action.config?.tiktokHandle
+        if (handle) {
+          localStorage.setItem('winandwin_pending_action', JSON.stringify({
+            type: action.type,
+            slug: window.location.pathname.replace(/^\//, ''),
+            timestamp: Date.now(),
+          }))
+          window.location.href = `https://tiktok.com/@${handle}`
+        } else {
+          setClicked((prev) => new Set(prev).add(action.type))
+        }
+        break
+      }
+      case 'book_appointment': {
+        const url = action.config?.bookingUrl
+        if (url) {
+          localStorage.setItem('winandwin_pending_action', JSON.stringify({
+            type: action.type,
+            slug: window.location.pathname.replace(/^\//, ''),
+            timestamp: Date.now(),
+          }))
+          window.location.href = url
+        } else {
+          setClicked((prev) => new Set(prev).add(action.type))
+        }
+        break
+      }
+      case 'whatsapp_join': {
+        const url = action.config?.whatsappUrl
+        if (url) {
+          localStorage.setItem('winandwin_pending_action', JSON.stringify({
+            type: action.type,
+            slug: window.location.pathname.replace(/^\//, ''),
+            timestamp: Date.now(),
+          }))
+          window.location.href = url
+        } else {
+          setClicked((prev) => new Set(prev).add(action.type))
+        }
+        break
+      }
+      case 'refer_friend': {
+        const shareUrl = window.location.href
+        if (navigator.share) {
+          navigator.share({
+            title: config.merchantName,
+            text: `Play and win prizes at ${config.merchantName}!`,
+            url: shareUrl,
+          }).then(() => markComplete(action.type)).catch(() => setClicked((prev) => new Set(prev).add(action.type)))
+        } else {
+          navigator.clipboard?.writeText(shareUrl).then(() => markComplete(action.type))
+          setClicked((prev) => new Set(prev).add(action.type))
+        }
+        break
+      }
+      case 'survey_feedback': {
+        setEmailExpanded(true)
+        break
+      }
     }
   }
 
@@ -454,8 +646,9 @@ function MultiActionScreen({ config, onComplete, preCompleted, previouslyComplet
           const isVerifying = verifying === action.type
           const isVerifyDone = verifyDone === action.type
           const wasClicked = clicked.has(action.type)
-          const showConfirm = !isDone && !isVerifying && wasClicked && (action.type === 'google_review' || action.type === 'instagram_follow')
-          const showEmail = action.type === 'email_collect' && emailExpanded && !isDone
+          const needsConfirm = ['google_review', 'tripadvisor_review', 'instagram_follow', 'facebook_like', 'tiktok_follow', 'book_appointment', 'whatsapp_join']
+          const showConfirm = !isDone && !isVerifying && wasClicked && needsConfirm.includes(action.type)
+          const showEmail = (action.type === 'email_collect' || action.type === 'survey_feedback') && emailExpanded && !isDone
 
           return (
             <div key={action.type} class="action-card-wrapper">
@@ -511,11 +704,19 @@ function MultiActionScreen({ config, onComplete, preCompleted, previouslyComplet
                   onClick={() => handleConfirmClick(action.type)}
                   type="button"
                 >
-                  {action.type === 'google_review' ? "I've left my review" : "I've followed"}
+                  {action.type === 'google_review' || action.type === 'tripadvisor_review'
+                    ? "I've left my review"
+                    : action.type === 'facebook_like'
+                      ? "I've liked the page"
+                      : action.type === 'book_appointment'
+                        ? "I've booked"
+                        : action.type === 'whatsapp_join'
+                          ? "I've joined"
+                          : "I've followed"}
                 </button>
               </div>
 
-              {action.type === 'email_collect' && (
+              {(action.type === 'email_collect' || action.type === 'survey_feedback') && (
                 <div class={`action-email-row${showEmail ? ' open' : ''}`}>
                   <div class="action-email-form">
                     <input

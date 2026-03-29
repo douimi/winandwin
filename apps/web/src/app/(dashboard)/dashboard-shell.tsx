@@ -55,7 +55,7 @@ export function DashboardShell({ user, merchantName, merchantSlug, merchantTier,
             {merchantName || 'Win & Win'}
           </span>
           {merchantName && (
-            <span className="block text-xs text-muted-foreground truncate">Win & Win</span>
+            <img src="/logo.jpeg" alt="Win & Win" className="h-6" />
           )}
         </div>
       </div>

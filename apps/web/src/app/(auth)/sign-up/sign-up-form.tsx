@@ -72,12 +72,7 @@ export function SignUpForm() {
     <div className="flex flex-col items-center">
       {/* Logo */}
       <a href="/" className="mb-8 flex flex-col items-center gap-2">
-        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-[#6366f1] to-[#ec4899] text-xl font-extrabold text-white shadow-lg shadow-[#6366f1]/25">
-          W
-        </div>
-        <span className="bg-gradient-to-r from-[#6366f1] to-[#ec4899] bg-clip-text text-xl font-extrabold tracking-tight text-transparent">
-          Win &amp; Win
-        </span>
+        <img src="/logo.jpeg" alt="Win & Win" className="h-10" />
       </a>
 
       <div className="grid w-full gap-6 lg:max-w-4xl lg:grid-cols-[1fr_1.2fr]">

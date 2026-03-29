@@ -402,9 +402,7 @@ export default function HomePage() {
       {/* ───── Header / Nav ───── */}
       <header className="sticky top-0 z-50 border-b bg-white/80 backdrop-blur-md">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-          <span className="bg-gradient-to-r from-[#6366f1] to-[#ec4899] bg-clip-text text-xl font-extrabold tracking-tight text-transparent">
-            Win &amp; Win
-          </span>
+          <img src="/logo.jpeg" alt="Win & Win" className="h-8" />
           <nav className="hidden items-center gap-8 text-sm font-medium text-gray-500 md:flex">
             <a href="#how-it-works" className="transition-colors hover:text-gray-900">How It Works</a>
             <a href="#games" className="transition-colors hover:text-gray-900">Games</a>

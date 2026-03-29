@@ -18,26 +18,26 @@ const CTA_TYPES = [
     icon: '\u2B50',
     description: 'Ask customers to leave a Google review.',
     configFields: [
-      { key: 'googlePlaceUrl', label: 'Google Place URL', placeholder: 'https://g.page/...' },
+      { key: 'googlePlaceUrl', label: 'Google Place URL', placeholder: 'https://maps.google.com/...' },
     ],
   },
   {
     type: 'instagram_follow',
     label: 'Instagram Follow',
-    icon: '\uD83D\uDCF7',
+    icon: '\uD83D\uDCF8',
     description: 'Ask customers to follow your Instagram.',
     configFields: [
       {
         key: 'instagramHandle',
         label: 'Instagram Handle',
-        placeholder: '@yourbusiness',
+        placeholder: 'yourbusiness',
       },
     ],
   },
   {
     type: 'email_collect',
     label: 'Email Collection',
-    icon: '\uD83D\uDCE7',
+    icon: '\u2709\uFE0F',
     description: 'Collect customer emails for marketing.',
     configFields: [],
   },
@@ -51,8 +51,67 @@ const CTA_TYPES = [
   {
     type: 'receipt_photo',
     label: 'Receipt Photo',
-    icon: '\uD83D\uDCC4',
+    icon: '\uD83E\uDDFE',
     description: 'Ask customers to upload a receipt photo.',
+    configFields: [],
+  },
+  {
+    type: 'tripadvisor_review',
+    label: 'TripAdvisor Review',
+    icon: '\uD83C\uDFE8',
+    description: 'Ask customers to leave a TripAdvisor review.',
+    configFields: [
+      { key: 'tripadvisorUrl', label: 'TripAdvisor Listing URL', placeholder: 'https://tripadvisor.com/...' },
+    ],
+  },
+  {
+    type: 'facebook_like',
+    label: 'Facebook Like',
+    icon: '\uD83D\uDC4D',
+    description: 'Ask customers to like your Facebook page.',
+    configFields: [
+      { key: 'facebookUrl', label: 'Facebook Page URL', placeholder: 'https://facebook.com/yourbusiness' },
+    ],
+  },
+  {
+    type: 'tiktok_follow',
+    label: 'TikTok Follow',
+    icon: '\uD83C\uDFB5',
+    description: 'Ask customers to follow you on TikTok.',
+    configFields: [
+      { key: 'tiktokHandle', label: 'TikTok Handle', placeholder: 'yourbusiness' },
+    ],
+  },
+  {
+    type: 'book_appointment',
+    label: 'Book Appointment',
+    icon: '\uD83D\uDCC5',
+    description: 'Ask customers to book an appointment.',
+    configFields: [
+      { key: 'bookingUrl', label: 'Booking Page URL', placeholder: 'https://calendly.com/...' },
+    ],
+  },
+  {
+    type: 'whatsapp_join',
+    label: 'WhatsApp Join',
+    icon: '\uD83D\uDCAC',
+    description: 'Ask customers to join your WhatsApp group.',
+    configFields: [
+      { key: 'whatsappUrl', label: 'WhatsApp Group/Channel Link', placeholder: 'https://chat.whatsapp.com/...' },
+    ],
+  },
+  {
+    type: 'refer_friend',
+    label: 'Refer a Friend',
+    icon: '\uD83D\uDC65',
+    description: 'Ask customers to refer a friend.',
+    configFields: [],
+  },
+  {
+    type: 'survey_feedback',
+    label: 'Survey / Feedback',
+    icon: '\uD83D\uDCCB',
+    description: 'Collect customer feedback.',
     configFields: [],
   },
 ] as const

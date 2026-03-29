@@ -40,9 +40,7 @@ export function AdminShell({ user, children }: AdminShellProps) {
       {/* Logo */}
       <div className="flex h-16 items-center px-6 border-b border-gray-200">
         <div className="min-w-0 flex-1">
-          <span className="block text-xl font-extrabold bg-gradient-to-r from-indigo-600 to-pink-500 bg-clip-text text-transparent">
-            Win & Win
-          </span>
+          <img src="/logo.jpeg" alt="Win & Win" className="h-6" />
           <span className="block text-[10px] font-semibold uppercase tracking-widest text-gray-400">
             Admin
           </span>

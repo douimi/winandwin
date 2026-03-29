@@ -111,6 +111,13 @@ export const ctaTypeSchema = z.enum([
   'email_collect',
   'visit_stamp',
   'receipt_photo',
+  'tripadvisor_review',
+  'facebook_like',
+  'tiktok_follow',
+  'book_appointment',
+  'whatsapp_join',
+  'refer_friend',
+  'survey_feedback',
 ])
 
 export const createCtaSchema = z.object({
