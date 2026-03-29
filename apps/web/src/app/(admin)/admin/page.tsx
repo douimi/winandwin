@@ -19,8 +19,9 @@ const kpiConfig = [
   { key: 'totalPlayers' as const, label: 'Players', icon: '\uD83D\uDC65' },
   { key: 'gamesPlayedToday' as const, label: 'Games Today', icon: '\uD83C\uDFAE' },
   { key: 'totalCouponsRedeemed' as const, label: 'Coupons', icon: '\uD83C\uDF9F\uFE0F' },
-  { key: 'gamesPlayedThisMonth' as const, label: 'Active Games', icon: '\u25B6\uFE0F' },
+  { key: 'gamesPlayedThisMonth' as const, label: 'Games This Month', icon: '\u25B6\uFE0F' },
   { key: 'newMerchantsThisWeek' as const, label: 'New This Week', icon: '\uD83D\uDCC8' },
+  { key: 'disabledMerchants' as const, label: 'Disabled', icon: '\uD83D\uDEAB' },
 ]
 
 const STATUS_STYLES: Record<string, { bg: string; text: string; border: string }> = {
@@ -43,7 +44,9 @@ export default function AdminOverviewPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
 
-  useEffect(() => {
+  function loadData() {
+    setLoading(true)
+    setError(false)
     fetchAdminStats()
       .then(setStats)
       .catch(() => setError(true))
@@ -56,6 +59,10 @@ export default function AdminOverviewPage() {
         setContacts(all.slice(0, 5))
       })
       .catch(() => {})
+  }
+
+  useEffect(() => {
+    loadData()
   }, [])
 
   const now = new Date()
@@ -69,15 +76,24 @@ export default function AdminOverviewPage() {
           <h1 className="text-2xl font-bold text-gray-900">Overview</h1>
           <p className="mt-1 text-sm text-gray-500">{dateStr}</p>
         </div>
-        {error && (
-          <span className="rounded-full border border-yellow-300 bg-yellow-50 px-2.5 py-0.5 text-xs font-medium text-yellow-700">
-            API offline
-          </span>
-        )}
+        <div className="flex items-center gap-3">
+          {error && (
+            <span className="rounded-full border border-yellow-300 bg-yellow-50 px-2.5 py-0.5 text-xs font-medium text-yellow-700">
+              API offline
+            </span>
+          )}
+          <button
+            type="button"
+            onClick={loadData}
+            className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50 transition-colors"
+          >
+            Refresh
+          </button>
+        </div>
       </div>
 
       {/* KPI Cards */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {kpiConfig.map((kpi) => (
           <Card key={kpi.key} className="border border-gray-200 bg-white shadow-sm rounded-xl">
             <CardContent className="p-6">
@@ -99,7 +115,7 @@ export default function AdminOverviewPage() {
         ))}
       </div>
 
-      {/* Two-column layout */}
+      {/* Three-column layout */}
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Top Merchants Table */}
         <Card className="border border-gray-200 bg-white shadow-sm rounded-xl">
@@ -205,6 +221,65 @@ export default function AdminOverviewPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Recent Activity Log */}
+      <Card className="border border-gray-200 bg-white shadow-sm rounded-xl">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-gray-900">Recent Activity</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {loading ? (
+            <div className="space-y-3">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <div key={i} className="flex items-center justify-between">
+                  <div className="h-4 w-48 animate-pulse rounded bg-gray-100" />
+                  <div className="h-4 w-20 animate-pulse rounded bg-gray-100" />
+                </div>
+              ))}
+            </div>
+          ) : stats?.recentActivity && stats.recentActivity.length > 0 ? (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-gray-200 text-left">
+                    <th className="pb-3 pr-4 font-medium text-gray-500">Merchant</th>
+                    <th className="pb-3 pr-4 font-medium text-gray-500">Result</th>
+                    <th className="pb-3 text-right font-medium text-gray-500">Time</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {stats.recentActivity.map((a) => (
+                    <tr key={a.id} className="border-b border-gray-100 transition-colors hover:bg-gray-50">
+                      <td className="py-2.5 pr-4">
+                        <a
+                          href={`/admin/merchants/${a.merchantId}`}
+                          className="font-medium text-gray-900 hover:text-indigo-600 transition-colors"
+                        >
+                          {a.merchantName}
+                        </a>
+                      </td>
+                      <td className="py-2.5 pr-4">
+                        <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold capitalize ${
+                          a.result === 'win'
+                            ? 'border-green-300 text-green-600 bg-green-50'
+                            : 'border-gray-200 text-gray-500 bg-gray-50'
+                        }`}>
+                          {a.result}
+                        </span>
+                      </td>
+                      <td className="py-2.5 text-right text-xs text-gray-400">
+                        {new Date(a.playedAt).toLocaleString()}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <p className="text-sm text-gray-500">No recent activity.</p>
+          )}
+        </CardContent>
+      </Card>
     </div>
   )
 }

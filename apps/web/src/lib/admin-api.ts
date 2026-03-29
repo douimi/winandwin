@@ -70,7 +70,15 @@ export interface AdminStats {
   totalCouponsRedeemed: number
   revenue: number
   newMerchantsThisWeek: number
+  disabledMerchants: number
   topMerchants: { id: string; name: string; plays: number }[]
+  recentActivity: {
+    id: string
+    merchantId: string
+    merchantName: string
+    result: string
+    playedAt: string
+  }[]
 }
 
 export interface AdminMerchantRow {
@@ -80,6 +88,7 @@ export interface AdminMerchantRow {
   email: string
   category: string
   subscriptionTier: string
+  disabled: boolean
   totalPlayers: number
   totalGamesPlayed: number
   playsThisMonth: number
@@ -96,6 +105,7 @@ export interface AdminMerchantDetail {
     category: string
     phone: string | null
     subscriptionTier: string
+    disabled: boolean
     createdAt: string
   }
   usage: {
@@ -120,6 +130,14 @@ export interface AdminMerchantDetail {
     createdAt: string
   }[]
   playerCount: number
+  recentPlayers: {
+    id: string
+    name: string | null
+    email: string | null
+    totalPlays: number
+    totalWins: number
+    lastSeenAt: string
+  }[]
   ctas: {
     id: string
     type: string
@@ -147,7 +165,7 @@ export function fetchAdminMerchantDetail(id: string): Promise<AdminMerchantDetai
 
 export function updateAdminMerchant(
   id: string,
-  payload: { subscriptionTier?: string },
+  payload: { subscriptionTier?: string; disabled?: boolean },
 ): Promise<unknown> {
   return adminRequest(`/api/v1/admin/merchants/${encodeURIComponent(id)}`, {
     method: 'PATCH',
@@ -155,3 +173,27 @@ export function updateAdminMerchant(
   })
 }
 
+export function resetMerchantPlays(id: string): Promise<{ deletedCount: number }> {
+  return adminRequest<{ deletedCount: number }>(
+    `/api/v1/admin/merchants/${encodeURIComponent(id)}/reset-plays`,
+    { method: 'POST' },
+  )
+}
+
+export function deleteMerchant(id: string): Promise<{ deleted: boolean }> {
+  return adminRequest<{ deleted: boolean }>(
+    `/api/v1/admin/merchants/${encodeURIComponent(id)}`,
+    { method: 'DELETE' },
+  )
+}
+
+export function fetchAdminSettings(): Promise<{ key: string; value: unknown; updatedAt: string }[]> {
+  return adminRequest<{ key: string; value: unknown; updatedAt: string }[]>('/api/v1/admin/settings')
+}
+
+export function updateAdminSetting(key: string, value: unknown): Promise<unknown> {
+  return adminRequest(`/api/v1/admin/settings/${encodeURIComponent(key)}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ value }),
+  })
+}

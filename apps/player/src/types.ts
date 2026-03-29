@@ -52,4 +52,4 @@ export interface PlayerState {
   } | null
 }
 
-export type PlayerScreen = 'loading' | 'welcome' | 'action' | 'actions' | 'register' | 'game' | 'result' | 'already-played' | 'limit-reached'
+export type PlayerScreen = 'loading' | 'welcome' | 'action' | 'actions' | 'register' | 'game' | 'result' | 'already-played' | 'limit-reached' | 'merchant-disabled'

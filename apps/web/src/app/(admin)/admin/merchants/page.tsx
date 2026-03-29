@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { Card, CardContent } from '@winandwin/ui'
-import { fetchAdminMerchants, type AdminMerchantRow } from '@/lib/admin-api'
+import { fetchAdminMerchants, updateAdminMerchant, type AdminMerchantRow } from '@/lib/admin-api'
 import { MerchantSearch } from './merchant-search'
 
 const TIER_STYLES: Record<string, string> = {
@@ -30,6 +30,7 @@ function SkeletonRows() {
           <td className="px-4 py-3"><div className="h-4 w-32 animate-pulse rounded bg-gray-100" /></td>
           <td className="px-4 py-3"><div className="h-4 w-20 animate-pulse rounded bg-gray-100" /></td>
           <td className="px-4 py-3"><div className="h-4 w-16 animate-pulse rounded bg-gray-100" /></td>
+          <td className="px-4 py-3"><div className="h-4 w-16 animate-pulse rounded bg-gray-100" /></td>
           <td className="px-4 py-3"><div className="h-4 w-12 animate-pulse rounded bg-gray-100" /></td>
           <td className="px-4 py-3"><div className="h-4 w-16 animate-pulse rounded bg-gray-100" /></td>
           <td className="px-4 py-3"><div className="h-4 w-20 animate-pulse rounded bg-gray-100" /></td>
@@ -45,6 +46,7 @@ export default function AdminMerchantsPage() {
   const [merchants, setMerchants] = useState<AdminMerchantRow[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
+  const [togglingId, setTogglingId] = useState<string | null>(null)
 
   useEffect(() => {
     setLoading(true)
@@ -54,6 +56,21 @@ export default function AdminMerchantsPage() {
       .catch(() => setError(true))
       .finally(() => setLoading(false))
   }, [search])
+
+  async function handleToggleDisabled(e: React.MouseEvent, merchant: AdminMerchantRow) {
+    e.stopPropagation()
+    setTogglingId(merchant.id)
+    try {
+      await updateAdminMerchant(merchant.id, { disabled: !merchant.disabled })
+      setMerchants((prev) =>
+        prev.map((m) => (m.id === merchant.id ? { ...m, disabled: !m.disabled } : m)),
+      )
+    } catch {
+      // silently fail
+    } finally {
+      setTogglingId(null)
+    }
+  }
 
   return (
     <div className="space-y-6">
@@ -82,8 +99,9 @@ export default function AdminMerchantsPage() {
                   <th className="px-4 py-3.5 font-semibold text-gray-600">Name</th>
                   <th className="px-4 py-3.5 font-semibold text-gray-600">Category</th>
                   <th className="px-4 py-3.5 font-semibold text-gray-600">Tier</th>
-                  <th className="px-4 py-3.5 font-semibold text-gray-600">Monthly Plays</th>
                   <th className="px-4 py-3.5 font-semibold text-gray-600">Status</th>
+                  <th className="px-4 py-3.5 font-semibold text-gray-600">Monthly Plays</th>
+                  <th className="px-4 py-3.5 font-semibold text-gray-600">Usage</th>
                   <th className="px-4 py-3.5 font-semibold text-gray-600">Joined</th>
                 </tr>
               </thead>
@@ -92,7 +110,7 @@ export default function AdminMerchantsPage() {
                   <SkeletonRows />
                 ) : merchants.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="px-4 py-12 text-center">
+                    <td colSpan={7} className="px-4 py-12 text-center">
                       <div className="flex flex-col items-center gap-2">
                         <span className="text-3xl">{'\uD83C\uDFEA'}</span>
                         <p className="text-sm text-gray-500">
@@ -118,11 +136,6 @@ export default function AdminMerchantsPage() {
                         : usagePercent > 70
                           ? 'bg-yellow-500'
                           : 'bg-green-500'
-                    const statusLabel = usagePercent > 90 ? 'At limit' : 'Active'
-                    const statusStyle =
-                      usagePercent > 90
-                        ? 'border-red-300 text-red-600 bg-red-50'
-                        : 'border-green-300 text-green-600 bg-green-50'
 
                     return (
                       <tr
@@ -150,6 +163,32 @@ export default function AdminMerchantsPage() {
                         </td>
                         <td className="px-4 py-3.5">
                           <div className="flex items-center gap-2">
+                            <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold ${
+                              m.disabled
+                                ? 'border-red-300 text-red-600 bg-red-50'
+                                : 'border-green-300 text-green-600 bg-green-50'
+                            }`}>
+                              {m.disabled ? 'Disabled' : 'Active'}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={(e) => handleToggleDisabled(e, m)}
+                              disabled={togglingId === m.id}
+                              className={`relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
+                                m.disabled ? 'bg-gray-300' : 'bg-indigo-600'
+                              } ${togglingId === m.id ? 'opacity-50' : ''}`}
+                              aria-label={m.disabled ? 'Enable merchant' : 'Disable merchant'}
+                            >
+                              <span
+                                className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                                  m.disabled ? 'translate-x-0' : 'translate-x-4'
+                                }`}
+                              />
+                            </button>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3.5">
+                          <div className="flex items-center gap-2">
                             <span className={`font-semibold ${usageColor}`}>
                               {m.playsThisMonth.toLocaleString()}
                             </span>
@@ -168,8 +207,12 @@ export default function AdminMerchantsPage() {
                           )}
                         </td>
                         <td className="px-4 py-3.5">
-                          <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold ${statusStyle}`}>
-                            {statusLabel}
+                          <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold ${
+                            usagePercent > 90
+                              ? 'border-red-300 text-red-600 bg-red-50'
+                              : 'border-green-300 text-green-600 bg-green-50'
+                          }`}>
+                            {usagePercent > 90 ? 'At limit' : `${usagePercent}%`}
                           </span>
                         </td>
                         <td className="px-4 py-3.5 text-gray-500 text-xs">

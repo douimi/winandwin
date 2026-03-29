@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'preact/hooks'
-import { fetchGameConfig, fetchPlayerState, spinGame, updatePlayerInfo } from './api'
+import { fetchGameConfig, fetchPlayerState, spinGame, updatePlayerInfo, GameApiError } from './api'
 import { ActionScreen } from './components/action-screen'
 import { AlreadyPlayedScreen } from './components/already-played'
 import { LoadingScreen } from './components/loading-screen'
@@ -240,7 +240,11 @@ export function App() {
         }
       } catch (err) {
         if (!cancelled) {
-          setError(classifyError(err))
+          if (err instanceof GameApiError && err.code === 'MERCHANT_DISABLED') {
+            setScreen('merchant-disabled')
+          } else {
+            setError(classifyError(err))
+          }
         }
       }
     }
@@ -427,6 +431,10 @@ export function App() {
         </div>
       </div>
     )
+  }
+
+  if (screen === 'merchant-disabled') {
+    return <MerchantDisabledScreen />
   }
 
   if (screen === 'loading' || !config) {
@@ -635,6 +643,65 @@ export function App() {
       {screen === 'limit-reached' && (
         <LimitReachedScreen merchantName={config.merchantName} />
       )}
+    </div>
+  )
+}
+
+function MerchantDisabledScreen() {
+  return (
+    <div class="app-container">
+      <div class="screen" style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        textAlign: 'center',
+        padding: '2rem',
+        minHeight: '100vh',
+        background: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #1e1b4b 100%)',
+      }}>
+        <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>{'\uD83D\uDEAB'}</div>
+        <h1 style={{
+          fontSize: '1.8rem',
+          fontWeight: 800,
+          marginBottom: '0.5rem',
+          color: '#fff',
+        }}>
+          Game Unavailable
+        </h1>
+        <p style={{
+          fontSize: '1.05rem',
+          color: 'rgba(255,255,255,0.7)',
+          maxWidth: '320px',
+          lineHeight: 1.5,
+          marginBottom: '1.5rem',
+        }}>
+          This game is currently unavailable. Please check back later or contact the business for more information.
+        </p>
+        <div style={{
+          background: 'rgba(255,255,255,0.1)',
+          border: '1px solid rgba(255,255,255,0.15)',
+          borderRadius: '12px',
+          padding: '1.25rem',
+          maxWidth: '320px',
+          width: '100%',
+        }}>
+          <p style={{
+            fontSize: '0.9rem',
+            color: 'rgba(255,255,255,0.6)',
+            margin: 0,
+          }}>
+            We apologize for the inconvenience. The game may resume shortly.
+          </p>
+        </div>
+        <p style={{
+          marginTop: '2rem',
+          fontSize: '0.75rem',
+          color: 'rgba(255,255,255,0.4)',
+        }}>
+          Powered by Win & Win
+        </p>
+      </div>
     </div>
   )
 }

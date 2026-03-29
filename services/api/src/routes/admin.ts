@@ -1,10 +1,34 @@
 import { Hono } from 'hono'
 import { eq, and, gte, sql, count, desc, ilike } from 'drizzle-orm'
-import { merchants, games, gamePlays, players, coupons, ctas, users, platformSettings } from '@winandwin/db/schema'
+import { merchants, games, gamePlays, players, coupons, ctas, users, platformSettings, prizes } from '@winandwin/db/schema'
 import { TIER_LIMITS } from '@winandwin/shared/constants'
 import type { AppEnv } from '../types'
 
 export const adminRouter = new Hono<AppEnv>()
+
+// Helper: get tier limits from DB, falling back to hardcoded defaults
+// biome-ignore lint/suspicious/noExplicitAny: db type is complex
+async function getDbTierLimits(db: any): Promise<Record<string, { monthlyPlays: number }>> {
+  try {
+    const result = await db
+      .select()
+      .from(platformSettings)
+      .where(eq(platformSettings.key, 'tier_limits'))
+      .limit(1)
+
+    if (result.length > 0 && result[0]!.value) {
+      return result[0]!.value as Record<string, { monthlyPlays: number }>
+    }
+  } catch {
+    // fall through to defaults
+  }
+  return {
+    free: { monthlyPlays: TIER_LIMITS.free.monthlyPlays },
+    starter: { monthlyPlays: TIER_LIMITS.starter.monthlyPlays },
+    pro: { monthlyPlays: TIER_LIMITS.pro.monthlyPlays === Infinity ? 999999 : TIER_LIMITS.pro.monthlyPlays },
+    enterprise: { monthlyPlays: TIER_LIMITS.enterprise.monthlyPlays === Infinity ? 999999 : (TIER_LIMITS.enterprise.monthlyPlays as number) },
+  }
+}
 
 // ---------------------------------------------------------------------------
 // GET /stats — Platform-wide stats
@@ -29,7 +53,9 @@ adminRouter.get('/stats', async (c) => {
       totalCouponsResult,
       redeemedCouponsResult,
       newMerchantsWeekResult,
+      disabledMerchantsResult,
       topMerchantsResult,
+      recentPlaysResult,
     ] = await Promise.all([
       // Total merchants
       db.select({ count: sql<number>`count(*)::int` }).from(merchants),
@@ -62,6 +88,11 @@ adminRouter.get('/stats', async (c) => {
         .select({ count: sql<number>`count(*)::int` })
         .from(merchants)
         .where(gte(merchants.createdAt, oneWeekAgo)),
+      // Disabled merchants
+      db
+        .select({ count: sql<number>`count(*)::int` })
+        .from(merchants)
+        .where(eq(merchants.disabled, true)),
       // Top 5 merchants by plays this week
       db
         .select({
@@ -73,24 +104,47 @@ adminRouter.get('/stats', async (c) => {
         .groupBy(gamePlays.merchantId)
         .orderBy(desc(sql`count(*)`))
         .limit(5),
+      // Recent 10 game plays across all merchants
+      db
+        .select({
+          id: gamePlays.id,
+          merchantId: gamePlays.merchantId,
+          result: gamePlays.result,
+          playedAt: gamePlays.playedAt,
+        })
+        .from(gamePlays)
+        .orderBy(desc(gamePlays.playedAt))
+        .limit(10),
     ])
 
-    // Fetch merchant names for top merchants
-    let topMerchants: { id: string; name: string; plays: number }[] = []
-    if (topMerchantsResult.length > 0) {
-      const merchantIds = topMerchantsResult.map((r) => r.merchantId)
+    // Fetch merchant names for top merchants and recent plays
+    const allMerchantIds = new Set<string>()
+    for (const r of topMerchantsResult) allMerchantIds.add(r.merchantId)
+    for (const r of recentPlaysResult) allMerchantIds.add(r.merchantId)
+
+    let nameMap = new Map<string, string>()
+    if (allMerchantIds.size > 0) {
+      const ids = [...allMerchantIds]
       const merchantRows = await db
         .select({ id: merchants.id, name: merchants.name })
         .from(merchants)
-        .where(sql`${merchants.id} IN (${sql.join(merchantIds.map((id) => sql`${id}`), sql`, `)})`)
-
-      const nameMap = new Map(merchantRows.map((m) => [m.id, m.name]))
-      topMerchants = topMerchantsResult.map((r) => ({
-        id: r.merchantId,
-        name: nameMap.get(r.merchantId) ?? 'Unknown',
-        plays: r.plays,
-      }))
+        .where(sql`${merchants.id} IN (${sql.join(ids.map((id) => sql`${id}`), sql`, `)})`)
+      nameMap = new Map(merchantRows.map((m) => [m.id, m.name]))
     }
+
+    const topMerchants = topMerchantsResult.map((r) => ({
+      id: r.merchantId,
+      name: nameMap.get(r.merchantId) ?? 'Unknown',
+      plays: r.plays,
+    }))
+
+    const recentActivity = recentPlaysResult.map((r) => ({
+      id: r.id,
+      merchantId: r.merchantId,
+      merchantName: nameMap.get(r.merchantId) ?? 'Unknown',
+      result: r.result,
+      playedAt: r.playedAt.toISOString(),
+    }))
 
     return c.json({
       success: true,
@@ -104,7 +158,9 @@ adminRouter.get('/stats', async (c) => {
         totalCouponsRedeemed: redeemedCouponsResult[0]?.count ?? 0,
         revenue: 0,
         newMerchantsThisWeek: newMerchantsWeekResult[0]?.count ?? 0,
+        disabledMerchants: disabledMerchantsResult[0]?.count ?? 0,
         topMerchants,
+        recentActivity,
       },
     })
   } catch (err) {
@@ -138,6 +194,9 @@ adminRouter.get('/merchants', async (c) => {
         .from(merchants)
         .orderBy(desc(merchants.createdAt))
     }
+
+    // Get tier limits from DB
+    const tierLimits = await getDbTierLimits(db)
 
     // Get monthly play counts and player counts for each merchant
     const monthStart = new Date()
@@ -174,8 +233,9 @@ adminRouter.get('/merchants', async (c) => {
     const totalPlaysMap = new Map(totalPlayCounts.map((r) => [r.merchantId, r.count]))
 
     const data = merchantList.map((m) => {
-      const tier = m.subscriptionTier as keyof typeof TIER_LIMITS
-      const monthlyLimit = TIER_LIMITS[tier]?.monthlyPlays ?? 200
+      const tier = m.subscriptionTier as string
+      const tierConfig = tierLimits[tier] as { monthlyPlays: number } | undefined
+      const monthlyLimit = tierConfig?.monthlyPlays ?? 200
       const playsThisMonth = monthlyPlaysMap.get(m.id) ?? 0
 
       return {
@@ -185,10 +245,11 @@ adminRouter.get('/merchants', async (c) => {
         email: m.email,
         category: m.category,
         subscriptionTier: m.subscriptionTier,
+        disabled: m.disabled,
         totalPlayers: playersMap.get(m.id) ?? 0,
         totalGamesPlayed: totalPlaysMap.get(m.id) ?? 0,
         playsThisMonth,
-        monthlyLimit: monthlyLimit === Number.POSITIVE_INFINITY ? null : monthlyLimit,
+        monthlyLimit: monthlyLimit >= 999999 ? null : monthlyLimit,
         createdAt: m.createdAt.toISOString(),
       }
     })
@@ -225,8 +286,12 @@ adminRouter.get('/merchants/:id', async (c) => {
     }
 
     const merchant = merchantResult[0]!
-    const tier = merchant.subscriptionTier as keyof typeof TIER_LIMITS
-    const monthlyLimit = TIER_LIMITS[tier]?.monthlyPlays ?? 200
+
+    // Get tier limits from DB
+    const tierLimits = await getDbTierLimits(db)
+    const tier = merchant.subscriptionTier as string
+    const tierConfig = tierLimits[tier] as { monthlyPlays: number } | undefined
+    const monthlyLimit = tierConfig?.monthlyPlays ?? 200
 
     const monthStart = new Date()
     monthStart.setUTCDate(1)
@@ -238,6 +303,7 @@ adminRouter.get('/merchants/:id', async (c) => {
       merchantCoupons,
       playerCountResult,
       merchantCtas,
+      recentPlayersResult,
     ] = await Promise.all([
       db
         .select({ count: sql<number>`count(*)::int` })
@@ -262,6 +328,12 @@ adminRouter.get('/merchants/:id', async (c) => {
         .select()
         .from(ctas)
         .where(eq(ctas.merchantId, id)),
+      db
+        .select()
+        .from(players)
+        .where(eq(players.merchantId, id))
+        .orderBy(desc(players.lastSeenAt))
+        .limit(20),
     ])
 
     // Get play counts per game
@@ -287,11 +359,12 @@ adminRouter.get('/merchants/:id', async (c) => {
           category: merchant.category,
           phone: merchant.phone,
           subscriptionTier: merchant.subscriptionTier,
+          disabled: merchant.disabled,
           createdAt: merchant.createdAt.toISOString(),
         },
         usage: {
           playsThisMonth: playsThisMonthResult[0]?.count ?? 0,
-          monthlyLimit: monthlyLimit === Number.POSITIVE_INFINITY ? null : monthlyLimit,
+          monthlyLimit: monthlyLimit >= 999999 ? null : monthlyLimit,
           tier,
         },
         games: merchantGames.map((g) => ({
@@ -311,6 +384,14 @@ adminRouter.get('/merchants/:id', async (c) => {
           createdAt: cp.createdAt.toISOString(),
         })),
         playerCount: playerCountResult[0]?.count ?? 0,
+        recentPlayers: recentPlayersResult.map((p) => ({
+          id: p.id,
+          name: p.name,
+          email: p.email,
+          totalPlays: p.totalPlays,
+          totalWins: p.totalWins,
+          lastSeenAt: p.lastSeenAt.toISOString(),
+        })),
         ctas: merchantCtas.map((ct) => ({
           id: ct.id,
           type: ct.type,
@@ -337,6 +418,7 @@ adminRouter.patch('/merchants/:id', async (c) => {
     const id = c.req.param('id')
     const body = await c.req.json<{
       subscriptionTier?: 'free' | 'starter' | 'pro' | 'enterprise'
+      disabled?: boolean
     }>()
 
     const existing = await db.select().from(merchants).where(eq(merchants.id, id)).limit(1)
@@ -349,6 +431,7 @@ adminRouter.patch('/merchants/:id', async (c) => {
 
     const updates: Record<string, unknown> = {}
     if (body.subscriptionTier) updates.subscriptionTier = body.subscriptionTier
+    if (typeof body.disabled === 'boolean') updates.disabled = body.disabled
 
     if (Object.keys(updates).length === 0) {
       return c.json(
@@ -368,6 +451,91 @@ adminRouter.patch('/merchants/:id', async (c) => {
     console.error('Error updating merchant:', err)
     return c.json(
       { success: false, error: { code: 'INTERNAL_ERROR', message: 'Failed to update merchant' } },
+      500,
+    )
+  }
+})
+
+// ---------------------------------------------------------------------------
+// POST /merchants/:id/reset-plays — Reset monthly plays for a merchant
+// ---------------------------------------------------------------------------
+adminRouter.post('/merchants/:id/reset-plays', async (c) => {
+  try {
+    const db = c.get('db')
+    const id = c.req.param('id')
+
+    const existing = await db.select().from(merchants).where(eq(merchants.id, id)).limit(1)
+    if (existing.length === 0) {
+      return c.json(
+        { success: false, error: { code: 'NOT_FOUND', message: 'Merchant not found' } },
+        404,
+      )
+    }
+
+    const monthStart = new Date()
+    monthStart.setUTCDate(1)
+    monthStart.setUTCHours(0, 0, 0, 0)
+
+    const deleted = await db
+      .delete(gamePlays)
+      .where(
+        and(
+          eq(gamePlays.merchantId, id),
+          gte(gamePlays.playedAt, monthStart),
+        ),
+      )
+      .returning({ id: gamePlays.id })
+
+    return c.json({
+      success: true,
+      data: { deletedCount: deleted.length },
+    })
+  } catch (err) {
+    console.error('Error resetting plays:', err)
+    return c.json(
+      { success: false, error: { code: 'INTERNAL_ERROR', message: 'Failed to reset plays' } },
+      500,
+    )
+  }
+})
+
+// ---------------------------------------------------------------------------
+// DELETE /merchants/:id — Delete merchant and all cascading data
+// ---------------------------------------------------------------------------
+adminRouter.delete('/merchants/:id', async (c) => {
+  try {
+    const db = c.get('db')
+    const id = c.req.param('id')
+
+    const existing = await db.select().from(merchants).where(eq(merchants.id, id)).limit(1)
+    if (existing.length === 0) {
+      return c.json(
+        { success: false, error: { code: 'NOT_FOUND', message: 'Merchant not found' } },
+        404,
+      )
+    }
+
+    // Delete in order to respect foreign keys:
+    // game_plays -> coupons -> prizes -> games -> ctas -> players -> merchant
+    await db.delete(gamePlays).where(eq(gamePlays.merchantId, id))
+    await db.delete(coupons).where(eq(coupons.merchantId, id))
+
+    // Get game ids to delete prizes
+    const merchantGames = await db.select({ id: games.id }).from(games).where(eq(games.merchantId, id))
+    for (const g of merchantGames) {
+      await db.delete(prizes).where(eq(prizes.gameId, g.id))
+    }
+
+    await db.delete(games).where(eq(games.merchantId, id))
+    await db.delete(ctas).where(eq(ctas.merchantId, id))
+    await db.delete(players).where(eq(players.merchantId, id))
+    await db.delete(merchants).where(eq(merchants.id, id))
+
+    return c.json({ success: true, data: { deleted: true } })
+  } catch (err) {
+    console.error('Error deleting merchant:', err)
+    return c.json(
+      { success: false, error: { code: 'INTERNAL_ERROR', message: 'Failed to delete merchant' } },
       500,
     )
   }

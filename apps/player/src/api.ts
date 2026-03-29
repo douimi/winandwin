@@ -1,9 +1,23 @@
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8787'
 
+export class GameApiError extends Error {
+  code: string
+  constructor(code: string, message: string) {
+    super(message)
+    this.code = code
+    this.name = 'GameApiError'
+  }
+}
+
 export async function fetchGameConfig(slug: string) {
   const res = await fetch(`${API_BASE}/api/v1/play/${slug}`)
   const json = await res.json()
-  if (!json.success) throw new Error(json.error?.message || 'Failed to load game')
+  if (!json.success) {
+    throw new GameApiError(
+      json.error?.code || 'UNKNOWN',
+      json.error?.message || 'Failed to load game',
+    )
+  }
   return json.data
 }
 
@@ -21,7 +35,7 @@ export async function spinGame(
     body: JSON.stringify({ fingerprintId, hardwareId, completedActions }),
   })
   const json = await res.json()
-  if (!json.success) throw new Error(json.error?.message || 'Failed to play')
+  if (!json.success) throw new GameApiError(json.error?.code || 'UNKNOWN', json.error?.message || 'Failed to play')
   return json.data
 }
 
@@ -41,6 +55,6 @@ export async function updatePlayerInfo(slug: string, fingerprintId: string, name
     body: JSON.stringify({ fingerprintId, hardwareId, name, email }),
   })
   const json = await res.json()
-  if (!json.success) throw new Error(json.error?.message || 'Failed to register')
+  if (!json.success) throw new GameApiError(json.error?.code || 'UNKNOWN', json.error?.message || 'Failed to register')
   return json.data
 }

@@ -75,6 +75,13 @@ playRouter.get('/:slug', async (c) => {
 
     const merchantData = merchant[0]!
 
+    if (merchantData.disabled) {
+      return c.json({
+        success: false,
+        error: { code: 'MERCHANT_DISABLED', message: 'This game is currently unavailable.' },
+      }, 403)
+    }
+
     // Get active game with prizes
     const activeGame = await db.query.games.findFirst({
       where: and(eq(games.merchantId, merchantData.id), eq(games.status, 'active')),
