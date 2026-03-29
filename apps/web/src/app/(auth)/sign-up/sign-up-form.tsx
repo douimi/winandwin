@@ -72,7 +72,7 @@ export function SignUpForm() {
     <div className="flex flex-col items-center">
       {/* Logo */}
       <a href="/" className="mb-8 flex flex-col items-center gap-2">
-        <img src="/logo.svg" alt="Win & Win" className="h-14 w-auto" />
+        <img src="/logo.svg" alt="Win & Win" className="h-24 w-auto" />
       </a>
 
       <div className="grid w-full gap-6 lg:max-w-4xl lg:grid-cols-[1fr_1.2fr]">
