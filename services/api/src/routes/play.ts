@@ -763,20 +763,27 @@ playRouter.post('/:slug/register', async (c) => {
 
     if (recentCoupon.length > 0) {
       const couponData = recentCoupon[0]!
+      const apiKey = c.env.RESEND_API_KEY ?? ''
+      console.log('[Register] Sending email to:', body.email, 'apiKey present:', !!apiKey, 'apiKey length:', apiKey.length)
 
-      // Look up the prize name from the coupon
-      sendCouponEmail({
-        to: body.email,
-        playerName: body.name,
-        merchantName: merchantData.name,
-        prizeName: couponData.prizeName,
-        prizeEmoji: undefined,
-        couponCode: couponData.code,
-        validFrom: couponData.validFrom.toISOString(),
-        validUntil: couponData.validUntil.toISOString(),
-      }, c.env.RESEND_API_KEY ?? '').catch(err => console.error('Email failed:', err))
-
-      emailSent = true
+      try {
+        await sendCouponEmail({
+          to: body.email,
+          playerName: body.name,
+          merchantName: merchantData.name,
+          prizeName: couponData.prizeName,
+          prizeEmoji: undefined,
+          couponCode: couponData.code,
+          validFrom: couponData.validFrom.toISOString(),
+          validUntil: couponData.validUntil.toISOString(),
+        }, apiKey)
+        emailSent = true
+        console.log('[Register] Email sent successfully')
+      } catch (err) {
+        console.error('[Register] Email FAILED:', err)
+      }
+    } else {
+      console.log('[Register] No coupon found for player:', playerData.id)
     }
 
     return c.json({

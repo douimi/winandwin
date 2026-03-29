@@ -90,10 +90,23 @@ function buildCouponEmailHtml(data: CouponEmailData): string {
                 <td style="padding:8px 0;font-size:14px;font-weight:600;color:#1a1a2e;text-align:right;border-top:1px solid #f0f0f0;">${validUntil}</td>
               </tr>
             </table>
+            <!-- QR Code -->
+            <div style="text-align:center;margin-bottom:24px;">
+              <img
+                src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(`https://winandwin.club/validate/${data.couponCode}`)}"
+                alt="Coupon QR Code"
+                width="180"
+                height="180"
+                style="border-radius:12px;border:1px solid #e5e7eb;"
+              />
+              <p style="margin:8px 0 0;font-size:12px;color:#9ca3af;">
+                Staff can scan this QR code to validate your coupon
+              </p>
+            </div>
             <!-- Instruction -->
             <div style="background:#f8fafc;border-radius:8px;padding:16px;text-align:center;">
               <p style="margin:0;font-size:14px;color:#374151;font-weight:500;">
-                Show this email or the coupon code to staff to redeem your prize
+                Show this email to staff to redeem your prize
               </p>
             </div>
           </td>

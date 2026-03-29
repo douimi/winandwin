@@ -297,37 +297,44 @@ export function App() {
 
   /** Trigger spin after action is completed in overlay mode */
   function handleSpinAfterAction(actions: string[]) {
+    console.log('[WW] handleSpinAfterAction called', { spinning, hasConfig: !!config, hasFp: !!fingerprintId })
     if (spinning || !config || !fingerprintId) return
     setSpinning(true)
 
     withTimeout(
       spinGame(slug, fingerprintId, actions, IS_TEST_MODE, hardwareId ?? undefined),
     ).then((spinResult) => {
+      console.log('[WW] Spin result:', spinResult.outcome, spinResult.prize?.name)
       setResult(spinResult)
 
       if (config.game.type === 'wheel') {
         const segments = buildWheelSegments(config.game.prizes, bizTheme.tryAgainText, bizTheme.tryAgainEmoji)
         const idx = findTargetIndex(segments, spinResult.outcome, spinResult.prize?.name)
+        console.log('[WW] Wheel target index:', idx)
         setTargetIndex(idx)
       }
     }).catch((err) => {
+      console.error('[WW] Spin error:', err)
       setError(classifyError(err))
       setSpinning(false)
     })
   }
 
   async function handleRegistration(name: string, email: string) {
+    console.log('[WW] handleRegistration called', { name, email, fingerprintId })
     if (!fingerprintId) return
     setPlayerEmail(email)
 
     try {
       // Send name/email to API and trigger coupon email
-      await withTimeout(
+      console.log('[WW] Calling updatePlayerInfo...')
+      const response = await withTimeout(
         updatePlayerInfo(slug, fingerprintId, name, email, hardwareId ?? undefined),
       )
+      console.log('[WW] updatePlayerInfo response:', response)
     } catch (err) {
       // Don't block the flow -- still show the result
-      console.error('Failed to update player info:', err)
+      console.error('[WW] Failed to update player info:', err)
     }
 
     setScreen('result')
@@ -378,15 +385,16 @@ export function App() {
   }
 
   function handleSpinComplete(_targetIdx: number) {
+    console.log('[WW] handleSpinComplete called, resultRef:', resultRef.current?.outcome)
     setSpinning(false)
 
     // Use ref to get the latest result (avoids stale closure)
     const currentResult = resultRef.current
     if (currentResult?.outcome === 'win') {
-      // Win: ask for name + email before showing result
+      console.log('[WW] → Going to register screen')
       setScreen('register')
     } else {
-      // Lose: show result directly
+      console.log('[WW] → Going to result screen (lose)')
       setScreen('result')
     }
   }
