@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'preact/hooks'
+import { useCallback, useEffect, useMemo, useState } from 'preact/hooks'
 import { fetchGameConfig, fetchPlayerState, spinGame, updatePlayerInfo } from './api'
 import { ActionScreen } from './components/action-screen'
 import { AlreadyPlayedScreen } from './components/already-played'
@@ -10,6 +10,8 @@ import { MysteryBox } from './components/mystery-box'
 import { Slots } from './components/slots'
 import { Wheel, buildWheelSegments, findTargetIndex } from './components/wheel'
 import { generateFingerprint, getHardwareFingerprint } from './lib/fingerprint'
+import { getAtmosphere } from './lib/atmospheres'
+import type { AtmosphereTheme } from './lib/atmospheres'
 import type { GameConfig, PlayerScreen, PlayerState, SpinResult } from './types'
 
 /** Classify errors into user-friendly categories */
@@ -97,6 +99,20 @@ function pickSingleAction(
   return sorted[0]!
 }
 
+/** Apply atmosphere CSS custom properties to the document root */
+function applyAtmosphereTheme(theme: AtmosphereTheme) {
+  const root = document.documentElement
+  root.style.setProperty('--atm-bg', theme.bgGradient)
+  root.style.setProperty('--atm-text', theme.primaryText)
+  root.style.setProperty('--atm-text-secondary', theme.secondaryText)
+  root.style.setProperty('--atm-card-bg', theme.cardBg)
+  root.style.setProperty('--atm-card-border', theme.cardBorder)
+  root.style.setProperty('--atm-button-bg', theme.buttonBg)
+  root.style.setProperty('--atm-button-text', theme.buttonText)
+  root.style.setProperty('--atm-button-glow', theme.buttonGlow)
+  root.style.setProperty('--atm-accent', theme.accentColor)
+}
+
 export function App() {
   const [screen, setScreen] = useState<PlayerScreen>('loading')
   const [config, setConfig] = useState<GameConfig | null>(null)
@@ -110,6 +126,7 @@ export function App() {
   const [playerState, setPlayerState] = useState<PlayerState | null>(null)
   const [playerEmail, setPlayerEmail] = useState<string | null>(null)
   const [singleAction, setSingleAction] = useState<GameConfig['requiredActions'][number] | null>(null)
+  const [showActionOverlay, setShowActionOverlay] = useState(false)
   const [preCompletedAction] = useState(() => {
     const slug = window.location.pathname.replace(/^\//, '') || 'demo'
     return checkPendingAction(slug)
@@ -118,20 +135,26 @@ export function App() {
   // Extract merchant slug from URL path: /merchant-slug
   const slug = window.location.pathname.replace(/^\//, '') || 'demo'
 
-  // Apply theme colors from config
+  // Get the atmosphere theme from config
+  const theme = useMemo(() => getAtmosphere(config?.atmosphere || 'joyful'), [config?.atmosphere])
+
+  // Apply atmosphere theme + branding colors from config
   useEffect(() => {
     if (!config) return
     const root = document.documentElement
     root.style.setProperty('--primary', config.game.branding.primaryColor)
     root.style.setProperty('--secondary', config.game.branding.secondaryColor)
-    root.style.setProperty(
-      '--bg',
-      `linear-gradient(135deg, ${config.game.branding.primaryColor} 0%, ${config.game.branding.secondaryColor} 100%)`
-    )
+    // Apply atmosphere as the main background instead of simple gradient
+    applyAtmosphereTheme(theme)
+    root.style.setProperty('--bg', theme.bgGradient)
+    root.style.setProperty('--text', theme.primaryText)
+    root.style.setProperty('--text-muted', theme.secondaryText)
+    root.style.setProperty('--card-bg', theme.cardBg)
+    root.style.setProperty('--card-border', theme.cardBorder)
     // Update theme-color meta tag
     const meta = document.querySelector('meta[name="theme-color"]')
     if (meta) meta.setAttribute('content', config.game.branding.primaryColor)
-  }, [config])
+  }, [config, theme])
 
   // Initialize: generate fingerprint, fetch config, fetch player state
   useEffect(() => {
@@ -162,8 +185,12 @@ export function App() {
 
           // Decide which screen to show based on server state
           if (IS_TEST_MODE) {
-            // Test mode: always start from welcome
-            setScreen('welcome')
+            // Test mode: for wheel, go directly to game; for others, show welcome
+            if (gameConfig.game.type === 'wheel') {
+              setScreen('game')
+            } else {
+              setScreen('welcome')
+            }
           } else if (!state.canPlay && state.playsToday >= state.maxPlaysPerDay) {
             // Player has already hit the daily limit
             setScreen('already-played')
@@ -173,12 +200,22 @@ export function App() {
             setCompletedActions(state.completedActionsToday)
             setScreen('game')
           } else {
-            // New player or no actions today -- show welcome
-            setScreen('welcome')
+            // For wheel games: show game screen directly (wheel is the hero)
+            // For other game types: show welcome screen
+            if (gameConfig.game.type === 'wheel') {
+              setScreen('game')
+            } else {
+              setScreen('welcome')
+            }
           }
         } else {
-          // No state returned (new player) -- show welcome
-          setScreen('welcome')
+          // No state returned (new player)
+          // For wheel: show game directly; for others: show welcome
+          if (gameConfig.game.type === 'wheel') {
+            setScreen('game')
+          } else {
+            setScreen('welcome')
+          }
         }
       } catch (err) {
         if (!cancelled) {
@@ -207,9 +244,62 @@ export function App() {
     }
   }
 
+  /** For wheel games: when SPIN is clicked, check if action needed first */
+  function handleWheelSpinClick() {
+    if (!config || spinning) return
+
+    // If we already have completed actions, proceed to spin
+    if (completedActions.length > 0) {
+      handleSpin()
+      return
+    }
+
+    // Determine which single action to show
+    const completedEver = playerState?.completedActionsEver ?? []
+    const action = pickSingleAction(config.requiredActions, completedEver)
+
+    if (action) {
+      setSingleAction(action)
+      setShowActionOverlay(true)
+    } else {
+      // No actions configured -- spin directly
+      handleSpin()
+    }
+  }
+
   function handleActionComplete(actions: string[]) {
     setCompletedActions(actions)
-    setScreen('game')
+    // If we were showing the overlay (wheel flow), close it and spin
+    if (showActionOverlay) {
+      setShowActionOverlay(false)
+      // Small delay to let the overlay close, then spin
+      setTimeout(() => {
+        handleSpinAfterAction(actions)
+      }, 400)
+    } else {
+      setScreen('game')
+    }
+  }
+
+  /** Trigger spin after action is completed in overlay mode */
+  function handleSpinAfterAction(actions: string[]) {
+    if (spinning || !config || !fingerprintId) return
+    setSpinning(true)
+
+    withTimeout(
+      spinGame(slug, fingerprintId, actions, IS_TEST_MODE, hardwareId ?? undefined),
+    ).then((spinResult) => {
+      setResult(spinResult)
+
+      if (config.game.type === 'wheel') {
+        const segments = buildWheelSegments(config.game.prizes)
+        const idx = findTargetIndex(segments, spinResult.outcome, spinResult.prize?.name)
+        setTargetIndex(idx)
+      }
+    }).catch((err) => {
+      setError(classifyError(err))
+      setSpinning(false)
+    })
   }
 
   async function handleRegistration(name: string, email: string) {
@@ -327,8 +417,20 @@ export function App() {
     )
   }
 
+  const initial = config.merchantName?.charAt(0)?.toUpperCase() || '?'
+
   return (
     <div class="app-container">
+      {/* Background image overlay (if configured) */}
+      {config.game.branding.backgroundUrl && (
+        <div
+          class="bg-image-overlay"
+          style={{
+            backgroundImage: `url(${config.game.branding.backgroundUrl})`,
+          }}
+        />
+      )}
+
       {screen === 'welcome' && (
         <WelcomeScreen config={config} onPlay={handlePlayClick} />
       )}
@@ -356,7 +458,79 @@ export function App() {
         <RegisterScreen onRegister={handleRegistration} result={result} />
       )}
 
-      {screen === 'game' && (
+      {screen === 'game' && config.game.type === 'wheel' && (
+        <div class="screen game-screen immersive-wheel-screen">
+          {/* Sparkle particles in background */}
+          <div class="game-sparkles">
+            <div class="sparkle s1" />
+            <div class="sparkle s2" />
+            <div class="sparkle s3" />
+            <div class="sparkle s4" />
+            <div class="sparkle s5" />
+            <div class="sparkle s6" />
+          </div>
+
+          {/* Merchant branding header */}
+          <div class="immersive-header">
+            <div class="immersive-logo-frame">
+              {config.merchantLogo ? (
+                <img
+                  class="immersive-logo-img"
+                  src={config.merchantLogo}
+                  alt={config.merchantName}
+                />
+              ) : (
+                <span class="immersive-logo-initial">{initial}</span>
+              )}
+            </div>
+            <p class="immersive-merchant-name">{config.merchantName}</p>
+          </div>
+
+          {/* Game title */}
+          <h1 class="immersive-game-title" style={{ fontSize: theme.titleSize, fontWeight: theme.fontWeight }}>
+            {config.game.name}
+          </h1>
+
+          {/* Subtitle */}
+          {config.merchantDescription && (
+            <p class="immersive-subtitle">{config.merchantDescription}</p>
+          )}
+
+          {/* THE WHEEL — the hero of the page */}
+          <Wheel
+            prizes={config.game.prizes}
+            branding={config.game.branding}
+            spinning={spinning}
+            onSpin={handleWheelSpinClick}
+            onSpinComplete={handleSpinComplete}
+            targetIndex={targetIndex}
+            wheelColors={theme.wheelColors}
+            wheelBorder={theme.wheelBorder}
+            wheelCenter={theme.wheelCenter}
+            wheelText={theme.wheelText}
+          />
+
+          {/* Powered by */}
+          <p class="immersive-powered">Powered by Win & Win</p>
+
+          {/* Action overlay (bottom sheet) */}
+          {showActionOverlay && singleAction && (
+            <div class="action-overlay-backdrop" onClick={() => setShowActionOverlay(false)}>
+              <div class="action-overlay-sheet" onClick={(e) => e.stopPropagation()}>
+                <div class="action-overlay-handle" />
+                <ActionScreen
+                  config={config}
+                  onComplete={handleActionComplete}
+                  preCompleted={preCompletedAction}
+                  singleAction={singleAction}
+                />
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {screen === 'game' && config.game.type !== 'wheel' && (
         <div class="screen game-screen">
           {/* Sparkle particles in background */}
           <div class="game-sparkles">
@@ -375,17 +549,6 @@ export function App() {
           </div>
 
           <p class="game-merchant-sub">{config.merchantName}</p>
-
-          {config.game.type === 'wheel' && (
-            <Wheel
-              prizes={config.game.prizes}
-              branding={config.game.branding}
-              spinning={spinning}
-              onSpin={handleSpin}
-              onSpinComplete={handleSpinComplete}
-              targetIndex={targetIndex}
-            />
-          )}
 
           {config.game.type === 'slots' && (
             <Slots

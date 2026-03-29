@@ -1,6 +1,8 @@
 export interface GameConfig {
   merchantName: string
   merchantLogo?: string
+  merchantDescription?: string
+  atmosphere?: string
   game: {
     id: string
     type: 'wheel' | 'slots' | 'mystery_box'
@@ -8,6 +10,8 @@ export interface GameConfig {
     branding: {
       primaryColor: string
       secondaryColor: string
+      backgroundUrl?: string | null
+      logoUrl?: string | null
     }
     prizes: { id: string; name: string; emoji?: string }[]
   }

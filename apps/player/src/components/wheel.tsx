@@ -8,6 +8,14 @@ interface WheelProps {
   onSpin: () => void
   /** Index in the DISPLAY segments array (includes "Try Again" segments) */
   targetIndex: number | null
+  /** Atmosphere wheel colors — overrides default palette */
+  wheelColors?: string[]
+  /** Atmosphere wheel border color */
+  wheelBorder?: string
+  /** Atmosphere wheel center hub color */
+  wheelCenter?: string
+  /** Atmosphere wheel text color */
+  wheelText?: string
 }
 
 export interface WheelSegment {
@@ -90,7 +98,11 @@ const SPIN_DURATION = 4500
 const MIN_ROTATIONS = 6
 
 /** Generate rich segment colors */
-function segmentColor(index: number, isPrize: boolean, primary: string, secondary: string): string {
+function segmentColor(index: number, isPrize: boolean, primary: string, secondary: string, atmosphereColors?: string[]): string {
+  if (atmosphereColors && atmosphereColors.length > 0) {
+    // Use atmosphere colors for all segments
+    return atmosphereColors[index % atmosphereColors.length]!
+  }
   if (!isPrize) return '#2d2d3d' // Dark muted for "Try Again"
   const palette = [primary, secondary, '#f59e0b', '#10b981', '#8b5cf6', '#ef4444', '#06b6d4', '#f97316']
   return palette[Math.floor(index / 2) % palette.length]!
@@ -119,7 +131,7 @@ function darken(color: string, amount = 0.25): string {
   return color
 }
 
-export function Wheel({ prizes, branding, onSpinComplete, spinning, onSpin, targetIndex }: WheelProps) {
+export function Wheel({ prizes, branding, onSpinComplete, spinning, onSpin, targetIndex, wheelColors, wheelBorder, wheelCenter, wheelText }: WheelProps) {
   const [rotation, setRotation] = useState(0)
   const hasSpun = useRef(false)
 
@@ -205,7 +217,7 @@ export function Wheel({ prizes, branding, onSpinComplete, spinning, onSpin, targ
           <svg viewBox={`0 0 ${SIZE} ${SIZE}`} width="100%" height="100%">
             <defs>
               {segments.map((seg, i) => {
-                const color = segmentColor(i, seg.isPrize, branding.primaryColor, branding.secondaryColor)
+                const color = segmentColor(i, seg.isPrize, branding.primaryColor, branding.secondaryColor, wheelColors)
                 return (
                   <radialGradient key={`grad-${i}`} id={`seg-grad-${i}`} cx="50%" cy="50%" r="55%">
                     <stop offset="0%" stop-color={lighten(color, seg.isPrize ? 0.15 : 0.05)} />
@@ -230,8 +242,8 @@ export function Wheel({ prizes, branding, onSpinComplete, spinning, onSpin, targ
             </defs>
 
             {/* Outer ring */}
-            <circle cx={CENTER} cy={CENTER} r={OUTER_R - 1} fill="url(#ring-grad)" stroke="#FFD700" stroke-width="2" />
-            <circle cx={CENTER} cy={CENTER} r={OUTER_R - 3} fill="none" stroke="rgba(255,215,0,0.3)" stroke-width="1" />
+            <circle cx={CENTER} cy={CENTER} r={OUTER_R - 1} fill="url(#ring-grad)" stroke={wheelBorder || '#FFD700'} stroke-width="2" />
+            <circle cx={CENTER} cy={CENTER} r={OUTER_R - 3} fill="none" stroke={wheelBorder ? `${wheelBorder}4d` : 'rgba(255,215,0,0.3)'} stroke-width="1" />
 
             {/* Segments */}
             {segments.map((seg, i) => {
@@ -277,7 +289,7 @@ export function Wheel({ prizes, branding, onSpinComplete, spinning, onSpin, targ
                   <text
                     x={labelX} y={labelY}
                     text-anchor="middle" dominant-baseline="central"
-                    fill={seg.isPrize ? '#fff' : 'rgba(255,255,255,0.5)'}
+                    fill={seg.isPrize ? (wheelText || '#fff') : `${wheelText || 'rgba(255,255,255,0.5)'}`}
                     font-size={seg.isPrize ? '11' : '9'}
                     font-weight={seg.isPrize ? '700' : '500'}
                     font-style={seg.isPrize ? 'normal' : 'italic'}
@@ -298,9 +310,9 @@ export function Wheel({ prizes, branding, onSpinComplete, spinning, onSpin, targ
             ))}
 
             {/* Center hub */}
-            <circle cx={CENTER} cy={CENTER} r={30} fill="url(#hub-grad)" stroke="#c0c0c0" stroke-width="2" filter="url(#hub-shadow)" />
+            <circle cx={CENTER} cy={CENTER} r={30} fill={wheelCenter || 'url(#hub-grad)'} stroke={wheelCenter ? darken(wheelCenter, 0.2) : '#c0c0c0'} stroke-width="2" filter="url(#hub-shadow)" />
             <circle cx={CENTER} cy={CENTER} r={26} fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="1" />
-            <text x={CENTER} y={CENTER} text-anchor="middle" dominant-baseline="central" fill="#6366f1" font-size="12" font-weight="800" letter-spacing="2">SPIN</text>
+            <text x={CENTER} y={CENTER} text-anchor="middle" dominant-baseline="central" fill={wheelText || '#6366f1'} font-size="12" font-weight="800" letter-spacing="2">SPIN</text>
           </svg>
         </div>
       </div>

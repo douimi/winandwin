@@ -31,6 +31,10 @@ export default function SettingsPage() {
   const [description, setDescription] = useState('')
   const [savingBrand, setSavingBrand] = useState(false)
 
+  // Atmosphere state
+  const [atmosphere, setAtmosphere] = useState('joyful')
+  const [savingAtmosphere, setSavingAtmosphere] = useState(false)
+
   const loadMerchant = useCallback(async () => {
     if (!merchantId) {
       setLoading(false)
@@ -49,6 +53,7 @@ export default function SettingsPage() {
       setLogoUrl((merchant as unknown as Record<string, string>).logoUrl ?? '')
       setBackgroundUrl((merchant as unknown as Record<string, string>).backgroundUrl ?? '')
       setDescription((merchant as unknown as Record<string, string>).description ?? '')
+      setAtmosphere((merchant as unknown as Record<string, string>).atmosphere ?? 'joyful')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load settings')
     } finally {
@@ -348,6 +353,65 @@ export default function SettingsPage() {
               {savingBrand ? 'Saving...' : 'Save Brand Identity'}
             </Button>
           </form>
+        </CardContent>
+      </Card>
+
+      {/* Game Atmosphere */}
+      <Card>
+        <CardHeader>
+          <CardTitle>{'\uD83C\uDFA8'} Game Atmosphere</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted-foreground mb-4">
+            Choose a visual theme for your player game page. This changes the entire look and feel.
+          </p>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {[
+              { key: 'joyful', label: 'Joyful & Fun', colors: ['#667eea', '#764ba2', '#f093fb'] },
+              { key: 'premium', label: 'Premium & Elegant', colors: ['#0a0a0a', '#1a1a2e', '#daa520'] },
+              { key: 'warm', label: 'Warm & Cozy', colors: ['#3c1810', '#5c2d1a', '#e8a849'] },
+              { key: 'kids', label: 'Child-Friendly', colors: ['#00b4d8', '#48cae4', '#ffb703'] },
+            ].map((atm) => (
+              <button
+                key={atm.key}
+                type="button"
+                onClick={async () => {
+                  setAtmosphere(atm.key)
+                  if (!merchantId) return
+                  setSavingAtmosphere(true)
+                  setError(null)
+                  try {
+                    await updateMerchant(merchantId, { atmosphere: atm.key } as Record<string, unknown>)
+                    showSuccess(`Atmosphere changed to "${atm.label}"`)
+                  } catch (err) {
+                    setError(err instanceof Error ? err.message : 'Failed to save atmosphere')
+                  } finally {
+                    setSavingAtmosphere(false)
+                  }
+                }}
+                disabled={savingAtmosphere}
+                className={`flex flex-col items-start gap-2 rounded-xl border-2 p-3 text-left transition-all ${
+                  atmosphere === atm.key
+                    ? 'border-indigo-500 bg-indigo-50 ring-2 ring-indigo-200'
+                    : 'border-gray-200 hover:border-gray-300 bg-white'
+                }`}
+              >
+                <div className="flex items-center gap-1.5">
+                  {atm.colors.map((c, i) => (
+                    <div
+                      key={i}
+                      className="h-5 w-5 rounded-full border border-gray-200"
+                      style={{ backgroundColor: c }}
+                    />
+                  ))}
+                </div>
+                <span className="text-sm font-medium">{atm.label}</span>
+                {atmosphere === atm.key && (
+                  <span className="text-xs text-indigo-600 font-medium">Active</span>
+                )}
+              </button>
+            ))}
+          </div>
         </CardContent>
       </Card>
 

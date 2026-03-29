@@ -16,6 +16,7 @@ const updateMerchantSchema = z.object({
   backgroundUrl: z.string().url().or(z.literal('')).optional(),
   description: z.string().max(500).optional(),
   logoUrl: z.string().url().or(z.literal('')).optional(),
+  atmosphere: z.enum(['joyful', 'premium', 'warm', 'kids']).optional(),
   address: z
     .object({
       street: z.string().max(200),
@@ -204,6 +205,7 @@ merchantsRouter.patch('/:id', async (c) => {
     if (parsed.data.description !== undefined) updates.description = parsed.data.description || null
     if (parsed.data.logoUrl !== undefined) updates.logoUrl = parsed.data.logoUrl || null
     if (parsed.data.address !== undefined) updates.address = parsed.data.address
+    if (parsed.data.atmosphere !== undefined) updates.atmosphere = parsed.data.atmosphere
 
     if (Object.keys(updates).length === 0) {
       return c.json(

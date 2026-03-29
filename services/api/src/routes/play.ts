@@ -115,6 +115,7 @@ playRouter.get('/:slug', async (c) => {
           weight: cta.weight,
           config: cta.config,
         })),
+        atmosphere: merchantData.atmosphere || 'joyful',
         minActionsRequired: 1,
       },
     })

@@ -53,6 +53,7 @@ export const merchants = pgTable('merchants', {
   backgroundUrl: text('background_url'),
   description: text('description'),
   validationPin: varchar('validation_pin', { length: 6 }).notNull().default('0000'),
+  atmosphere: varchar('atmosphere', { length: 30 }).notNull().default('joyful'),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true })
     .notNull()

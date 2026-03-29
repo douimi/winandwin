@@ -2202,3 +2202,200 @@ button:active {
   border-color: var(--primary);
   box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
 }
+
+/* ============================================
+   Background Image Overlay
+   ============================================ */
+
+.bg-image-overlay {
+  position: fixed;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  opacity: 0.12;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* ============================================
+   Immersive Wheel Screen
+   ============================================ */
+
+.immersive-wheel-screen {
+  padding-top: 1.25rem !important;
+  padding-bottom: 1.25rem !important;
+  gap: 0 !important;
+  justify-content: flex-start !important;
+}
+
+.immersive-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  margin-bottom: 0.5rem;
+  position: relative;
+  z-index: 1;
+  animation: fadeIn 0.5s ease;
+}
+
+.immersive-logo-frame {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 2px solid var(--atm-card-border, rgba(255,255,255,0.2));
+  background: var(--atm-card-bg, rgba(255,255,255,0.15));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+}
+
+.immersive-logo-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.immersive-logo-initial {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--atm-text, #fff);
+}
+
+.immersive-merchant-name {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--atm-text-secondary, rgba(255,255,255,0.8));
+  text-align: center;
+  position: relative;
+  z-index: 1;
+}
+
+.immersive-game-title {
+  font-size: 1.8rem;
+  font-weight: 800;
+  text-align: center;
+  color: var(--atm-text, #fff);
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+  margin-bottom: 0.25rem;
+  position: relative;
+  z-index: 1;
+  animation: fadeIn 0.5s ease 0.1s both;
+}
+
+.immersive-subtitle {
+  font-size: 0.9rem;
+  color: var(--atm-text-secondary, rgba(255,255,255,0.7));
+  text-align: center;
+  margin-bottom: 0.75rem;
+  max-width: 300px;
+  line-height: 1.4;
+  position: relative;
+  z-index: 1;
+  animation: fadeIn 0.5s ease 0.2s both;
+}
+
+.immersive-powered {
+  font-size: 0.7rem;
+  color: var(--atm-text-secondary, rgba(255,255,255,0.4));
+  text-align: center;
+  margin-top: 0.75rem;
+  position: relative;
+  z-index: 1;
+  opacity: 0.6;
+}
+
+/* Atmosphere-aware spin button */
+.immersive-wheel-screen .spin-button {
+  background: var(--atm-button-bg, linear-gradient(135deg, #fff 0%, #f5f0ff 100%));
+  color: var(--atm-button-text, var(--primary));
+  border-color: transparent;
+  box-shadow: 0 4px 20px var(--atm-button-glow, rgba(0,0,0,0.2));
+}
+
+.immersive-wheel-screen .spin-button:not(.disabled)::before {
+  background: linear-gradient(90deg, transparent, var(--atm-button-glow, rgba(255,215,0,0.15)), transparent);
+}
+
+.immersive-wheel-screen .spin-button.disabled {
+  background: var(--atm-card-bg, rgba(255,255,255,0.15));
+  color: var(--atm-text-secondary, rgba(255,255,255,0.5));
+}
+
+/* ============================================
+   Action Overlay (Bottom Sheet)
+   ============================================ */
+
+@keyframes overlayFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes sheetSlideUp {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+
+.action-overlay-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+  animation: overlayFadeIn 0.3s ease;
+}
+
+.action-overlay-sheet {
+  width: 100%;
+  max-width: var(--max-width);
+  max-height: 80vh;
+  overflow-y: auto;
+  background: var(--atm-bg, linear-gradient(135deg, #667eea, #764ba2));
+  border-radius: 24px 24px 0 0;
+  padding: 0.5rem 0 0;
+  animation: sheetSlideUp 0.35s ease;
+  position: relative;
+}
+
+.action-overlay-sheet .screen {
+  min-height: auto;
+}
+
+.action-overlay-handle {
+  width: 36px;
+  height: 4px;
+  background: rgba(255,255,255,0.3);
+  border-radius: 2px;
+  margin: 0.5rem auto 0;
+}
+
+/* Single action card inside overlay: reduce padding */
+.action-overlay-sheet .action-screen {
+  padding-top: 1rem;
+  padding-bottom: 1.5rem;
+}
+
+.action-overlay-sheet .action-header {
+  margin-bottom: 1rem;
+}
+
+/* ============================================
+   Welcome Screen — atmosphere-aware
+   ============================================ */
+
+.welcome-screen .welcome-play-btn {
+  background: var(--atm-button-bg, linear-gradient(135deg, #f093fb, #f5576c));
+}
+
+.welcome-screen .welcome-play-inner {
+  color: var(--atm-button-text, #fff);
+}
