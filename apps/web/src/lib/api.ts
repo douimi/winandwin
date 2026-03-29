@@ -28,6 +28,9 @@ export class ApiError extends Error {
   }
 }
 
+/** Default request timeout in milliseconds */
+const REQUEST_TIMEOUT_MS = 15_000
+
 async function request<T>(
   path: string,
   options: RequestInit = {},
@@ -44,11 +47,21 @@ async function request<T>(
 
   const url = `${API_BASE}${path}`
 
+  // AbortController for timeout handling
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS)
+
   let res: Response
   try {
-    res = await fetch(url, { ...options, headers })
-  } catch {
+    res = await fetch(url, { ...options, headers, signal: controller.signal })
+  } catch (err) {
+    clearTimeout(timeoutId)
+    if (err instanceof DOMException && err.name === 'AbortError') {
+      throw new ApiError('TIMEOUT', 'Request timed out — the server took too long to respond', 0)
+    }
     throw new ApiError('NETWORK_ERROR', 'Unable to reach the API server', 0)
+  } finally {
+    clearTimeout(timeoutId)
   }
 
   if (!res.ok) {

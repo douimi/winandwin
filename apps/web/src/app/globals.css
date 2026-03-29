@@ -35,3 +35,74 @@ body {
 *::after {
   border-color: var(--color-border);
 }
+
+/* ─────────────────────────  Landing page animations  ───────────────────────── */
+html { scroll-behavior: smooth; }
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-20px); }
+}
+@keyframes heroOrb {
+  0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.4; }
+  33% { transform: translate(30px, -20px) scale(1.1); opacity: 0.6; }
+  66% { transform: translate(-20px, 15px) scale(0.95); opacity: 0.35; }
+}
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+@keyframes spinSlow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+@keyframes bounceIn {
+  0% { transform: scale(0.5); opacity: 0; }
+  60% { transform: scale(1.1); }
+  100% { transform: scale(1); opacity: 1; }
+}
+@keyframes slideUp {
+  from { transform: translateY(40px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+@keyframes slotScroll {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(-60px); }
+}
+@keyframes boxBounce {
+  0%, 100% { transform: scale(1); }
+  25% { transform: scale(1.15) rotate(-3deg); }
+  50% { transform: scale(0.95) rotate(3deg); }
+  75% { transform: scale(1.1) rotate(-2deg); }
+}
+@keyframes phoneWheel {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 20px rgba(99,102,241,0.3); }
+  50% { box-shadow: 0 0 40px rgba(99,102,241,0.6); }
+}
+
+.animate-slideUp { animation: slideUp 0.7s ease-out both; }
+.animate-slideUp-d1 { animation: slideUp 0.7s ease-out 0.15s both; }
+.animate-slideUp-d2 { animation: slideUp 0.7s ease-out 0.3s both; }
+.animate-slideUp-d3 { animation: slideUp 0.7s ease-out 0.45s both; }
+.animate-slideUp-d4 { animation: slideUp 0.7s ease-out 0.6s both; }
+.animate-slideUp-d5 { animation: slideUp 0.7s ease-out 0.75s both; }
+
+.game-card { transition: transform 0.3s ease, box-shadow 0.3s ease; }
+.game-card:hover { transform: translateY(-8px); box-shadow: 0 25px 50px -12px rgba(0,0,0,0.15); }
+
+.game-card:hover .wheel-spin { animation: spinSlow 1s linear infinite; }
+.game-card:hover .slot-scroll { animation: slotScroll 0.4s linear infinite; }
+.game-card:hover .box-bounce { animation: boxBounce 0.6s ease-in-out infinite; }
+
+.plan-card { transition: transform 0.3s ease, box-shadow 0.3s ease; }
+.plan-card:hover { transform: translateY(-4px); box-shadow: 0 20px 40px -12px rgba(99,102,241,0.2); }
+
+.section-divider {
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(99,102,241,0.2), rgba(236,72,153,0.2), transparent);
+}

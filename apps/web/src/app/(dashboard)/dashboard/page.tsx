@@ -77,7 +77,7 @@ export default async function DashboardPage() {
             <div className="flex-1">
               <p className="font-medium text-indigo-900">Upgrade your plan to unlock more plays and features</p>
               <p className="text-sm text-indigo-700">
-                You are on the Free tier (200 plays/month). Upgrade to get more plays, advanced analytics, and more.
+                You are on the {merchantTier.charAt(0).toUpperCase() + merchantTier.slice(1)} tier ({usage?.monthlyLimit ?? 'limited'} plays/month). Upgrade to get more plays, advanced analytics, and more.
               </p>
             </div>
             <a

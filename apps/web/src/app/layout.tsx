@@ -47,6 +47,9 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={inter.variable}>
+      <head>
+        <link rel="preconnect" href="https://winandwin-api.douimiotmane.workers.dev" />
+      </head>
       <body className="min-h-screen font-sans antialiased">{children}</body>
     </html>
   )
