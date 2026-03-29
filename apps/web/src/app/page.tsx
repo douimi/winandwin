@@ -286,7 +286,7 @@ export default function HomePage() {
             ) : (
               <>
                 <a href="/sign-in">
-                  <Button variant="ghost" className="hidden sm:inline-flex active:scale-95 transition-transform">Sign In</Button>
+                  <Button variant="ghost" className="active:scale-95 transition-transform">Sign In</Button>
                 </a>
                 <a href="#contact">
                   <Button className="bg-gradient-to-r from-[#6366f1] to-[#ec4899] font-semibold shadow-lg shadow-indigo-500/25 hover:shadow-xl active:scale-95 transition-transform">
