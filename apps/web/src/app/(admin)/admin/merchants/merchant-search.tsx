@@ -23,7 +23,7 @@ export function MerchantSearch({ defaultValue }: { defaultValue: string }) {
   return (
     <div className="relative">
       <svg
-        className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500"
+        className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400"
         fill="none"
         stroke="currentColor"
         viewBox="0 0 24 24"
@@ -40,13 +40,13 @@ export function MerchantSearch({ defaultValue }: { defaultValue: string }) {
         placeholder="Search merchants by name or email..."
         value={value}
         onChange={(e) => setValue(e.target.value)}
-        className="w-full pl-10 border-slate-700 bg-slate-900 text-slate-200 placeholder:text-slate-500 focus:border-indigo-500 focus:ring-indigo-500/20"
+        className="w-full pl-10 border-gray-200 bg-white text-gray-900 placeholder:text-gray-400 focus:border-indigo-500 focus:ring-indigo-500/20"
       />
       {value && (
         <button
           type="button"
           onClick={() => setValue('')}
-          className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors"
+          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
         >
           <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />

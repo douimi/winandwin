@@ -20,11 +20,11 @@ interface PlatformSetting {
   updatedAt: string
 }
 
-const tierAccentColors: Record<string, { gradient: string; border: string; badge: string; icon: string }> = {
-  free: { gradient: 'from-slate-600 to-slate-500', border: 'border-slate-700', badge: 'bg-gradient-to-r from-slate-600 to-slate-500 text-white', icon: '\uD83C\uDD93' },
-  starter: { gradient: 'from-blue-600 to-blue-500', border: 'border-blue-800/50', badge: 'bg-gradient-to-r from-blue-600 to-blue-500 text-white', icon: '\uD83D\uDE80' },
-  pro: { gradient: 'from-purple-600 to-purple-500', border: 'border-purple-800/50', badge: 'bg-gradient-to-r from-purple-600 to-purple-500 text-white', icon: '\u2B50' },
-  enterprise: { gradient: 'from-amber-600 to-amber-500', border: 'border-amber-800/50', badge: 'bg-gradient-to-r from-amber-600 to-amber-500 text-white', icon: '\uD83D\uDC8E' },
+const tierAccentColors: Record<string, { topBorder: string; icon: string; badge: string }> = {
+  free: { topBorder: 'border-t-gray-400', icon: '\uD83C\uDD93', badge: 'border-gray-300 text-gray-600 bg-white' },
+  starter: { topBorder: 'border-t-blue-500', icon: '\uD83D\uDE80', badge: 'border-blue-300 text-blue-700 bg-white' },
+  pro: { topBorder: 'border-t-indigo-500', icon: '\u2B50', badge: 'border-indigo-300 text-indigo-700 bg-white' },
+  enterprise: { topBorder: 'border-t-amber-500', icon: '\uD83D\uDC8E', badge: 'border-amber-300 text-amber-700 bg-white' },
 }
 
 async function adminRequest<T>(path: string, options: RequestInit = {}): Promise<T> {
@@ -125,10 +125,10 @@ export default function AdminSettingsPage() {
   if (loading) {
     return (
       <div className="space-y-8">
-        <h1 className="text-2xl font-bold text-slate-100">Platform Settings</h1>
-        <Card className="border-slate-800 bg-slate-900">
+        <h1 className="text-2xl font-bold text-gray-900">Platform Settings</h1>
+        <Card className="border border-gray-200 bg-white shadow-sm rounded-xl">
           <CardContent className="flex items-center justify-center py-12">
-            <p className="text-sm text-slate-400">Loading settings...</p>
+            <p className="text-sm text-gray-500">Loading settings...</p>
           </CardContent>
         </Card>
       </div>
@@ -139,20 +139,20 @@ export default function AdminSettingsPage() {
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-100">Platform Settings</h1>
-          <p className="mt-1 text-sm text-slate-500">Configure tier limits and platform-wide settings</p>
+          <h1 className="text-2xl font-bold text-gray-900">Platform Settings</h1>
+          <p className="mt-1 text-sm text-gray-500">Configure tier limits and platform-wide settings</p>
         </div>
         {hasChanges && (
-          <Button onClick={handleSave} disabled={saving} className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold shadow-lg">
+          <Button onClick={handleSave} disabled={saving} className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold shadow-sm">
             {saving ? 'Saving...' : 'Save Changes'}
           </Button>
         )}
       </div>
 
       {feedback && (
-        <Card className={feedback.type === 'success' ? 'border-green-900/30 bg-green-950/20' : 'border-red-900/30 bg-red-950/20'}>
+        <Card className={`rounded-xl ${feedback.type === 'success' ? 'border-green-200 bg-green-50' : 'border-red-200 bg-red-50'}`}>
           <CardContent className="py-3">
-            <p className={`text-sm font-medium ${feedback.type === 'success' ? 'text-green-300' : 'text-red-300'}`}>
+            <p className={`text-sm font-medium ${feedback.type === 'success' ? 'text-green-700' : 'text-red-700'}`}>
               {feedback.message}
             </p>
           </CardContent>
@@ -162,37 +162,35 @@ export default function AdminSettingsPage() {
       {/* Tier Cards Grid */}
       <div className="grid gap-6 sm:grid-cols-2">
         {(['free', 'starter', 'pro', 'enterprise'] as const).map((name) => {
-          const accent = (tierAccentColors[name] ?? tierAccentColors.free)!
+          const accent = tierAccentColors[name] ?? tierAccentColors.free!
           const monthlyPlays = getMonthlyPlays(name)
           const isEdited = `${name}.monthlyPlays` in editedValues
 
           return (
-            <Card key={name} className={`${accent.border} bg-slate-900 overflow-hidden`}>
-              {/* Gradient header strip */}
-              <div className={`h-1.5 bg-gradient-to-r ${accent.gradient}`} />
+            <Card key={name} className={`border border-gray-200 bg-white shadow-sm rounded-xl overflow-hidden border-t-2 ${accent.topBorder}`}>
               <CardHeader className="pb-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <span className="text-2xl">{accent.icon}</span>
-                    <CardTitle className="text-slate-100 capitalize text-lg">{name}</CardTitle>
+                    <CardTitle className="text-gray-900 capitalize text-lg">{name}</CardTitle>
                   </div>
-                  <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-bold capitalize shadow-sm ${accent.badge}`}>
+                  <span className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-bold capitalize ${accent.badge}`}>
                     {name}
                   </span>
                 </div>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  <div className="flex items-center justify-between rounded-lg bg-slate-800/30 px-4 py-3">
-                    <span className="text-sm font-medium text-slate-300">Monthly Plays Limit</span>
+                  <div className="flex items-center justify-between rounded-lg bg-gray-50 px-4 py-3">
+                    <span className="text-sm font-medium text-gray-600">Monthly Plays Limit</span>
                     <input
                       type="number"
                       value={monthlyPlays}
                       onChange={(e) => handleMonthlyPlaysChange(name, e.target.value)}
                       className={`w-28 rounded-lg border px-3 py-1.5 text-right text-sm font-semibold transition-colors ${
                         isEdited
-                          ? 'border-indigo-500 bg-indigo-950/30 text-indigo-300 shadow-sm shadow-indigo-500/10'
-                          : 'border-slate-700 bg-slate-800 text-slate-200'
+                          ? 'border-indigo-400 bg-indigo-50 text-indigo-700 shadow-sm'
+                          : 'border-gray-200 bg-white text-gray-900'
                       }`}
                       min={0}
                     />
@@ -205,14 +203,14 @@ export default function AdminSettingsPage() {
       </div>
 
       {/* Source Info */}
-      <Card className="border-slate-800 bg-slate-900/50">
+      <Card className="border border-gray-200 bg-gray-50 rounded-xl">
         <CardContent className="py-4">
           <div className="flex items-start gap-3">
             <span className="mt-0.5 text-lg">{'\u2139\uFE0F'}</span>
             <div>
-              <p className="text-sm font-medium text-slate-300">Database-backed configuration</p>
-              <p className="mt-1 text-sm text-slate-400">
-                Tier limits are stored in the <code className="rounded bg-slate-800 px-1.5 py-0.5 text-xs text-indigo-300">platform_settings</code> table.
+              <p className="text-sm font-medium text-gray-700">Database-backed configuration</p>
+              <p className="mt-1 text-sm text-gray-500">
+                Tier limits are stored in the <code className="rounded bg-white border border-gray-200 px-1.5 py-0.5 text-xs text-indigo-600">platform_settings</code> table.
                 Changes take effect within 5 minutes. Hardcoded defaults from constants are used as fallback.
               </p>
             </div>

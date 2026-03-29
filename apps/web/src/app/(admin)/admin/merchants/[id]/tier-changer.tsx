@@ -5,13 +5,6 @@ import { changeMerchantTier } from './actions'
 
 const TIERS = ['free', 'starter', 'pro', 'enterprise'] as const
 
-const tierColors: Record<string, string> = {
-  free: 'text-slate-300',
-  starter: 'text-blue-300',
-  pro: 'text-purple-300',
-  enterprise: 'text-amber-300',
-}
-
 export function TierChanger({
   merchantId,
   currentTier,
@@ -55,7 +48,7 @@ export function TierChanger({
   return (
     <div className="flex flex-col gap-2">
       <div className="flex items-center gap-3">
-        <label htmlFor="tier-select" className="text-sm font-medium text-slate-400">
+        <label htmlFor="tier-select" className="text-sm font-medium text-gray-500">
           Tier:
         </label>
         <select
@@ -66,7 +59,7 @@ export function TierChanger({
             setConfirming(false)
             setMessage(null)
           }}
-          className={`rounded-lg border border-slate-700 bg-slate-800 px-3 py-1.5 text-sm font-medium capitalize ${tierColors[tier] ?? 'text-slate-300'} focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500/30`}
+          className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm font-medium capitalize text-gray-900 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500/30"
         >
           {TIERS.map((t) => (
             <option key={t} value={t} className="capitalize">
@@ -92,7 +85,7 @@ export function TierChanger({
               <button
                 type="button"
                 onClick={handleCancel}
-                className="rounded-lg border border-slate-700 px-3 py-1.5 text-sm text-slate-400 hover:bg-slate-800 transition-colors"
+                className="rounded-lg border border-gray-200 px-3 py-1.5 text-sm text-gray-500 hover:bg-gray-50 transition-colors"
               >
                 Cancel
               </button>
@@ -101,12 +94,12 @@ export function TierChanger({
         )}
       </div>
       {confirming && !saving && (
-        <p className="text-xs text-yellow-400">
+        <p className="text-xs text-yellow-600">
           Are you sure? This will change the tier from <span className="font-semibold capitalize">{currentTier}</span> to <span className="font-semibold capitalize">{tier}</span>.
         </p>
       )}
       {message && (
-        <p className={`text-xs font-medium ${message.success ? 'text-emerald-400' : 'text-red-400'}`}>
+        <p className={`text-xs font-medium ${message.success ? 'text-green-600' : 'text-red-600'}`}>
           {message.text}
         </p>
       )}
