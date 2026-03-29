@@ -202,14 +202,15 @@ function GameDemo() {
                     const endAngle = ((i + 1) * 360) / n
                     const startRad = (startAngle * Math.PI) / 180
                     const endRad = (endAngle * Math.PI) / 180
-                    const x1 = cx + r * Math.cos(startRad)
-                    const y1 = cy + r * Math.sin(startRad)
-                    const x2 = cx + r * Math.cos(endRad)
-                    const y2 = cy + r * Math.sin(endRad)
+                    const rd = (n: number) => Math.round(n * 100) / 100
+                    const x1 = rd(cx + r * Math.cos(startRad))
+                    const y1 = rd(cy + r * Math.sin(startRad))
+                    const x2 = rd(cx + r * Math.cos(endRad))
+                    const y2 = rd(cy + r * Math.sin(endRad))
                     const midAngle = ((startAngle + endAngle) / 2) * (Math.PI / 180)
-                    const tx = cx + r * 0.55 * Math.cos(midAngle)
-                    const ty = cy + r * 0.55 * Math.sin(midAngle)
-                    const labelRotation = ((startAngle + endAngle) / 2)
+                    const tx = rd(cx + r * 0.55 * Math.cos(midAngle))
+                    const ty = rd(cy + r * 0.55 * Math.sin(midAngle))
+                    const labelRotation = rd((startAngle + endAngle) / 2)
 
                     return (
                       <g key={i}>
