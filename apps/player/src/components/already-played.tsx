@@ -17,7 +17,7 @@ export function AlreadyPlayedScreen({ playerState, merchantName }: Props) {
   const won = playerState.lastPlayResult === 'win'
   const coupon = playerState.lastCoupon
   const validationUrl = coupon
-    ? `https://winandwind.club/validate/${coupon.code}`
+    ? `https://winandwin.club/validate/${coupon.code}`
     : null
 
   return (
