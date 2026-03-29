@@ -3,9 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle, Button } from '@winandwin/ui'
 import { TIER_LIMITS } from '@winandwin/shared'
 import { useEffect, useState } from 'react'
-
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8787'
-const ADMIN_KEY = process.env.NEXT_PUBLIC_ADMIN_API_KEY || ''
+import { adminRequest } from '@/lib/admin-api'
 
 interface TierLimits {
   free: { monthlyPlays: number; maxPrizes?: number; maxCtas?: number }
@@ -25,20 +23,6 @@ const tierAccentColors: Record<string, { topBorder: string; icon: string; badge:
   starter: { topBorder: 'border-t-blue-500', icon: '\uD83D\uDE80', badge: 'border-blue-300 text-blue-700 bg-white' },
   pro: { topBorder: 'border-t-indigo-500', icon: '\u2B50', badge: 'border-indigo-300 text-indigo-700 bg-white' },
   enterprise: { topBorder: 'border-t-amber-500', icon: '\uD83D\uDC8E', badge: 'border-amber-300 text-amber-700 bg-white' },
-}
-
-async function adminRequest<T>(path: string, options: RequestInit = {}): Promise<T> {
-  const res = await fetch(`${API_BASE}${path}`, {
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      'x-admin-key': ADMIN_KEY,
-      ...(options.headers as Record<string, string> | undefined),
-    },
-  })
-  const json = await res.json()
-  if (!json.success) throw new Error(json.error?.message || 'Request failed')
-  return json.data
 }
 
 export default function AdminSettingsPage() {
