@@ -5,6 +5,7 @@ export interface GameConfig {
   merchantCategory?: string
   atmosphere?: string
   customColors?: { c1: string; c2: string; c3: string }
+  monthlyLimitReached?: boolean
   game: {
     id: string
     type: 'wheel' | 'slots' | 'mystery_box'
@@ -51,4 +52,4 @@ export interface PlayerState {
   } | null
 }
 
-export type PlayerScreen = 'loading' | 'welcome' | 'action' | 'actions' | 'register' | 'game' | 'result' | 'already-played'
+export type PlayerScreen = 'loading' | 'welcome' | 'action' | 'actions' | 'register' | 'game' | 'result' | 'already-played' | 'limit-reached'

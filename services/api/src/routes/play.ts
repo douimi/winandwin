@@ -96,10 +96,27 @@ playRouter.get('/:slug', async (c) => {
 
     const gameBranding = activeGame.branding as Record<string, unknown> | null
 
+    // Check monthly limit for the merchant
+    const tierLimits = await getTierLimits(db)
+    const tier = merchantData.subscriptionTier as keyof typeof tierLimits
+    const monthlyLimit = (tierLimits[tier] as Record<string, unknown>)?.monthlyPlays as number ?? 200
+    let monthlyLimitReached = false
+    if (monthlyLimit !== Infinity) {
+      const monthStart = new Date()
+      monthStart.setUTCDate(1)
+      monthStart.setUTCHours(0, 0, 0, 0)
+      const monthlyPlaysResult = await db
+        .select({ count: sql<number>`count(*)::int` })
+        .from(gamePlays)
+        .where(and(eq(gamePlays.merchantId, merchantData.id), gte(gamePlays.playedAt, monthStart)))
+      monthlyLimitReached = (monthlyPlaysResult[0]?.count ?? 0) >= monthlyLimit
+    }
+
     return c.json({
       success: true,
       data: {
         merchantName: merchantData.name,
+        monthlyLimitReached,
         merchantLogo: merchantData.logoUrl,
         merchantDescription: merchantData.description,
         merchantCategory: merchantData.category,

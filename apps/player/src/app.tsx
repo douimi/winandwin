@@ -6,6 +6,7 @@ import { LoadingScreen } from './components/loading-screen'
 import { RegisterScreen } from './components/register-screen'
 import { ResultScreen } from './components/result-screen'
 import { WelcomeScreen } from './components/welcome-screen'
+import { LimitReachedScreen } from './components/limit-reached'
 import { MysteryBox } from './components/mystery-box'
 import { Slots } from './components/slots'
 import { Wheel, buildWheelSegments, findTargetIndex } from './components/wheel'
@@ -189,6 +190,12 @@ export function App() {
         if (cancelled) return
 
         setConfig(gameConfig)
+
+        // Check monthly limit
+        if (gameConfig.monthlyLimitReached) {
+          setScreen('limit-reached')
+          return
+        }
 
         if (state) {
           setPlayerState(state)
@@ -623,6 +630,10 @@ export function App() {
 
       {screen === 'already-played' && playerState && (
         <AlreadyPlayedScreen playerState={playerState} merchantName={config.merchantName} businessTheme={bizTheme} />
+      )}
+
+      {screen === 'limit-reached' && (
+        <LimitReachedScreen merchantName={config.merchantName} />
       )}
     </div>
   )
