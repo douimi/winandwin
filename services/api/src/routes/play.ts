@@ -764,7 +764,6 @@ playRouter.post('/:slug/register', async (c) => {
     if (recentCoupon.length > 0) {
       const couponData = recentCoupon[0]!
       const apiKey = c.env.RESEND_API_KEY ?? ''
-      console.log('[Register] Sending email to:', body.email, 'apiKey present:', !!apiKey, 'apiKey length:', apiKey.length)
 
       try {
         await sendCouponEmail({
@@ -778,12 +777,9 @@ playRouter.post('/:slug/register', async (c) => {
           validUntil: couponData.validUntil.toISOString(),
         }, apiKey)
         emailSent = true
-        console.log('[Register] Email sent successfully')
       } catch (err) {
-        console.error('[Register] Email FAILED:', err)
       }
     } else {
-      console.log('[Register] No coupon found for player:', playerData.id)
     }
 
     return c.json({
