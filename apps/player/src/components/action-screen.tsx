@@ -167,9 +167,14 @@ function SingleActionScreen({ config, singleAction, onComplete, preCompleted }: 
         <div class="action-merchant-badge">
           <h1 class="action-merchant-name">{config.merchantName}</h1>
         </div>
-        <p class="action-subtitle">
-          Complete this action to play!
+        <p class="action-instruction">
+          Complete this step to unlock your game!
         </p>
+        <div class="action-step-dots">
+          <span class="action-step-dot active" />
+          <span class="action-step-dot" />
+        </div>
+        <p class="action-step-label">Step 1 of 2</p>
       </div>
 
       <div class="action-list">
@@ -438,7 +443,7 @@ function MultiActionScreen({ config, onComplete, preCompleted, previouslyComplet
         <div class="action-merchant-badge">
           <h1 class="action-merchant-name">{config.merchantName}</h1>
         </div>
-        <p class="action-subtitle">
+        <p class="action-instruction">
           Complete {config.minActionsRequired === 1 ? 'an action' : `${config.minActionsRequired} actions`} to unlock your game!
         </p>
       </div>

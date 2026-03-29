@@ -10,7 +10,7 @@ export function LoadingScreen({ merchantName }: Props) {
         <div class="loading-spinner-dot" />
       </div>
       {merchantName && <p class="loading-merchant">{merchantName}</p>}
-      <p class="loading-text">Loading your game...</p>
+      <p class="loading-text">Loading your experience...</p>
     </div>
   )
 }

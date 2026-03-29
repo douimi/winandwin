@@ -11,6 +11,11 @@ const GLOBAL_STYLES = `
     0%, 100% { transform: translateY(0); }
     50% { transform: translateY(-20px); }
   }
+  @keyframes heroOrb {
+    0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.4; }
+    33% { transform: translate(30px, -20px) scale(1.1); opacity: 0.6; }
+    66% { transform: translate(-20px, 15px) scale(0.95); opacity: 0.35; }
+  }
   @keyframes gradientShift {
     0% { background-position: 0% 50%; }
     50% { background-position: 100% 50%; }
@@ -62,19 +67,6 @@ const GLOBAL_STYLES = `
   .plan-card:hover { transform: translateY(-4px); box-shadow: 0 20px 40px -12px rgba(99,102,241,0.2); }
 `
 
-/* ─────────────────────────  Floating emojis data  ───────────────────────── */
-const FLOATING_EMOJIS = [
-  { emoji: '🎡', x: 5, delay: 0, dur: 6, size: 34 },
-  { emoji: '🎰', x: 14, delay: 1.5, dur: 7, size: 28 },
-  { emoji: '📦', x: 24, delay: 3, dur: 5.5, size: 26 },
-  { emoji: '🎁', x: 36, delay: 0.8, dur: 6.5, size: 30 },
-  { emoji: '⭐', x: 47, delay: 2.2, dur: 5, size: 24 },
-  { emoji: '🎉', x: 57, delay: 4, dur: 7.5, size: 32 },
-  { emoji: '🏆', x: 67, delay: 1, dur: 6, size: 28 },
-  { emoji: '🎡', x: 76, delay: 3.5, dur: 5.5, size: 22 },
-  { emoji: '🎰', x: 85, delay: 2, dur: 7, size: 26 },
-  { emoji: '⭐', x: 93, delay: 0.5, dur: 6.5, size: 20 },
-]
 
 /* ─────────────────────────  SVG Wheel for phone mockup  ───────────────────────── */
 function PhoneWheelSVG() {
@@ -291,23 +283,38 @@ export default function HomePage() {
           }}
         />
 
-        {/* Floating emojis */}
+        {/* Soft blurred orbs (Stripe-style) */}
         <div className="pointer-events-none absolute inset-0 overflow-hidden">
-          {FLOATING_EMOJIS.map((item, i) => (
-            <span
-              key={i}
-              className="absolute"
-              style={{
-                left: `${item.x}%`,
-                top: '40%',
-                fontSize: `${item.size}px`,
-                opacity: 0.2,
-                animation: `float ${item.dur}s ease-in-out ${item.delay}s infinite`,
-              }}
-            >
-              {item.emoji}
-            </span>
-          ))}
+          <div
+            className="absolute rounded-full"
+            style={{
+              width: '400px', height: '400px',
+              top: '10%', left: '5%',
+              background: 'radial-gradient(circle, rgba(99,102,241,0.25) 0%, transparent 70%)',
+              filter: 'blur(60px)',
+              animation: 'heroOrb 12s ease-in-out infinite',
+            }}
+          />
+          <div
+            className="absolute rounded-full"
+            style={{
+              width: '350px', height: '350px',
+              top: '50%', right: '0%',
+              background: 'radial-gradient(circle, rgba(236,72,153,0.2) 0%, transparent 70%)',
+              filter: 'blur(60px)',
+              animation: 'heroOrb 15s ease-in-out 2s infinite',
+            }}
+          />
+          <div
+            className="absolute rounded-full"
+            style={{
+              width: '300px', height: '300px',
+              bottom: '10%', left: '30%',
+              background: 'radial-gradient(circle, rgba(139,92,246,0.18) 0%, transparent 70%)',
+              filter: 'blur(50px)',
+              animation: 'heroOrb 10s ease-in-out 4s infinite',
+            }}
+          />
         </div>
 
         <div className="relative mx-auto max-w-7xl px-6 pb-24 pt-20 lg:pt-32">

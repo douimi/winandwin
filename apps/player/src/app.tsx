@@ -353,7 +353,7 @@ export function App() {
       )}
 
       {screen === 'register' && (
-        <RegisterScreen onRegister={handleRegistration} />
+        <RegisterScreen onRegister={handleRegistration} result={result} />
       )}
 
       {screen === 'game' && (

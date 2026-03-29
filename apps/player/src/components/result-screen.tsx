@@ -26,12 +26,12 @@ export function ResultScreen({ result, merchantName, playerEmail }: Props) {
           </div>
         </div>
 
-        <div class="result-emoji">{result.prize?.emoji || '&#127881;'}</div>
+        <div class="result-emoji">{result.prize?.emoji || '\u{1F389}'}</div>
 
         <h1 class="result-title result-title-win">You Won!</h1>
 
         <div class="result-prize-card">
-          <div class="result-prize-emoji">{result.prize?.emoji || '&#127873;'}</div>
+          <div class="result-prize-emoji">{result.prize?.emoji || '\u{1F381}'}</div>
           <h2 class="result-prize-name">{result.prize?.name}</h2>
           {result.prize?.description && (
             <p class="result-prize-desc">{result.prize.description}</p>
@@ -61,18 +61,22 @@ export function ResultScreen({ result, merchantName, playerEmail }: Props) {
 
   return (
     <div class="screen result-screen result-lose">
-      <div class="result-emoji result-emoji-lose">&#127808;</div>
+      <div class="result-emoji result-emoji-lose">{'\u{1F340}'}</div>
 
-      <h1 class="result-title">Almost!</h1>
+      <h1 class="result-title">So Close!</h1>
 
       <p class="lose-message">
-        {result.message || "So close! You didn't win this time, but luck could be on your side next time!"}
+        {result.message || "Almost there! You didn't win this time, but luck could be on your side next time!"}
       </p>
 
       <div class="lose-comeback">
-        <div class="lose-comeback-icon">&#128336;</div>
+        <div class="lose-comeback-icon">{'\u{1F31F}'}</div>
         <span>Come back tomorrow for another chance!</span>
       </div>
+
+      <p class="lose-encourage">
+        {'\u{1F60A}'} Better luck next time at {merchantName}!
+      </p>
     </div>
   )
 }
