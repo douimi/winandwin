@@ -58,13 +58,17 @@ function checkPendingAction(slug: string): string | null {
     const pending = JSON.parse(raw) as { type: string; slug: string; timestamp: number }
     // Must be for this merchant and within last 30 minutes
     if (pending.slug === slug && Date.now() - pending.timestamp < 30 * 60 * 1000) {
-      localStorage.removeItem('winandwin_pending_action')
       return pending.type
     }
     // Expired -- clean up
     localStorage.removeItem('winandwin_pending_action')
   } catch { /* ignore */ }
   return null
+}
+
+/** Clear the pending action from localStorage after it's been consumed */
+function clearPendingAction() {
+  try { localStorage.removeItem('winandwin_pending_action') } catch { /* ignore */ }
 }
 
 /** Auto-trigger spin for mystery box when game screen loads */
@@ -132,13 +136,70 @@ export function App() {
   const [playerEmail, setPlayerEmail] = useState<string | null>(null)
   const [singleAction, setSingleAction] = useState<GameConfig['requiredActions'][number] | null>(null)
   const [showActionOverlay, setShowActionOverlay] = useState(false)
-  const [preCompletedAction] = useState(() => {
-    const slug = window.location.pathname.replace(/^\//, '') || 'demo'
-    return checkPendingAction(slug)
+  const [preCompletedAction, setPreCompletedAction] = useState(() => {
+    const s = window.location.pathname.replace(/^\//, '') || 'demo'
+    return checkPendingAction(s)
   })
 
   // Extract merchant slug from URL path: /merchant-slug
   const slug = window.location.pathname.replace(/^\//, '') || 'demo'
+
+  // Detect when user returns via back button (bfcache restoration on mobile)
+  useEffect(() => {
+    function handlePageShow(e: PageTransitionEvent) {
+      if (e.persisted) {
+        // Page was restored from bfcache — check for pending CTA action
+        const pending = checkPendingAction(slug)
+        if (pending) {
+          setPreCompletedAction(pending)
+          // If we have config and it's a wheel game, show the overlay
+          if (config && config.game.type === 'wheel') {
+            const matchingAction = config.requiredActions.find(
+              (a: { type: string }) => a.type === pending
+            )
+            if (matchingAction) {
+              setSingleAction(matchingAction)
+              setShowActionOverlay(true)
+              clearPendingAction()
+            }
+          } else {
+            clearPendingAction()
+            // For non-wheel games, reload to trigger the full flow
+            window.location.reload()
+          }
+        }
+      }
+    }
+    window.addEventListener('pageshow', handlePageShow)
+    return () => window.removeEventListener('pageshow', handlePageShow)
+  }, [slug, config])
+
+  // Also detect visibility change (some mobile browsers use this instead of pageshow)
+  useEffect(() => {
+    function handleVisibilityChange() {
+      if (document.visibilityState === 'visible') {
+        const pending = checkPendingAction(slug)
+        if (pending) {
+          setPreCompletedAction(pending)
+          if (config && config.game.type === 'wheel') {
+            const matchingAction = config.requiredActions.find(
+              (a: { type: string }) => a.type === pending
+            )
+            if (matchingAction) {
+              setSingleAction(matchingAction)
+              setShowActionOverlay(true)
+              clearPendingAction()
+            }
+          } else if (config) {
+            clearPendingAction()
+            window.location.reload()
+          }
+        }
+      }
+    }
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
+  }, [slug, config])
 
   // Get the atmosphere theme from config
   const theme = useMemo(() => getAtmosphere(config?.atmosphere || 'joyful', config?.customColors), [config?.atmosphere, config?.customColors])
@@ -218,6 +279,7 @@ export function App() {
             if (matchingAction) {
               setSingleAction(matchingAction)
               setShowActionOverlay(true)
+              clearPendingAction()
             }
             setScreen('game')
           } else if (IS_TEST_MODE) {
