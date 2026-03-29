@@ -65,8 +65,10 @@ export default function AdminOverviewPage() {
     loadData()
   }, [])
 
-  const now = new Date()
-  const dateStr = now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
+  const [dateStr, setDateStr] = useState('')
+  useEffect(() => {
+    setDateStr(new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }))
+  }, [])
 
   return (
     <div className="space-y-8">

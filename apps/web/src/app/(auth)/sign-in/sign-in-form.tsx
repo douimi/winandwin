@@ -35,7 +35,7 @@ export function SignInForm() {
     <div className="mx-auto flex max-w-md flex-col items-center">
       {/* Logo */}
       <a href="/" className="mb-8 flex flex-col items-center gap-2">
-        <img src="/logo.svg" alt="Win & Win" className="h-24 w-auto" />
+        <img src="/logo.svg" alt="Win & Win" className="h-32 w-auto" />
       </a>
 
       <Card className="w-full shadow-xl shadow-black/5 border-0 bg-white/80 backdrop-blur-sm">
