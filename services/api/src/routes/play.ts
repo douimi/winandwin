@@ -13,14 +13,15 @@ import { sendCouponEmail } from '../lib/email'
 import type { AppEnv } from '../types'
 
 // Module-level cache for tier limits from DB
-let cachedTierLimits: Record<string, { monthlyPlays: number }> | null = null
+let cachedMergedLimits: Record<string, Record<string, unknown>> | null = null
 let tierLimitsCachedAt = 0
-const TIER_LIMITS_CACHE_TTL = 5 * 60 * 1000 // 5 minutes
+const TIER_LIMITS_CACHE_TTL = 30 * 1000 // 30 seconds (short cache for quick updates)
 
+/** Deep merge DB tier limits over hardcoded defaults */
 async function getTierLimits(db: Database): Promise<typeof TIER_LIMITS> {
   const now = Date.now()
-  if (cachedTierLimits && now - tierLimitsCachedAt < TIER_LIMITS_CACHE_TTL) {
-    return { ...TIER_LIMITS, ...cachedTierLimits } as typeof TIER_LIMITS
+  if (cachedMergedLimits && now - tierLimitsCachedAt < TIER_LIMITS_CACHE_TTL) {
+    return cachedMergedLimits as unknown as typeof TIER_LIMITS
   }
 
   try {
@@ -31,9 +32,17 @@ async function getTierLimits(db: Database): Promise<typeof TIER_LIMITS> {
       .limit(1)
 
     if (result.length > 0 && result[0]!.value) {
-      cachedTierLimits = result[0]!.value as Record<string, { monthlyPlays: number }>
+      const dbLimits = result[0]!.value as Record<string, Record<string, unknown>>
+      // Deep merge: for each tier, merge DB values over defaults
+      const merged: Record<string, Record<string, unknown>> = {}
+      for (const tier of Object.keys(TIER_LIMITS)) {
+        const defaults = TIER_LIMITS[tier as keyof typeof TIER_LIMITS]
+        const overrides = dbLimits[tier] || {}
+        merged[tier] = { ...defaults, ...overrides }
+      }
+      cachedMergedLimits = merged
       tierLimitsCachedAt = now
-      return { ...TIER_LIMITS, ...cachedTierLimits } as typeof TIER_LIMITS
+      return merged as unknown as typeof TIER_LIMITS
     }
   } catch (err) {
     console.error('Failed to fetch tier limits from DB, using defaults:', err)

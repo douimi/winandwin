@@ -1,6 +1,6 @@
 import { Hono } from 'hono'
 import { eq, and, gte, sql, count } from 'drizzle-orm'
-import { players, gamePlays, coupons, prizes, merchants } from '@winandwin/db/schema'
+import { players, gamePlays, coupons, prizes, merchants, platformSettings } from '@winandwin/db/schema'
 import { TIER_LIMITS } from '@winandwin/shared/constants'
 import type { AppEnv } from '../types'
 
@@ -452,7 +452,22 @@ statsRouter.get('/usage', async (c) => {
     }
 
     const tier = merchantResult[0]!.subscriptionTier as keyof typeof TIER_LIMITS
-    const monthlyLimit = TIER_LIMITS[tier]?.monthlyPlays ?? 200
+
+    // Get tier limits from DB (with fallback to hardcoded)
+    let monthlyLimit = TIER_LIMITS[tier]?.monthlyPlays ?? 200
+    try {
+      const dbSettings = await db
+        .select()
+        .from(platformSettings)
+        .where(eq(platformSettings.key, 'tier_limits'))
+        .limit(1)
+      if (dbSettings.length > 0 && dbSettings[0]!.value) {
+        const dbLimits = dbSettings[0]!.value as Record<string, { monthlyPlays?: number }>
+        if (dbLimits[tier]?.monthlyPlays !== undefined) {
+          monthlyLimit = dbLimits[tier]!.monthlyPlays!
+        }
+      }
+    } catch { /* use default */ }
 
     // Count plays this month
     const monthStart = new Date()
