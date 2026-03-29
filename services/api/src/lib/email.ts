@@ -24,7 +24,7 @@ export async function sendCouponEmail(data: CouponEmailData, resendApiKey: strin
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      from: 'Win & Win <noreply@winandwin.club>',
+      from: 'Win & Win <noreply@winandwind.club>',
       to: data.to,
       subject: `You won at ${data.merchantName}!`,
       html,

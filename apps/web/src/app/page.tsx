@@ -1,7 +1,15 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Button, Card, CardContent, Input, Label } from '@winandwin/ui'
+
+function useIsLoggedIn() {
+  const [loggedIn, setLoggedIn] = useState(false)
+  useEffect(() => {
+    setLoggedIn(document.cookie.includes('better-auth.session'))
+  }, [])
+  return loggedIn
+}
 
 /* ─────────────────────────  CSS Animations (inline style tag)  ───────────────────────── */
 const GLOBAL_STYLES = `
@@ -241,6 +249,7 @@ function ContactForm() {
 
 /* ═══════════════════════════  MAIN PAGE  ═══════════════════════════ */
 export default function HomePage() {
+  const isLoggedIn = useIsLoggedIn()
   return (
     <div className="min-h-screen bg-white">
       <style>{GLOBAL_STYLES}</style>
@@ -259,14 +268,24 @@ export default function HomePage() {
             <a href="#contact" className="transition-colors hover:text-gray-900">Contact</a>
           </nav>
           <div className="flex gap-3">
-            <a href="/sign-in">
-              <Button variant="ghost" className="hidden sm:inline-flex">Sign In</Button>
-            </a>
-            <a href="#contact">
-              <Button className="bg-gradient-to-r from-[#6366f1] to-[#ec4899] font-semibold shadow-lg shadow-indigo-500/25 hover:shadow-xl">
-                Contact Us
-              </Button>
-            </a>
+            {isLoggedIn ? (
+              <a href="/dashboard">
+                <Button className="bg-gradient-to-r from-[#6366f1] to-[#ec4899] font-semibold shadow-lg shadow-indigo-500/25 hover:shadow-xl">
+                  My Dashboard
+                </Button>
+              </a>
+            ) : (
+              <>
+                <a href="/sign-in">
+                  <Button variant="ghost" className="hidden sm:inline-flex">Sign In</Button>
+                </a>
+                <a href="#contact">
+                  <Button className="bg-gradient-to-r from-[#6366f1] to-[#ec4899] font-semibold shadow-lg shadow-indigo-500/25 hover:shadow-xl">
+                    Contact Us
+                  </Button>
+                </a>
+              </>
+            )}
           </div>
         </div>
       </header>

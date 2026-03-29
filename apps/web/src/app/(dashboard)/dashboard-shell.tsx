@@ -48,7 +48,7 @@ export function DashboardShell({ user, merchantName, merchantSlug, merchantTier,
     navItems.find((item) => isActive(item.href))?.label || 'Dashboard'
 
   const sidebarContent = (
-    <>
+    <div className="flex flex-col h-full">
       <div className="flex h-14 items-center border-b px-6">
         <div className="min-w-0 flex-1">
           <span className="block text-lg font-bold truncate">
@@ -144,13 +144,13 @@ export function DashboardShell({ user, merchantName, merchantSlug, merchantTier,
           Sign Out
         </button>
       </div>
-    </>
+    </div>
   )
 
   return (
     <div className="flex min-h-screen">
       {/* Desktop sidebar */}
-      <aside className="hidden w-64 flex-col border-r bg-card lg:flex">
+      <aside className="hidden w-64 flex-col border-r bg-card lg:flex overflow-y-auto">
         {sidebarContent}
       </aside>
 
