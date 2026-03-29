@@ -365,12 +365,13 @@ export default function SettingsPage() {
           <p className="text-sm text-muted-foreground mb-4">
             Choose a visual theme for your player game page. This changes the entire look and feel.
           </p>
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {[
-              { key: 'joyful', label: 'Joyful & Fun', colors: ['#667eea', '#764ba2', '#f093fb'] },
-              { key: 'premium', label: 'Premium & Elegant', colors: ['#0a0a0a', '#1a1a2e', '#daa520'] },
-              { key: 'warm', label: 'Warm & Cozy', colors: ['#3c1810', '#5c2d1a', '#e8a849'] },
-              { key: 'kids', label: 'Child-Friendly', colors: ['#00b4d8', '#48cae4', '#ffb703'] },
+              { key: 'joyful', label: 'Joyful & Fun', emoji: '🎉', colors: ['#667eea', '#764ba2', '#f093fb'] },
+              { key: 'premium', label: 'Premium & Elegant', emoji: '✨', colors: ['#0a0a0a', '#1a1a2e', '#daa520'] },
+              { key: 'warm', label: 'Warm & Cozy', emoji: '☕', colors: ['#3c1810', '#5c2d1a', '#e8a849'] },
+              { key: 'kids', label: 'Child-Friendly', emoji: '🎈', colors: ['#00b4d8', '#48cae4', '#ffb703'] },
+              { key: 'custom', label: 'Custom Colors', emoji: '🎨', colors: [primaryColor || '#6366f1', secondaryColor || '#ec4899', '#f59e0b'] },
             ].map((atm) => (
               <button
                 key={atm.key}
@@ -396,14 +397,17 @@ export default function SettingsPage() {
                     : 'border-gray-200 hover:border-gray-300 bg-white'
                 }`}
               >
-                <div className="flex items-center gap-1.5">
-                  {atm.colors.map((c, i) => (
-                    <div
-                      key={i}
-                      className="h-5 w-5 rounded-full border border-gray-200"
-                      style={{ backgroundColor: c }}
-                    />
-                  ))}
+                <div className="flex items-center gap-2">
+                  <span className="text-lg">{atm.emoji}</span>
+                  <div className="flex items-center gap-1">
+                    {atm.colors.map((c, i) => (
+                      <div
+                        key={i}
+                        className="h-5 w-5 rounded-full border border-gray-200"
+                        style={{ backgroundColor: c }}
+                      />
+                    ))}
+                  </div>
                 </div>
                 <span className="text-sm font-medium">{atm.label}</span>
                 {atmosphere === atm.key && (
@@ -412,6 +416,48 @@ export default function SettingsPage() {
               </button>
             ))}
           </div>
+          {atmosphere === 'custom' && (
+            <div className="mt-4 rounded-xl border border-indigo-200 bg-indigo-50/50 p-4">
+              <p className="text-sm font-medium mb-3">Choose your 3 custom colors:</p>
+              <div className="grid gap-3 sm:grid-cols-3">
+                {[
+                  { label: 'Primary', key: 'customColor1' as const, value: primaryColor || '#6366f1' },
+                  { label: 'Secondary', key: 'customColor2' as const, value: secondaryColor || '#ec4899' },
+                  { label: 'Accent', key: 'customColor3' as const, value: '#f59e0b' },
+                ].map((color) => (
+                  <div key={color.key} className="space-y-1">
+                    <Label className="text-xs">{color.label}</Label>
+                    <div className="flex gap-2">
+                      <input
+                        type="color"
+                        defaultValue={color.value}
+                        onChange={async (e) => {
+                          if (!merchantId) return
+                          await updateMerchant(merchantId, { [color.key]: e.target.value } as Record<string, unknown>)
+                        }}
+                        className="h-9 w-12 cursor-pointer rounded border"
+                      />
+                      <Input
+                        defaultValue={color.value}
+                        className="flex-1 font-mono text-xs"
+                        readOnly
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <Button
+                className="mt-3"
+                size="sm"
+                onClick={async () => {
+                  if (!merchantId) return
+                  showSuccess('Custom colors saved!')
+                }}
+              >
+                Save Custom Colors
+              </Button>
+            </div>
+          )}
         </CardContent>
       </Card>
 

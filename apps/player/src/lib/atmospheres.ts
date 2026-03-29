@@ -100,6 +100,43 @@ export const ATMOSPHERES: Record<string, AtmosphereTheme> = {
   },
 }
 
-export function getAtmosphere(name: string): AtmosphereTheme {
+/**
+ * Build a custom atmosphere from merchant's chosen colors.
+ * c1 = primary, c2 = secondary, c3 = accent
+ */
+export function buildCustomAtmosphere(c1: string, c2: string, c3: string): AtmosphereTheme {
+  // Determine if background is dark or light to set text colors
+  const hex = c1.replace('#', '')
+  const r = parseInt(hex.substring(0, 2), 16)
+  const g = parseInt(hex.substring(2, 4), 16)
+  const b = parseInt(hex.substring(4, 6), 16)
+  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255
+  const isDark = luminance < 0.5
+
+  return {
+    name: 'custom',
+    label: 'Custom',
+    bgGradient: `linear-gradient(135deg, ${c1} 0%, ${c2} 50%, ${c3} 100%)`,
+    primaryText: isDark ? '#ffffff' : '#1a1a2e',
+    secondaryText: isDark ? 'rgba(255,255,255,0.75)' : 'rgba(0,0,0,0.6)',
+    cardBg: isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.06)',
+    cardBorder: isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)',
+    buttonBg: `linear-gradient(135deg, ${c2} 0%, ${c3} 100%)`,
+    buttonText: isDark ? '#ffffff' : '#1a1a2e',
+    buttonGlow: `${c3}66`,
+    accentColor: c3,
+    wheelColors: [c1, c2, c3, c1, c2, c3],
+    wheelBorder: isDark ? '#ffffff' : c3,
+    wheelCenter: isDark ? '#ffffff' : c1,
+    wheelText: '#ffffff',
+    fontWeight: 'bold',
+    titleSize: '2rem',
+  }
+}
+
+export function getAtmosphere(name: string, customColors?: { c1: string; c2: string; c3: string }): AtmosphereTheme {
+  if (name === 'custom' && customColors) {
+    return buildCustomAtmosphere(customColors.c1, customColors.c2, customColors.c3)
+  }
   return ATMOSPHERES[name] ?? ATMOSPHERES['joyful']!
 }

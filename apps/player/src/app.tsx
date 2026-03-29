@@ -136,7 +136,7 @@ export function App() {
   const slug = window.location.pathname.replace(/^\//, '') || 'demo'
 
   // Get the atmosphere theme from config
-  const theme = useMemo(() => getAtmosphere(config?.atmosphere || 'joyful'), [config?.atmosphere])
+  const theme = useMemo(() => getAtmosphere(config?.atmosphere || 'joyful', config?.customColors), [config?.atmosphere, config?.customColors])
 
   // Apply atmosphere theme + branding colors from config
   useEffect(() => {
@@ -183,34 +183,38 @@ export function App() {
         if (state) {
           setPlayerState(state)
 
-          // Decide which screen to show based on server state
-          if (IS_TEST_MODE) {
-            // Test mode: for wheel, go directly to game; for others, show welcome
-            if (gameConfig.game.type === 'wheel') {
-              setScreen('game')
-            } else {
-              setScreen('welcome')
-            }
-          } else if (!state.canPlay && state.playsToday >= state.maxPlaysPerDay) {
-            // Player has already hit the daily limit
-            setScreen('already-played')
-          } else if (state.completedActionsToday.length > 0) {
-            // Player has completed actions today but hasn't played yet
-            // Pre-populate completed actions and go to game screen
-            setCompletedActions(state.completedActionsToday)
-            setScreen('game')
-          } else {
-            // For wheel games: show game screen directly (wheel is the hero)
-            // For other game types: show welcome screen
+          // Helper: determine initial screen
+          const goToGameOrWelcome = () => {
             if (gameConfig.game.type === 'wheel') {
               setScreen('game')
             } else {
               setScreen('welcome')
             }
           }
+
+          // If returning from a CTA (preCompletedAction), auto-show the action overlay
+          const pendingCta = checkPendingAction(slug)
+          if (pendingCta && gameConfig.game.type === 'wheel') {
+            // Go to game screen with the action overlay auto-shown for verification
+            const completedEver = state?.completedActionsEver ?? []
+            const action = pickSingleAction(gameConfig.requiredActions, completedEver)
+            if (action && action.type === pendingCta) {
+              setSingleAction(action)
+              setShowActionOverlay(true)
+            }
+            setScreen('game')
+          } else if (IS_TEST_MODE) {
+            goToGameOrWelcome()
+          } else if (!state.canPlay && state.playsToday >= state.maxPlaysPerDay) {
+            setScreen('already-played')
+          } else if (state.completedActionsToday.length > 0) {
+            setCompletedActions(state.completedActionsToday)
+            setScreen('game')
+          } else {
+            goToGameOrWelcome()
+          }
         } else {
           // No state returned (new player)
-          // For wheel: show game directly; for others: show welcome
           if (gameConfig.game.type === 'wheel') {
             setScreen('game')
           } else {

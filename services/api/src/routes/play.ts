@@ -116,6 +116,11 @@ playRouter.get('/:slug', async (c) => {
           config: cta.config,
         })),
         atmosphere: merchantData.atmosphere || 'joyful',
+        customColors: (merchantData.atmosphere === 'custom') ? {
+          c1: (merchantData as Record<string, unknown>).customColor1 as string || '#6366f1',
+          c2: (merchantData as Record<string, unknown>).customColor2 as string || '#ec4899',
+          c3: (merchantData as Record<string, unknown>).customColor3 as string || '#f59e0b',
+        } : undefined,
         minActionsRequired: 1,
       },
     })

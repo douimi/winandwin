@@ -252,7 +252,7 @@ body {
 }
 
 .error-title {
-  font-size: 1.5rem;
+  font-size: 2rem;
   font-weight: 700;
 }
 
@@ -423,7 +423,7 @@ body {
   justify-content: center;
   flex-shrink: 0;
   transition: all var(--transition);
-  font-size: 0.85rem;
+  font-size: 1.1rem;
 }
 
 .action-card.completed .action-card-check {
@@ -494,7 +494,7 @@ body {
 }
 
 .verify-text {
-  font-size: 0.85rem;
+  font-size: 1.1rem;
   font-weight: 600;
   color: rgba(255, 255, 255, 0.9);
 }
@@ -542,7 +542,7 @@ body {
   border: 1.5px solid rgba(74, 222, 128, 0.4);
   background: linear-gradient(135deg, rgba(74, 222, 128, 0.12), rgba(74, 222, 128, 0.06));
   color: #4ade80;
-  font-size: 0.85rem;
+  font-size: 1.1rem;
   font-weight: 600;
   cursor: pointer;
   font-family: inherit;
@@ -608,7 +608,7 @@ body {
   border: none;
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.1));
   color: #fff;
-  font-size: 0.85rem;
+  font-size: 1.1rem;
   font-weight: 600;
   cursor: pointer;
   font-family: inherit;
@@ -713,7 +713,7 @@ body {
 }
 
 .register-label {
-  font-size: 0.85rem;
+  font-size: 1.1rem;
   font-weight: 600;
   color: var(--text-muted);
 }
@@ -862,7 +862,7 @@ body {
 }
 
 .game-title {
-  font-size: 1.5rem;
+  font-size: 2rem;
   font-weight: 800;
   text-align: center;
   background: linear-gradient(180deg, #fff 0%, rgba(255, 255, 255, 0.85) 100%);
@@ -873,7 +873,7 @@ body {
 }
 
 .game-merchant-sub {
-  font-size: 0.85rem;
+  font-size: 1.1rem;
   color: var(--text-muted);
   text-align: center;
   margin-bottom: 1.5rem;
@@ -1020,7 +1020,7 @@ body {
   border-radius: 9999px;
   background: linear-gradient(135deg, var(--gold-dark), var(--gold), var(--gold-dark));
   color: #1a1a2e;
-  font-size: 0.85rem;
+  font-size: 1.1rem;
   font-weight: 800;
   letter-spacing: 0.12em;
   box-shadow: 0 4px 20px rgba(255, 215, 0, 0.3);
@@ -1229,7 +1229,7 @@ body {
   border-radius: var(--radius-sm);
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.04) 100%);
   border: 1px solid rgba(255, 255, 255, 0.12);
-  font-size: 0.85rem;
+  font-size: 1.1rem;
   color: var(--text-muted);
   display: flex;
   align-items: center;
@@ -1606,7 +1606,7 @@ body {
 }
 
 .mystery-box-qmark {
-  font-size: 0.85rem;
+  font-size: 1.1rem;
   font-weight: 700;
   color: var(--text-muted);
   opacity: 0.6;
@@ -1930,8 +1930,8 @@ body {
 }
 
 .single-action-card .action-card-icon-circle {
-  width: 52px;
-  height: 52px;
+  width: 72px;
+  height: 72px;
 }
 
 .single-action-card .action-card-icon {
@@ -2126,7 +2126,7 @@ body {
 
 .already-played-comeback {
   margin-top: 1.5rem;
-  font-size: 0.85rem;
+  font-size: 1.1rem;
   opacity: 0.7;
   position: relative;
   z-index: 1;
@@ -2241,8 +2241,8 @@ button:active {
 }
 
 .immersive-logo-frame {
-  width: 52px;
-  height: 52px;
+  width: 72px;
+  height: 72px;
   border-radius: 50%;
   overflow: hidden;
   border: 2px solid var(--atm-card-border, rgba(255,255,255,0.2));
@@ -2260,13 +2260,13 @@ button:active {
 }
 
 .immersive-logo-initial {
-  font-size: 1.5rem;
+  font-size: 2rem;
   font-weight: 800;
   color: var(--atm-text, #fff);
 }
 
 .immersive-merchant-name {
-  font-size: 0.85rem;
+  font-size: 1.1rem;
   font-weight: 500;
   color: var(--atm-text-secondary, rgba(255,255,255,0.8));
   text-align: center;
@@ -2275,7 +2275,7 @@ button:active {
 }
 
 .immersive-game-title {
-  font-size: 1.8rem;
+  font-size: 2.2rem;
   font-weight: 800;
   text-align: center;
   color: var(--atm-text, #fff);
@@ -2288,7 +2288,7 @@ button:active {
 }
 
 .immersive-subtitle {
-  font-size: 0.9rem;
+  font-size: 1.05rem;
   color: var(--atm-text-secondary, rgba(255,255,255,0.7));
   text-align: center;
   margin-bottom: 0.75rem;

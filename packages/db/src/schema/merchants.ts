@@ -54,6 +54,9 @@ export const merchants = pgTable('merchants', {
   description: text('description'),
   validationPin: varchar('validation_pin', { length: 6 }).notNull().default('0000'),
   atmosphere: varchar('atmosphere', { length: 30 }).notNull().default('joyful'),
+  customColor1: varchar('custom_color1', { length: 7 }),
+  customColor2: varchar('custom_color2', { length: 7 }),
+  customColor3: varchar('custom_color3', { length: 7 }),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true })
     .notNull()

@@ -3,6 +3,7 @@ export interface GameConfig {
   merchantLogo?: string
   merchantDescription?: string
   atmosphere?: string
+  customColors?: { c1: string; c2: string; c3: string }
   game: {
     id: string
     type: 'wheel' | 'slots' | 'mystery_box'

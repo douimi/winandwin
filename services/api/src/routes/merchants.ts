@@ -16,7 +16,10 @@ const updateMerchantSchema = z.object({
   backgroundUrl: z.string().url().or(z.literal('')).optional(),
   description: z.string().max(500).optional(),
   logoUrl: z.string().url().or(z.literal('')).optional(),
-  atmosphere: z.enum(['joyful', 'premium', 'warm', 'kids']).optional(),
+  atmosphere: z.enum(['joyful', 'premium', 'warm', 'kids', 'custom']).optional(),
+  customColor1: z.string().regex(/^#[0-9a-fA-F]{6}$/).optional(),
+  customColor2: z.string().regex(/^#[0-9a-fA-F]{6}$/).optional(),
+  customColor3: z.string().regex(/^#[0-9a-fA-F]{6}$/).optional(),
   address: z
     .object({
       street: z.string().max(200),
@@ -206,6 +209,9 @@ merchantsRouter.patch('/:id', async (c) => {
     if (parsed.data.logoUrl !== undefined) updates.logoUrl = parsed.data.logoUrl || null
     if (parsed.data.address !== undefined) updates.address = parsed.data.address
     if (parsed.data.atmosphere !== undefined) updates.atmosphere = parsed.data.atmosphere
+    if (parsed.data.customColor1 !== undefined) updates.customColor1 = parsed.data.customColor1
+    if (parsed.data.customColor2 !== undefined) updates.customColor2 = parsed.data.customColor2
+    if (parsed.data.customColor3 !== undefined) updates.customColor3 = parsed.data.customColor3
 
     if (Object.keys(updates).length === 0) {
       return c.json(
