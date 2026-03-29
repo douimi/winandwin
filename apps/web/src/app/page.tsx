@@ -6,7 +6,10 @@ import { Button, Card, CardContent, Input, Label } from '@winandwin/ui'
 function useIsLoggedIn() {
   const [loggedIn, setLoggedIn] = useState(false)
   useEffect(() => {
-    setLoggedIn(document.cookie.includes('better-auth.session'))
+    fetch('/api/auth/check')
+      .then((r) => r.json())
+      .then((data: { authenticated: boolean }) => setLoggedIn(data.authenticated))
+      .catch(() => setLoggedIn(false))
   }, [])
   return loggedIn
 }
