@@ -1,4 +1,4 @@
-import { useRef, useState } from 'preact/hooks'
+import { useEffect, useRef, useState } from 'preact/hooks'
 import type { BusinessTheme } from '../lib/business-themes'
 
 interface WheelProps {
@@ -138,7 +138,7 @@ function darken(color: string, amount = 0.25): string {
 
 export function Wheel({ prizes, branding, onSpinComplete, spinning, onSpin, targetIndex, wheelColors, wheelBorder, wheelCenter, wheelText, businessTheme }: WheelProps) {
   const [rotation, setRotation] = useState(0)
-  const hasSpun = useRef(false)
+  const isAnimating = useRef(false)
 
   // Build display segments with themed "Try Again" text
   const segments = buildWheelSegments(
@@ -148,14 +148,26 @@ export function Wheel({ prizes, branding, onSpinComplete, spinning, onSpin, targ
   )
   const segmentAngle = 360 / segments.length
 
+  // Reset rotation when not spinning (allows re-spin in test mode)
+  useEffect(() => {
+    if (!spinning && rotation !== 0) {
+      // After spin completes, reset for next spin (without transition)
+      const timer = setTimeout(() => {
+        isAnimating.current = false
+        setRotation(0)
+      }, 500)
+      return () => clearTimeout(timer)
+    }
+  }, [spinning])
+
   function handleSpin() {
-    if (spinning || hasSpun.current) return
-    hasSpun.current = true
+    if (spinning || isAnimating.current) return
     onSpin()
   }
 
   // When targetIndex is set and we're spinning, calculate the rotation
-  if (spinning && targetIndex !== null && rotation === 0) {
+  if (spinning && targetIndex !== null && !isAnimating.current) {
+    isAnimating.current = true
     const targetMiddle = targetIndex * segmentAngle + segmentAngle / 2
     const stopAt = 360 - targetMiddle
     const totalDegrees = MIN_ROTATIONS * 360 + stopAt
