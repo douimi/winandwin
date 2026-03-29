@@ -36,10 +36,13 @@ app.use('*', securityHeaders)
 app.use(
   '*',
   async (c, next) => {
-    const allowedOrigins =
-      c.env.ENVIRONMENT === 'production'
-        ? (c.env.ALLOWED_ORIGINS || '').split(',').map((o) => o.trim()).filter(Boolean)
-        : ['http://localhost:3000', 'http://localhost:3001']
+    // Always include localhost for dev + any configured origins for production
+    const configuredOrigins = (c.env.ALLOWED_ORIGINS || '').split(',').map((o) => o.trim()).filter(Boolean)
+    const allowedOrigins = [
+      'http://localhost:3000',
+      'http://localhost:3001',
+      ...configuredOrigins,
+    ]
 
     const corsMiddleware = cors({
       origin: allowedOrigins,
