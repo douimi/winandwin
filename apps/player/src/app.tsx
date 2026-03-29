@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'preact/hooks'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'preact/hooks'
 import { fetchGameConfig, fetchPlayerState, spinGame, updatePlayerInfo } from './api'
 import { ActionScreen } from './components/action-screen'
 import { AlreadyPlayedScreen } from './components/already-played'
@@ -120,7 +120,9 @@ export function App() {
   const [config, setConfig] = useState<GameConfig | null>(null)
   const [completedActions, setCompletedActions] = useState<string[]>([])
   const [spinning, setSpinning] = useState(false)
-  const [result, setResult] = useState<SpinResult | null>(null)
+  const [result, _setResult] = useState<SpinResult | null>(null)
+  const resultRef = useRef<SpinResult | null>(null)
+  const setResult = (r: SpinResult | null) => { resultRef.current = r; _setResult(r) }
   const [targetIndex, setTargetIndex] = useState<number | null>(null)
   const [error, setError] = useState<{ kind: ErrorKind; message: string } | null>(null)
   const [fingerprintId, setFingerprintId] = useState<string | null>(null)
@@ -378,7 +380,9 @@ export function App() {
   function handleSpinComplete(_targetIdx: number) {
     setSpinning(false)
 
-    if (result?.outcome === 'win') {
+    // Use ref to get the latest result (avoids stale closure)
+    const currentResult = resultRef.current
+    if (currentResult?.outcome === 'win') {
       // Win: ask for name + email before showing result
       setScreen('register')
     } else {
