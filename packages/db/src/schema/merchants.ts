@@ -1,5 +1,5 @@
 import { relations } from 'drizzle-orm'
-import { boolean, jsonb, pgEnum, pgTable, text, timestamp, varchar } from 'drizzle-orm/pg-core'
+import { boolean, integer, jsonb, pgEnum, pgTable, text, timestamp, varchar } from 'drizzle-orm/pg-core'
 import { coupons } from './coupons'
 import { ctas } from './ctas'
 import { games } from './games'
@@ -55,6 +55,9 @@ export const merchants = pgTable('merchants', {
   validationPin: varchar('validation_pin', { length: 6 }).notNull().default('0000'),
   disabled: boolean('disabled').notNull().default(false),
   atmosphere: varchar('atmosphere', { length: 30 }).notNull().default('joyful'),
+  cooldownHours: integer('cooldown_hours').notNull().default(24),
+  maxWinsPerPeriod: integer('max_wins_per_period').notNull().default(5),
+  winPeriodDays: integer('win_period_days').notNull().default(7),
   customColor1: varchar('custom_color1', { length: 7 }),
   customColor2: varchar('custom_color2', { length: 7 }),
   customColor3: varchar('custom_color3', { length: 7 }),

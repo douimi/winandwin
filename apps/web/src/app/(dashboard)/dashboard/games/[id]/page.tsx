@@ -53,9 +53,7 @@ export default function GameDetailPage() {
           setName(data.name)
           setStatus(data.status)
           setGlobalWinRate(
-            typeof data.globalWinRate === 'string'
-              ? Math.round(parseFloat(data.globalWinRate) * 100)
-              : Number(data.globalWinRate),
+            Math.round(Number(data.globalWinRate) || 30),
           )
         }
       } catch (err) {

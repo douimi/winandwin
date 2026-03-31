@@ -6,6 +6,7 @@ export interface GameConfig {
   atmosphere?: string
   customColors?: { c1: string; c2: string; c3: string }
   monthlyLimitReached?: boolean
+  cooldownHours?: number
   game: {
     id: string
     type: 'wheel' | 'slots' | 'mystery_box'
@@ -50,6 +51,9 @@ export interface PlayerState {
     validFrom: string
     validUntil: string
   } | null
+  nextPlayAt?: string
+  maxWinsReached?: boolean
+  cooldownHours?: number
 }
 
 export type PlayerScreen = 'loading' | 'welcome' | 'action' | 'actions' | 'register' | 'game' | 'result' | 'already-played' | 'limit-reached' | 'merchant-disabled'

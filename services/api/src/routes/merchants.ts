@@ -20,6 +20,9 @@ const updateMerchantSchema = z.object({
   customColor1: z.string().regex(/^#[0-9a-fA-F]{6}$/).optional(),
   customColor2: z.string().regex(/^#[0-9a-fA-F]{6}$/).optional(),
   customColor3: z.string().regex(/^#[0-9a-fA-F]{6}$/).optional(),
+  cooldownHours: z.number().int().min(1).max(720).optional(),
+  maxWinsPerPeriod: z.number().int().min(1).max(100).optional(),
+  winPeriodDays: z.number().int().min(1).max(90).optional(),
   address: z
     .object({
       street: z.string().max(200),
@@ -212,6 +215,9 @@ merchantsRouter.patch('/:id', async (c) => {
     if (parsed.data.customColor1 !== undefined) updates.customColor1 = parsed.data.customColor1
     if (parsed.data.customColor2 !== undefined) updates.customColor2 = parsed.data.customColor2
     if (parsed.data.customColor3 !== undefined) updates.customColor3 = parsed.data.customColor3
+    if (parsed.data.cooldownHours !== undefined) updates.cooldownHours = parsed.data.cooldownHours
+    if (parsed.data.maxWinsPerPeriod !== undefined) updates.maxWinsPerPeriod = parsed.data.maxWinsPerPeriod
+    if (parsed.data.winPeriodDays !== undefined) updates.winPeriodDays = parsed.data.winPeriodDays
 
     if (Object.keys(updates).length === 0) {
       return c.json(

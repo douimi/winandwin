@@ -151,6 +151,7 @@ playRouter.get('/:slug', async (c) => {
           weight: cta.weight,
           config: cta.config,
         })),
+        cooldownHours: merchantData.cooldownHours || 24,
         atmosphere: merchantData.atmosphere || 'joyful',
         customColors: (merchantData.atmosphere === 'custom') ? {
           c1: (merchantData as Record<string, unknown>).customColor1 as string || '#6366f1',
@@ -257,19 +258,19 @@ playRouter.get('/:slug/state', async (c) => {
 
     const playerData = playerResult[0]!
     const maxPlaysPerDay = activeGame.frequencyLimit?.maxPlaysPerDay ?? 1
+    const cooldownHours = merchantData.cooldownHours || 24
+    const cooldownMs = cooldownHours * 60 * 60 * 1000
+    const cooldownStart = new Date(Date.now() - cooldownMs)
 
-    // Query today's game_plays
-    const todayStart = new Date()
-    todayStart.setUTCHours(0, 0, 0, 0)
-
-    const todaysPlays = await db
+    // Query plays within cooldown period (replaces "today" check)
+    const recentPlays = await db
       .select()
       .from(gamePlays)
       .where(
         and(
           eq(gamePlays.gameId, activeGame.id),
           eq(gamePlays.playerId, playerData.id),
-          gte(gamePlays.playedAt, todayStart),
+          gte(gamePlays.playedAt, cooldownStart),
         ),
       )
 
@@ -279,12 +280,39 @@ playRouter.get('/:slug/state', async (c) => {
       .from(gamePlays)
       .where(eq(gamePlays.playerId, playerData.id))
 
-    const playsToday = todaysPlays.length
-    const canPlay = playsToday < maxPlaysPerDay
+    // Check max wins per period
+    const winPeriodDays = merchantData.winPeriodDays || 7
+    const winPeriodStart = new Date(Date.now() - winPeriodDays * 24 * 60 * 60 * 1000)
+    const winsInPeriodResult = await db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(gamePlays)
+      .where(
+        and(
+          eq(gamePlays.playerId, playerData.id),
+          eq(gamePlays.merchantId, merchantData.id),
+          eq(gamePlays.result, 'win'),
+          gte(gamePlays.playedAt, winPeriodStart),
+        ),
+      )
+    const winsInPeriod = winsInPeriodResult[0]?.count ?? 0
+    const maxWinsReached = winsInPeriod >= (merchantData.maxWinsPerPeriod || 5)
 
-    // Extract actions completed TODAY
+    const playsInCooldown = recentPlays.length
+    const canPlay = playsInCooldown < maxPlaysPerDay && !maxWinsReached
+
+    // Calculate next play time
+    let nextPlayAt: string | null = null
+    if (recentPlays.length > 0 && !canPlay) {
+      const sorted = recentPlays.sort(
+        (a, b) => new Date(b.playedAt).getTime() - new Date(a.playedAt).getTime(),
+      )
+      const lastPlayTime = new Date(sorted[0]!.playedAt).getTime()
+      nextPlayAt = new Date(lastPlayTime + cooldownMs).toISOString()
+    }
+
+    // Extract actions completed in cooldown period
     const completedActionsToday: string[] = []
-    for (const play of todaysPlays) {
+    for (const play of recentPlays) {
       const actions = play.completedActions as string[] | null
       if (actions) {
         for (const action of actions) {
@@ -312,15 +340,13 @@ playRouter.get('/:slug/state', async (c) => {
     let lastPlayResult: 'win' | 'lose' | null = null
     let lastCoupon: { code: string; validFrom: string; validUntil: string } | null = null
 
-    if (todaysPlays.length > 0) {
-      // Sort by playedAt desc to get the most recent
-      const sorted = todaysPlays.sort(
+    if (recentPlays.length > 0) {
+      const sorted = recentPlays.sort(
         (a, b) => new Date(b.playedAt).getTime() - new Date(a.playedAt).getTime(),
       )
       const lastPlay = sorted[0]!
       lastPlayResult = lastPlay.result
 
-      // If they won, look up the coupon
       if (lastPlayResult === 'win' && lastPlay.prizeId) {
         const couponResult = await db
           .select()
@@ -329,7 +355,7 @@ playRouter.get('/:slug/state', async (c) => {
             and(
               eq(coupons.playerId, playerData.id),
               eq(coupons.gameId, activeGame.id),
-              gte(coupons.createdAt, todayStart),
+              gte(coupons.createdAt, cooldownStart),
             ),
           )
           .limit(1)
@@ -351,11 +377,14 @@ playRouter.get('/:slug/state', async (c) => {
         playerId: playerData.id,
         completedActionsToday,
         completedActionsEver,
-        playsToday,
+        playsToday: playsInCooldown,
         maxPlaysPerDay,
         canPlay,
         lastPlayResult,
         lastCoupon,
+        nextPlayAt,
+        maxWinsReached,
+        cooldownHours,
       },
     })
   } catch (err) {

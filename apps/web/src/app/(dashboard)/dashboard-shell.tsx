@@ -57,7 +57,7 @@ export function DashboardShell({ user, merchantName, merchantSlug, merchantTier,
           <p className="mt-2 text-xs text-muted-foreground truncate">{merchantName}</p>
         )}
       </div>
-      <nav className="flex-1 space-y-1 p-4">
+      <nav className="flex-1 overflow-y-auto space-y-1 p-4">
         {navItems.map((item) => {
           const active = isActive(item.href)
           return (
@@ -114,7 +114,7 @@ export function DashboardShell({ user, merchantName, merchantSlug, merchantTier,
           </a>
         )}
       </nav>
-      <div className="border-t p-4">
+      <div className="mt-auto border-t p-4">
         <div className="flex items-center gap-3">
           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-xs font-medium text-primary-foreground">
             {user.name.charAt(0).toUpperCase()}

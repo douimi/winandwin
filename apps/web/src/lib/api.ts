@@ -223,6 +223,13 @@ export async function updateMerchant(
     backgroundUrl: string
     description: string
     logoUrl: string
+    atmosphere: string
+    customColor1: string
+    customColor2: string
+    customColor3: string
+    cooldownHours: number
+    maxWinsPerPeriod: number
+    winPeriodDays: number
     address: {
       street: string
       city: string

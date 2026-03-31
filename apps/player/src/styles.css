@@ -2424,3 +2424,45 @@ button:active {
 .welcome-accent-emoji {
   font-size: inherit;
 }
+
+/* Countdown Timer */
+.countdown-section {
+  margin-top: 1.5rem;
+  text-align: center;
+  padding: 1rem;
+  border-radius: 16px;
+  background: var(--atm-card-bg, rgba(255,255,255,0.1));
+  border: 1px solid var(--atm-card-border, rgba(255,255,255,0.15));
+}
+.countdown-label {
+  font-size: 0.9rem;
+  color: var(--atm-text-secondary, rgba(255,255,255,0.7));
+  margin-bottom: 0.5rem;
+}
+.countdown-timer {
+  font-size: 2rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: var(--atm-accent, #f59e0b);
+  letter-spacing: 2px;
+}
+.countdown-ready {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--atm-accent, #22c55e);
+  margin-bottom: 0.75rem;
+}
+.countdown-refresh-btn {
+  padding: 12px 32px;
+  border-radius: 30px;
+  border: none;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  background: var(--atm-button-bg, linear-gradient(135deg, #6366f1, #ec4899));
+  color: var(--atm-button-text, #fff);
+  transition: transform 0.15s ease;
+}
+.countdown-refresh-btn:active {
+  transform: scale(0.97);
+}

@@ -23,6 +23,12 @@ export default function SettingsPage() {
   const [validationPin, setValidationPin] = useState('0000')
   const [savingPin, setSavingPin] = useState(false)
 
+  // Game Rules state
+  const [cooldownHours, setCooldownHours] = useState(24)
+  const [maxWinsPerPeriod, setMaxWinsPerPeriod] = useState(5)
+  const [winPeriodDays, setWinPeriodDays] = useState(7)
+  const [savingRules, setSavingRules] = useState(false)
+
   // Brand Identity state
   const [primaryColor, setPrimaryColor] = useState('#6366f1')
   const [secondaryColor, setSecondaryColor] = useState('#ec4899')
@@ -48,6 +54,9 @@ export default function SettingsPage() {
       setTimezone(merchant.timezone)
       setPhone(merchant.phone ?? '')
       setValidationPin((merchant as unknown as Record<string, string>).validationPin ?? '0000')
+      setCooldownHours((merchant as unknown as Record<string, number>).cooldownHours ?? 24)
+      setMaxWinsPerPeriod((merchant as unknown as Record<string, number>).maxWinsPerPeriod ?? 5)
+      setWinPeriodDays((merchant as unknown as Record<string, number>).winPeriodDays ?? 7)
       setPrimaryColor((merchant as unknown as Record<string, string>).primaryColor ?? '#6366f1')
       setSecondaryColor((merchant as unknown as Record<string, string>).secondaryColor ?? '#ec4899')
       setLogoUrl((merchant as unknown as Record<string, string>).logoUrl ?? '')
@@ -458,6 +467,72 @@ export default function SettingsPage() {
               </Button>
             </div>
           )}
+        </CardContent>
+      </Card>
+
+      {/* Game Rules */}
+      <Card>
+        <CardHeader>
+          <CardTitle>{'\u{1F3AE}'} Game Rules</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form
+            onSubmit={async (e) => {
+              e.preventDefault()
+              if (!merchantId) return
+              setSavingRules(true)
+              setError(null)
+              try {
+                await updateMerchant(merchantId, { cooldownHours, maxWinsPerPeriod, winPeriodDays })
+                showSuccess('Game rules updated successfully.')
+              } catch (err) {
+                setError(err instanceof Error ? err.message : 'Failed to save')
+              } finally {
+                setSavingRules(false)
+              }
+            }}
+            className="space-y-4"
+          >
+            <div className="space-y-2">
+              <Label htmlFor="cooldownHours">Cooldown between plays (hours)</Label>
+              <Input
+                id="cooldownHours"
+                type="number"
+                min={1}
+                max={720}
+                value={cooldownHours}
+                onChange={(e) => setCooldownHours(Number(e.target.value))}
+              />
+              <p className="text-xs text-muted-foreground">How long a player must wait before playing again. Default: 24 hours.</p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="maxWins">Max wins per period</Label>
+              <Input
+                id="maxWins"
+                type="number"
+                min={1}
+                max={100}
+                value={maxWinsPerPeriod}
+                onChange={(e) => setMaxWinsPerPeriod(Number(e.target.value))}
+              />
+              <p className="text-xs text-muted-foreground">Maximum number of wins a player can have within the win period. Helps prevent fraud.</p>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="winPeriod">Win period (days)</Label>
+              <Input
+                id="winPeriod"
+                type="number"
+                min={1}
+                max={90}
+                value={winPeriodDays}
+                onChange={(e) => setWinPeriodDays(Number(e.target.value))}
+              />
+              <p className="text-xs text-muted-foreground">The rolling window for counting wins. Default: 7 days.</p>
+            </div>
+            <Button type="submit" disabled={savingRules}>
+              {savingRules ? 'Saving...' : 'Save Game Rules'}
+            </Button>
+          </form>
         </CardContent>
       </Card>
 
