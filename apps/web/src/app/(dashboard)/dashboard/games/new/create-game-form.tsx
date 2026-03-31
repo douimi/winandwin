@@ -17,6 +17,8 @@ interface Prize {
   emoji: string
   winRate: number
   couponValidityDays: number
+  maxTotal: number | null
+  maxPerDay: number | null
 }
 
 export function CreateGameForm() {
@@ -26,13 +28,13 @@ export function CreateGameForm() {
   const [gameName, setGameName] = useState('')
   const [globalWinRate, setGlobalWinRate] = useState(30)
   const [prizes, setPrizes] = useState<Prize[]>([
-    { name: '', emoji: '🎁', winRate: 50, couponValidityDays: 7 },
+    { name: '', emoji: '🎁', winRate: 50, couponValidityDays: 7, maxTotal: null, maxPerDay: null },
   ])
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   function addPrize() {
-    setPrizes((prev) => [...prev, { name: '', emoji: '🎁', winRate: 50, couponValidityDays: 7 }])
+    setPrizes((prev) => [...prev, { name: '', emoji: '🎁', winRate: 50, couponValidityDays: 7, maxTotal: null, maxPerDay: null }])
   }
 
   function removePrize(index: number) {
@@ -61,6 +63,8 @@ export function CreateGameForm() {
             emoji: p.emoji,
             winRate: p.winRate,
             couponValidityDays: p.couponValidityDays,
+            ...(p.maxTotal !== null ? { maxTotal: p.maxTotal } : {}),
+            ...(p.maxPerDay !== null ? { maxPerDay: p.maxPerDay } : {}),
           })),
           globalWinRate,
         },
@@ -191,6 +195,36 @@ export function CreateGameForm() {
                         updatePrize(index, 'couponValidityDays', Number((e.target as HTMLInputElement).value))
                       }
                     />
+                  </div>
+                </div>
+                <div className="flex gap-3">
+                  <div className="flex-1">
+                    <Label>Max Total Wins</Label>
+                    <Input
+                      type="number"
+                      min={1}
+                      placeholder="Unlimited"
+                      value={prize.maxTotal ?? ''}
+                      onChange={(e) => {
+                        const val = (e.target as HTMLInputElement).value
+                        updatePrize(index, 'maxTotal', val ? Number(val) : (null as unknown as number))
+                      }}
+                    />
+                    <p className="text-[10px] text-muted-foreground mt-0.5">Leave empty for unlimited</p>
+                  </div>
+                  <div className="flex-1">
+                    <Label>Max Per Day</Label>
+                    <Input
+                      type="number"
+                      min={1}
+                      placeholder="Unlimited"
+                      value={prize.maxPerDay ?? ''}
+                      onChange={(e) => {
+                        const val = (e.target as HTMLInputElement).value
+                        updatePrize(index, 'maxPerDay', val ? Number(val) : (null as unknown as number))
+                      }}
+                    />
+                    <p className="text-[10px] text-muted-foreground mt-0.5">Leave empty for unlimited</p>
                   </div>
                 </div>
               </div>

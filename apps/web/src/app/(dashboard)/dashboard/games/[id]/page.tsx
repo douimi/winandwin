@@ -219,16 +219,36 @@ export default function GameDetailPage() {
               <p className="text-sm text-muted-foreground">No prizes configured.</p>
             ) : (
               game.prizes.map((prize) => (
-                <div key={prize.id} className="flex items-center gap-3 rounded-lg border p-3">
-                  <span className="text-2xl">{prize.emoji || '🎁'}</span>
-                  <div className="flex-1">
-                    <p className="text-sm font-semibold">{prize.name}</p>
-                    <div className="flex gap-4 text-xs text-muted-foreground">
-                      <span>Win weight: {prize.winRate}</span>
-                      <span>Valid: {prize.couponValidityDays}d</span>
-                      <span>Won: {prize.totalWon}</span>
-                      {prize.maxTotal != null && <span>Max: {prize.maxTotal}</span>}
+                <div key={prize.id} className="rounded-lg border p-3">
+                  <div className="flex items-center gap-3">
+                    <span className="text-2xl">{prize.emoji || '🎁'}</span>
+                    <div className="flex-1">
+                      <p className="text-sm font-semibold">{prize.name}</p>
+                      <div className="flex flex-wrap gap-3 text-xs text-muted-foreground mt-1">
+                        <span>Win weight: {prize.winRate}</span>
+                        <span>Valid: {prize.couponValidityDays}d</span>
+                      </div>
                     </div>
+                  </div>
+                  <div className="mt-2 flex flex-wrap gap-3">
+                    <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${prize.totalWon > 0 ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
+                      Won: {prize.totalWon}{prize.maxTotal != null ? ` / ${prize.maxTotal}` : ''}
+                    </span>
+                    {prize.maxTotal != null && (
+                      <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${prize.totalWon >= prize.maxTotal ? 'bg-red-50 text-red-700' : 'bg-blue-50 text-blue-700'}`}>
+                        {prize.totalWon >= prize.maxTotal ? '🚫 Limit reached' : `${prize.maxTotal - prize.totalWon} remaining`}
+                      </span>
+                    )}
+                    {prize.maxPerDay != null && (
+                      <span className="inline-flex items-center rounded-full bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700">
+                        Max {prize.maxPerDay}/day
+                      </span>
+                    )}
+                    {prize.maxTotal == null && prize.maxPerDay == null && (
+                      <span className="inline-flex items-center rounded-full bg-gray-50 px-2 py-0.5 text-xs font-medium text-gray-500">
+                        Unlimited
+                      </span>
+                    )}
                   </div>
                 </div>
               ))
