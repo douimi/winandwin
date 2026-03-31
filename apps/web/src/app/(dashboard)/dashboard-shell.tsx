@@ -51,7 +51,7 @@ export function DashboardShell({ user, merchantName, merchantSlug, merchantTier,
     <div className="flex flex-col h-full">
       <div className="border-b px-4 py-4">
         <a href="/dashboard" className="block">
-          <img src="/logo.svg" alt="Win & Win" className="w-full max-w-[230px]" />
+          <img src="/logo.svg" alt="Win & Win" className="h-10 w-auto" />
         </a>
         {merchantName && (
           <p className="mt-2 text-xs text-muted-foreground truncate">{merchantName}</p>
@@ -148,7 +148,7 @@ export function DashboardShell({ user, merchantName, merchantSlug, merchantTier,
   return (
     <div className="flex min-h-screen">
       {/* Desktop sidebar */}
-      <aside className="hidden w-64 flex-col border-r bg-card lg:flex overflow-y-auto">
+      <aside className="hidden w-64 flex-col border-r bg-card lg:flex sticky top-0 h-screen">
         {sidebarContent}
       </aside>
 

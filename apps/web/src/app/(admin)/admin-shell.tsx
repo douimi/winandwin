@@ -40,7 +40,7 @@ export function AdminShell({ user, children }: AdminShellProps) {
       {/* Logo */}
       <div className="border-b border-gray-200 px-4 py-4">
         <a href="/admin" className="block">
-          <img src="/logo.svg" alt="Win & Win" className="w-full max-w-[230px]" />
+          <img src="/logo.svg" alt="Win & Win" className="h-10 w-auto" />
         </a>
         <span className="mt-2 inline-flex items-center rounded-full bg-indigo-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-indigo-700">
           Admin
@@ -109,7 +109,7 @@ export function AdminShell({ user, children }: AdminShellProps) {
   return (
     <div className="flex min-h-screen bg-gray-50">
       {/* Desktop sidebar */}
-      <aside className="hidden w-[260px] flex-col border-r border-gray-200 bg-white lg:flex">
+      <aside className="hidden w-[260px] flex-col border-r border-gray-200 bg-white lg:flex sticky top-0 h-screen">
         {sidebarContent}
       </aside>
 
