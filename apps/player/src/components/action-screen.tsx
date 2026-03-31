@@ -102,7 +102,9 @@ function SingleActionScreen({ config, singleAction, onComplete, preCompleted }: 
         break
       }
       case 'instagram_follow': {
-        const handle = singleAction.config?.instagramHandle
+        let handle = singleAction.config?.instagramHandle || ''
+        // Strip full URL if user entered one (e.g., https://www.instagram.com/username/)
+        handle = handle.replace(/^https?:\/\/(www\.)?instagram\.com\/?/i, '').replace(/\/+$/, '')
         if (handle) {
           localStorage.setItem('winandwin_pending_action', JSON.stringify({
             type: singleAction.type,
@@ -155,14 +157,15 @@ function SingleActionScreen({ config, singleAction, onComplete, preCompleted }: 
         break
       }
       case 'tiktok_follow': {
-        const handle = singleAction.config?.tiktokHandle
-        if (handle) {
+        let tiktokHandle = singleAction.config?.tiktokHandle || ''
+        tiktokHandle = tiktokHandle.replace(/^https?:\/\/(www\.)?tiktok\.com\/?@?/i, '').replace(/\/+$/, '')
+        if (tiktokHandle) {
           localStorage.setItem('winandwin_pending_action', JSON.stringify({
             type: singleAction.type,
             slug: window.location.pathname.replace(/^\//, ''),
             timestamp: Date.now(),
           }))
-          window.location.href = `https://tiktok.com/@${handle}`
+          window.location.href = `https://tiktok.com/@${tiktokHandle}`
         } else {
           setClicked(true)
         }

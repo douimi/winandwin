@@ -16,6 +16,22 @@ import type { AtmosphereTheme } from './lib/atmospheres'
 import { getBusinessTheme } from './lib/business-themes'
 import type { GameConfig, PlayerScreen, PlayerState, SpinResult } from './types'
 
+/** Action metadata for progress display */
+const ACTION_META_MAP: Record<string, { icon: string; label: string }> = {
+  google_review: { icon: '\u2B50', label: 'Google Review' },
+  instagram_follow: { icon: '\uD83D\uDCF8', label: 'Instagram Follow' },
+  email_collect: { icon: '\u2709\uFE0F', label: 'Share Email' },
+  visit_stamp: { icon: '\uD83D\uDCCD', label: 'Visit Stamp' },
+  receipt_photo: { icon: '\uD83E\uDDFE', label: 'Receipt Photo' },
+  tripadvisor_review: { icon: '\uD83C\uDFE8', label: 'TripAdvisor Review' },
+  facebook_like: { icon: '\uD83D\uDC4D', label: 'Facebook Like' },
+  tiktok_follow: { icon: '\uD83C\uDFB5', label: 'TikTok Follow' },
+  book_appointment: { icon: '\uD83D\uDCC5', label: 'Book Appointment' },
+  whatsapp_join: { icon: '\uD83D\uDCAC', label: 'WhatsApp Join' },
+  refer_friend: { icon: '\uD83D\uDC65', label: 'Refer a Friend' },
+  survey_feedback: { icon: '\uD83D\uDCCB', label: 'Feedback' },
+}
+
 /** Classify errors into user-friendly categories */
 type ErrorKind = 'network' | 'timeout' | 'api'
 
@@ -587,6 +603,36 @@ export function App() {
             <div class="action-overlay-backdrop" onClick={() => setShowActionOverlay(false)}>
               <div class="action-overlay-sheet" onClick={(e) => e.stopPropagation()}>
                 <div class="action-overlay-handle" />
+
+                {/* Action progression: show completed + current */}
+                {config.requiredActions.length > 1 && (
+                  <div class="action-progress-list">
+                    {config.requiredActions
+                      .sort((a, b) => (b.weight || 0) - (a.weight || 0))
+                      .map((action) => {
+                        const everCompleted = playerState?.completedActionsEver?.includes(action.type)
+                        const isCurrent = action.type === singleAction.type
+                        const meta = ACTION_META_MAP[action.type]
+                        return (
+                          <div
+                            key={action.type}
+                            class={`action-progress-item ${everCompleted ? 'done' : ''} ${isCurrent ? 'current' : ''}`}
+                          >
+                            <span class="action-progress-icon">
+                              {everCompleted ? '\u2705' : (meta?.icon || '\u2B50')}
+                            </span>
+                            <span class="action-progress-label">
+                              {meta?.label || action.type.replace(/_/g, ' ')}
+                            </span>
+                            {isCurrent && !everCompleted && (
+                              <span class="action-progress-badge">Current</span>
+                            )}
+                          </div>
+                        )
+                      })}
+                  </div>
+                )}
+
                 <ActionScreen
                   config={config}
                   onComplete={handleActionComplete}
