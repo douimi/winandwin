@@ -94,6 +94,7 @@ export const gameBrandingSchema = z.object({
 export const createGameSchema = z.object({
   type: gameTypeSchema,
   name: z.string().min(1).max(100),
+  description: z.string().max(500).optional(),
   config: z.object({
     prizes: z.array(prizeSchema).min(1).max(20),
     globalWinRate: z.number().min(1).max(100).default(30),

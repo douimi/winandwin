@@ -1,7 +1,8 @@
 import { Hono } from 'hono'
-import { eq, and } from 'drizzle-orm'
-import { games, prizes } from '@winandwin/db/schema'
+import { eq, and, sql } from 'drizzle-orm'
+import { games, prizes, merchants } from '@winandwin/db/schema'
 import { createGameSchema } from '@winandwin/shared/validators'
+import { getTierLimits } from '../lib/tier-limits'
 import type { AppEnv } from '../types'
 
 export const gamesRouter = new Hono<AppEnv>()
@@ -101,6 +102,59 @@ gamesRouter.post('/', async (c) => {
 
     const { type, name, config } = parsed.data
 
+    // Test mode bypass
+    const isTestMode = c.req.query('testmode') === 'unlimited'
+
+    if (!isTestMode) {
+      // Tier limit: check maxGames
+      const merchantResult = await db
+        .select()
+        .from(merchants)
+        .where(eq(merchants.id, merchantId))
+        .limit(1)
+
+      if (merchantResult.length > 0) {
+        const tierLimits = await getTierLimits(db)
+        const tier = merchantResult[0]!.subscriptionTier as keyof typeof tierLimits
+        const limits = tierLimits[tier] as Record<string, unknown> | undefined
+        const maxGames = (limits?.maxGames as number) ?? 999
+
+        const gameCountResult = await db
+          .select({ count: sql<number>`count(*)::int` })
+          .from(games)
+          .where(eq(games.merchantId, merchantId))
+
+        const gameCount = gameCountResult[0]?.count ?? 0
+        if (gameCount >= maxGames) {
+          return c.json(
+            {
+              success: false,
+              error: {
+                code: 'TIER_LIMIT',
+                message: `Your plan allows ${maxGames} active game${maxGames !== 1 ? 's' : ''}. Upgrade to create more.`,
+              },
+            },
+            403,
+          )
+        }
+
+        // Tier limit: check maxPrizes
+        const maxPrizes = (limits?.maxPrizes as number) ?? 999
+        if (config.prizes.length > maxPrizes) {
+          return c.json(
+            {
+              success: false,
+              error: {
+                code: 'TIER_LIMIT',
+                message: `Your plan allows ${maxPrizes} prize${maxPrizes !== 1 ? 's' : ''} per game.`,
+              },
+            },
+            403,
+          )
+        }
+      }
+    }
+
     // Use batch to insert game + prizes (neon-http doesn't support interactive transactions)
     const gameId = crypto.randomUUID()
 
@@ -109,6 +163,7 @@ gamesRouter.post('/', async (c) => {
       merchantId,
       type,
       name,
+      description: body.description ?? null,
       globalWinRate: String(config.globalWinRate),
       scheduling: config.scheduling,
       frequencyLimit: config.frequencyLimit,
@@ -163,6 +218,7 @@ gamesRouter.patch('/:id', async (c) => {
     // Build update object from allowed fields
     const updates: Record<string, unknown> = {}
     if (body.name !== undefined) updates.name = body.name
+    if (body.description !== undefined) updates.description = body.description
     if (body.status !== undefined) updates.status = body.status
     if (body.globalWinRate !== undefined) updates.globalWinRate = String(body.globalWinRate)
     if (body.branding !== undefined) updates.branding = body.branding

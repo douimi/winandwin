@@ -276,6 +276,7 @@ export interface CreateGamePayload {
   merchantId: string
   type: string
   name: string
+  description?: string
   config: {
     prizes: {
       name: string
@@ -305,6 +306,7 @@ export async function createGame(
 export interface GameDetail {
   id: string
   name: string
+  description?: string
   type: string
   status: string
   globalWinRate: string
@@ -327,6 +329,7 @@ export interface GameDetail {
 
 export interface UpdateGamePayload {
   name?: string
+  description?: string
   status?: string
   globalWinRate?: number
   branding?: { primaryColor: string; secondaryColor: string }

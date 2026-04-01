@@ -8,8 +8,10 @@ import {
   updateCta,
   deleteCta,
   type CtaItem,
+  fetchMerchant,
 } from '@/lib/api'
 import { useMerchantId } from '@/lib/merchant-context'
+import { TIER_LIMITS } from '@winandwin/shared/constants'
 
 const CTA_TYPES = [
   {
@@ -124,6 +126,9 @@ export default function CtasPage() {
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
   const [actionLoading, setActionLoading] = useState<string | null>(null)
 
+  // Tier limit banner
+  const [tierLimitMessage, setTierLimitMessage] = useState<string | null>(null)
+
   // Add CTA form
   const [showAddForm, setShowAddForm] = useState(false)
   const [newCtaType, setNewCtaType] = useState<string>(CTA_TYPES[0].type)
@@ -148,6 +153,29 @@ export default function CtasPage() {
   useEffect(() => {
     loadCtas()
   }, [loadCtas])
+
+  // Check tier limits for the banner
+  useEffect(() => {
+    if (!merchantId) return
+    let cancelled = false
+    async function checkLimit() {
+      try {
+        const merchant = await fetchMerchant(merchantId)
+        const tier = merchant.subscriptionTier as keyof typeof TIER_LIMITS
+        const maxCtas = TIER_LIMITS[tier].maxCtas as number
+        if (maxCtas !== Infinity) {
+          const list = await fetchCtas(merchantId)
+          if (!cancelled && list.length >= maxCtas) {
+            setTierLimitMessage(
+              `You've reached the maximum of ${maxCtas} CTA${maxCtas !== 1 ? 's' : ''} for your ${tier} plan. Upgrade to add more.`,
+            )
+          }
+        }
+      } catch { /* non-critical */ }
+    }
+    checkLimit()
+    return () => { cancelled = true }
+  }, [merchantId])
 
   function showSuccessFeedback(msg: string) {
     setSuccessMessage(msg)
@@ -275,6 +303,15 @@ export default function CtasPage() {
         {'\u2139\uFE0F'} Players see one action per visit, in display order.
         Set the order number on each CTA: 1 = shown first, 2 = shown second, etc.
       </div>
+
+      {tierLimitMessage && (
+        <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+          {tierLimitMessage}{' '}
+          <a href="/dashboard/upgrade" className="font-medium underline">
+            Upgrade now
+          </a>
+        </div>
+      )}
 
       {successMessage && (
         <div className="rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">

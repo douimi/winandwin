@@ -96,7 +96,7 @@ function MysteryBoxAutoSpin({ onSpin }: { onSpin: () => void }) {
  * - Filter out actions in completedActionsEver
  * - Sort remaining by weight ASCENDING (weight = display order: 1 first, 2 second, etc.)
  * - Pick the first one
- * - If all done, pick the one with lowest weight
+ * - If all done, return null (no more replays possible)
  */
 function pickSingleAction(
   requiredActions: GameConfig['requiredActions'],
@@ -114,8 +114,8 @@ function pickSingleAction(
     return remaining[0]!
   }
 
-  // All done -- pick highest weight
-  return sorted[0]!
+  // All done -- no more replays
+  return null
 }
 
 /** Apply atmosphere CSS custom properties to the document root */
@@ -258,8 +258,25 @@ export function App() {
               // pending action already cleared by checkPendingAction
             }
             setScreen('game')
+          } else if (preCompletedAction && gameConfig.game.type !== 'wheel') {
+            // Non-wheel games: return from CTA, go to action screen for verification
+            const matchingAction = gameConfig.requiredActions.find(
+              (a: { type: string }) => a.type === preCompletedAction
+            )
+            if (matchingAction) {
+              setSingleAction(matchingAction)
+              setScreen('action') // Go to action screen which will auto-verify
+            } else {
+              setScreen('welcome')
+            }
           } else if (IS_TEST_MODE) {
             goToGameOrWelcome()
+          } else if (state.hasWonInCooldown) {
+            // Won in this cooldown period -- show already-played
+            setScreen('already-played')
+          } else if (state.allCtasCompleted) {
+            // All CTAs completed -- no more replays possible
+            setScreen('already-played')
           } else if (!state.canPlay && state.playsToday >= state.maxPlaysPerDay) {
             setScreen('already-played')
           } else if (state.completedActionsToday.length > 0) {
@@ -437,6 +454,44 @@ export function App() {
     }
   }
 
+  /** Check if a replay (try again) is possible: there are uncompleted CTAs remaining */
+  function canTryAgain(): boolean {
+    if (!config || IS_TEST_MODE) return !!config // always allow in test mode
+    const completedEver = playerState?.completedActionsEver ?? []
+    // Include the actions we just completed in this session
+    const allCompleted = [...new Set([...completedEver, ...completedActions])]
+    const remaining = config.requiredActions.filter((a) => !allCompleted.includes(a.type))
+    return remaining.length > 0
+  }
+
+  /** Handle "Try Again" from the lose screen — pick the next CTA */
+  function handleTryAgain() {
+    if (!config) return
+
+    // Update completedActionsEver to include the just-completed actions
+    const completedEver = [...new Set([...(playerState?.completedActionsEver ?? []), ...completedActions])]
+
+    // Update player state so pickSingleAction has the latest data
+    if (playerState) {
+      setPlayerState({ ...playerState, completedActionsEver: completedEver })
+    }
+
+    const action = pickSingleAction(config.requiredActions, completedEver)
+
+    if (action) {
+      // Reset game state for a new play
+      setResult(null)
+      setTargetIndex(null)
+      setCompletedActions([])
+      setPreCompletedAction(null)
+      setSingleAction(action)
+      setScreen('action')
+    } else {
+      // No more CTAs -- stay on result screen
+      setScreen('already-played')
+    }
+  }
+
   const handleRetry = useCallback(() => {
     setError(null)
     setScreen('loading')
@@ -578,7 +633,7 @@ export function App() {
           </h1>
 
           {/* Subtitle */}
-          <p class="immersive-subtitle">{config.merchantDescription || bizTheme.defaultSubtitle}</p>
+          <p class="immersive-subtitle">{config.game.description || config.merchantDescription || bizTheme.defaultSubtitle}</p>
 
           {/* THE WHEEL — the hero of the page */}
           <Wheel
@@ -701,7 +756,14 @@ export function App() {
       )}
 
       {screen === 'result' && result && (
-        <ResultScreen result={result} merchantName={config.merchantName} playerEmail={playerEmail} businessTheme={bizTheme} />
+        <ResultScreen
+          result={result}
+          merchantName={config.merchantName}
+          playerEmail={playerEmail}
+          businessTheme={bizTheme}
+          canTryAgain={result.outcome === 'lose' && canTryAgain()}
+          onTryAgain={handleTryAgain}
+        />
       )}
 
       {screen === 'already-played' && playerState && (

@@ -11,6 +11,7 @@ export interface GameConfig {
     id: string
     type: 'wheel' | 'slots' | 'mystery_box'
     name: string
+    description?: string
     branding: {
       primaryColor: string
       secondaryColor: string
@@ -54,6 +55,8 @@ export interface PlayerState {
   nextPlayAt?: string
   maxWinsReached?: boolean
   cooldownHours?: number
+  allCtasCompleted?: boolean
+  hasWonInCooldown?: boolean
 }
 
 export type PlayerScreen = 'loading' | 'welcome' | 'action' | 'actions' | 'register' | 'game' | 'result' | 'already-played' | 'limit-reached' | 'merchant-disabled'

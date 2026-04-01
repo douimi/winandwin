@@ -1,5 +1,6 @@
 import { Button, Card, CardContent, CardHeader, CardTitle } from '@winandwin/ui'
 import { GameList } from './game-list'
+import { TierLimitBanner } from './tier-limit-banner'
 
 export default function GamesPage() {
   return (
@@ -10,6 +11,7 @@ export default function GamesPage() {
           <Button>+ Create Game</Button>
         </a>
       </div>
+      <TierLimitBanner resource="games" />
       <GameList />
     </div>
   )

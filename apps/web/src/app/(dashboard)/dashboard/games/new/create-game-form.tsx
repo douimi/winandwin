@@ -26,6 +26,7 @@ export function CreateGameForm() {
   const merchantId = useMerchantId()
   const [gameType, setGameType] = useState<string>('wheel')
   const [gameName, setGameName] = useState('')
+  const [gameDescription, setGameDescription] = useState('')
   const [globalWinRate, setGlobalWinRate] = useState(30)
   const [prizes, setPrizes] = useState<Prize[]>([
     { name: '', emoji: '🎁', winRate: 50, couponValidityDays: 7, maxTotal: null, maxPerDay: null },
@@ -57,6 +58,7 @@ export function CreateGameForm() {
         merchantId,
         type: gameType,
         name: gameName,
+        description: gameDescription || undefined,
         config: {
           prizes: prizes.map((p) => ({
             name: p.name,
@@ -119,6 +121,17 @@ export function CreateGameForm() {
               value={gameName}
               onChange={(e) => setGameName((e.target as HTMLInputElement).value)}
               required
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="gameDescription">Game Description</Label>
+            <textarea
+              id="gameDescription"
+              placeholder="Describe your game to players (e.g., 'Spin the wheel and win a free dessert!')"
+              value={gameDescription}
+              onChange={(e) => setGameDescription((e.target as HTMLTextAreaElement).value)}
+              rows={3}
+              className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
             />
           </div>
           <div className="space-y-2">

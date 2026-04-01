@@ -1,7 +1,8 @@
 import { Hono } from 'hono'
-import { eq, and } from 'drizzle-orm'
-import { ctas } from '@winandwin/db/schema'
+import { eq, and, sql } from 'drizzle-orm'
+import { ctas, merchants } from '@winandwin/db/schema'
 import { createCtaSchema } from '@winandwin/shared/validators'
+import { getTierLimits } from '../lib/tier-limits'
 import { z } from 'zod'
 import type { AppEnv } from '../types'
 
@@ -68,6 +69,44 @@ ctasRouter.post('/', async (c) => {
         },
         400,
       )
+    }
+
+    // Test mode bypass
+    const isTestMode = c.req.query('testmode') === 'unlimited'
+
+    if (!isTestMode) {
+      // Tier limit: check maxCtas
+      const merchantResult = await db
+        .select()
+        .from(merchants)
+        .where(eq(merchants.id, merchantId))
+        .limit(1)
+
+      if (merchantResult.length > 0) {
+        const tierLimits = await getTierLimits(db)
+        const tier = merchantResult[0]!.subscriptionTier as keyof typeof tierLimits
+        const limits = tierLimits[tier] as Record<string, unknown> | undefined
+        const maxCtas = (limits?.maxCtas as number) ?? 999
+
+        const ctaCountResult = await db
+          .select({ count: sql<number>`count(*)::int` })
+          .from(ctas)
+          .where(eq(ctas.merchantId, merchantId))
+
+        const ctaCount = ctaCountResult[0]?.count ?? 0
+        if (ctaCount >= maxCtas) {
+          return c.json(
+            {
+              success: false,
+              error: {
+                code: 'TIER_LIMIT',
+                message: `Your plan allows ${maxCtas} CTA${maxCtas !== 1 ? 's' : ''}. Upgrade to add more.`,
+              },
+            },
+            403,
+          )
+        }
+      }
     }
 
     // Check if a CTA of this type already exists for this merchant

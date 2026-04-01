@@ -17,6 +17,7 @@ export const games = pgTable('games', {
     .references(() => merchants.id, { onDelete: 'cascade' }),
   type: gameTypeEnum('type').notNull(),
   name: varchar('name', { length: 100 }).notNull(),
+  description: text('description'),
   status: gameStatusEnum('status').notNull().default('draft'),
   scheduling: jsonb('scheduling')
     .$type<{

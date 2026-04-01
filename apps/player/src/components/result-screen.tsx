@@ -7,9 +7,11 @@ interface Props {
   merchantName: string
   playerEmail?: string | null
   businessTheme?: BusinessTheme
+  canTryAgain?: boolean
+  onTryAgain?: () => void
 }
 
-export function ResultScreen({ result, merchantName, playerEmail, businessTheme }: Props) {
+export function ResultScreen({ result, merchantName, playerEmail, businessTheme, canTryAgain, onTryAgain }: Props) {
   const isWin = result.outcome === 'win'
 
   if (isWin) {
@@ -71,10 +73,23 @@ export function ResultScreen({ result, merchantName, playerEmail, businessTheme 
         {result.message || businessTheme?.loseMessage || "Almost there! You didn't win this time, but luck could be on your side next time!"}
       </p>
 
-      <div class="lose-comeback">
-        <div class="lose-comeback-icon">{'\u{1F31F}'}</div>
-        <span>{businessTheme?.loseMessage || 'Come back tomorrow for another chance!'}</span>
-      </div>
+      {canTryAgain && onTryAgain ? (
+        <div class="lose-comeback">
+          <button
+            class="try-again-button"
+            onClick={onTryAgain}
+            type="button"
+          >
+            {'\u{1F504}'} Try Again!
+          </button>
+          <p class="try-again-hint">Complete another action to play again!</p>
+        </div>
+      ) : (
+        <div class="lose-comeback">
+          <div class="lose-comeback-icon">{'\u{1F31F}'}</div>
+          <span>{businessTheme?.loseMessage || 'Come back tomorrow for another chance!'}</span>
+        </div>
+      )}
 
       <p class="lose-encourage">
         {businessTheme?.accentEmoji || '\u{1F60A}'} Better luck next time at {merchantName}!

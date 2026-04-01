@@ -114,11 +114,12 @@ function GameDemo() {
           <div className="flex flex-col items-center justify-center h-full px-4 pt-6 bg-gradient-to-b from-indigo-600 to-purple-700">
             <p className="text-white/90 font-bold text-sm mb-3">Spin to Win!</p>
 
-            {/* Pointer triangle */}
-            <div className="w-0 h-0 border-l-[8px] border-r-[8px] border-t-[14px] border-l-transparent border-r-transparent border-t-amber-400 mb-[-6px] z-10" />
-
             {/* SVG Wheel */}
-            <div className="w-[210px] h-[210px]">
+            <div className="w-[210px] h-[210px]" style={{ position: 'relative' }}>
+              {/* Pointer arrow at top */}
+              <svg style={{ position: 'absolute', top: -12, left: '50%', transform: 'translateX(-50%)', zIndex: 10 }} width="30" height="24" viewBox="0 0 30 24">
+                <polygon points="15,24 0,0 30,0" fill="#ef4444" stroke="#b91c1c" strokeWidth="1.5" />
+              </svg>
               <svg viewBox="0 0 250 250" className="w-full h-full">
                 <g
                   style={{
@@ -198,6 +199,14 @@ function GameDemo() {
           </div>
         </div>
 
+        {/* Personalization badges */}
+        <div className="absolute -right-16 top-[35%] rounded-full bg-white px-3 py-1.5 text-xs font-semibold text-indigo-600 shadow-lg border border-indigo-100" style={{ animation: 'float 4s ease-in-out infinite' }}>
+          Your Brand {'\u2728'}
+        </div>
+        <div className="absolute -left-14 top-[50%] rounded-full bg-white px-3 py-1.5 text-xs font-semibold text-pink-600 shadow-lg border border-pink-100" style={{ animation: 'float 4s ease-in-out 1s infinite' }}>
+          Your Logo {'\u{1F3A8}'}
+        </div>
+
         {/* Glow behind phone */}
         <div className="absolute -inset-8 rounded-full bg-indigo-400/20 blur-3xl -z-10" />
       </div>
@@ -264,21 +273,21 @@ function ContactForm() {
       <div className="grid gap-5 sm:grid-cols-2">
         <div className="space-y-1.5">
           <Label htmlFor="businessName">Business Name *</Label>
-          <Input id="businessName" name="businessName" required value={form.businessName} onChange={handleChange} placeholder="e.g. Café Parisien" />
+          <Input id="businessName" name="businessName" required value={form.businessName} onChange={handleChange} placeholder="e.g. Café Atlas" />
         </div>
         <div className="space-y-1.5">
           <Label htmlFor="name">Your Name *</Label>
-          <Input id="name" name="name" required value={form.name} onChange={handleChange} placeholder="Jean Dupont" />
+          <Input id="name" name="name" required value={form.name} onChange={handleChange} placeholder="Amine El Idrissi" />
         </div>
       </div>
       <div className="grid gap-5 sm:grid-cols-2">
         <div className="space-y-1.5">
           <Label htmlFor="email">Email *</Label>
-          <Input id="email" name="email" type="email" required value={form.email} onChange={handleChange} placeholder="jean@cafe.fr" />
+          <Input id="email" name="email" type="email" required value={form.email} onChange={handleChange} placeholder="amine@cafe.ma" />
         </div>
         <div className="space-y-1.5">
           <Label htmlFor="phone">Phone (optional)</Label>
-          <Input id="phone" name="phone" type="tel" value={form.phone} onChange={handleChange} placeholder="+33 6 12 34 56 78" />
+          <Input id="phone" name="phone" type="tel" value={form.phone} onChange={handleChange} placeholder="+212 6XX XXX XXX" />
         </div>
       </div>
       <div className="space-y-1.5">
@@ -299,6 +308,7 @@ function ContactForm() {
           <option value="salon">Salon</option>
           <option value="gym">Gym</option>
           <option value="hotel">Hotel</option>
+          <option value="riad">Riad</option>
           <option value="other">Other</option>
         </select>
       </div>
@@ -495,6 +505,14 @@ export default function HomePage() {
                   </div>
                 </div>
 
+                {/* Personalization badges */}
+                <div className="absolute -right-16 top-[35%] rounded-full bg-white px-3 py-1.5 text-xs font-semibold text-indigo-600 shadow-lg border border-indigo-100 animate-slideUp-d3">
+                  Your Brand {'\u2728'}
+                </div>
+                <div className="absolute -left-14 top-[50%] rounded-full bg-white px-3 py-1.5 text-xs font-semibold text-pink-600 shadow-lg border border-pink-100 animate-slideUp-d3">
+                  Your Logo {'\u{1F3A8}'}
+                </div>
+
                 {/* Glow behind phone */}
                 <div className="absolute -inset-8 rounded-full bg-indigo-400/20 blur-3xl -z-10" />
               </div>
@@ -503,7 +521,7 @@ export default function HomePage() {
 
           {/* Trust bar */}
           <div className="mt-16 text-center animate-slideUp-d3">
-            <p className="text-sm font-medium text-gray-500 mb-4">Trusted by 500+ businesses across France</p>
+            <p className="text-sm font-medium text-gray-500 mb-4">Trusted by 500+ businesses across Morocco</p>
             <div className="flex flex-wrap items-center justify-center gap-6 text-3xl opacity-40">
               <span title="Restaurant">{'\u{1F37D}\u{FE0F}'}</span>
               <span title="Cafe">{'\u2615'}</span>
@@ -516,7 +534,7 @@ export default function HomePage() {
             </div>
             {/* Trust logos */}
             <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
-              {['Restaurant Le Bon', 'Café Lumière', 'Bistro Central', 'Salon Élégance', 'Boulangerie Martin', 'Gym Vitality'].map((name, i) => (
+              {['Riad Jardin', 'Café Hafa', 'Restaurant Al Fassia', 'Salon Beauté', 'Pâtisserie Amoud', 'Gym Atlas'].map((name, i) => (
                 <span
                   key={i}
                   className="rounded-full border border-gray-200 bg-white/80 px-4 py-1.5 text-xs font-medium text-gray-500 shadow-sm"
@@ -740,11 +758,11 @@ export default function HomePage() {
             <div className="plan-card rounded-2xl border border-gray-200 bg-white p-8">
               <h3 className="text-lg font-bold text-gray-900">Starter</h3>
               <div className="mt-4 flex items-baseline gap-1">
-                <span className="text-4xl font-extrabold text-gray-900">{'49\u20AC'}</span>
-                <span className="text-gray-500">/mo</span>
+                <span className="text-4xl font-extrabold text-gray-900">299</span>
+                <span className="text-gray-500">MAD/mo</span>
               </div>
               <ul className="mt-6 space-y-3 text-sm text-gray-600">
-                {['1 game', '1 QR code', 'Up to 500 plays/mo', 'Basic analytics', 'Email support'].map((f, i) => (
+                {['500 plays/month', '1 active game', '3 prizes per game', '3 CTA types', 'Basic QR code', 'Email coupons', 'Basic analytics'].map((f, i) => (
                   <li key={i} className="flex items-center gap-2"><span className="text-emerald-500 font-bold">{'\u2713'}</span> {f}</li>
                 ))}
               </ul>
@@ -760,11 +778,11 @@ export default function HomePage() {
               </div>
               <h3 className="text-lg font-bold text-gray-900">Pro</h3>
               <div className="mt-4 flex items-baseline gap-1">
-                <span className="text-4xl font-extrabold text-gray-900">{'149\u20AC'}</span>
-                <span className="text-gray-500">/mo</span>
+                <span className="text-4xl font-extrabold text-gray-900">599</span>
+                <span className="text-gray-500">MAD/mo</span>
               </div>
               <ul className="mt-6 space-y-3 text-sm text-gray-600">
-                {['3 games', '3 QR codes', 'Unlimited plays', 'Advanced analytics', 'Priority support', 'Custom branding', 'Smart coupons'].map((f, i) => (
+                {['2,000 plays/month', '3 active games', '10 prizes per game', 'All CTA types', 'Branded QR materials', 'Full analytics', 'Marketing automation', 'WhatsApp support'].map((f, i) => (
                   <li key={i} className="flex items-center gap-2"><span className="text-emerald-500 font-bold">{'\u2713'}</span> {f}</li>
                 ))}
               </ul>
@@ -782,7 +800,7 @@ export default function HomePage() {
                 <span className="text-4xl font-extrabold text-gray-900">Custom</span>
               </div>
               <ul className="mt-6 space-y-3 text-sm text-gray-600">
-                {['Unlimited games', 'Unlimited QR codes', 'Unlimited plays', 'White-label solution', 'Dedicated account manager', 'API access', 'Custom integrations'].map((f, i) => (
+                {['Unlimited plays', 'Unlimited games', 'Multi-location support', 'White-label option', 'Dedicated account manager', 'Custom integrations', 'Priority support'].map((f, i) => (
                   <li key={i} className="flex items-center gap-2"><span className="text-emerald-500 font-bold">{'\u2713'}</span> {f}</li>
                 ))}
               </ul>
@@ -792,7 +810,7 @@ export default function HomePage() {
             </div>
           </div>
 
-          <p className="mt-8 text-center text-sm text-gray-400">All plans include a 14-day free trial. No credit card required.</p>
+          <p className="mt-8 text-center text-sm text-gray-400">14-day free trial included. No credit card required.</p>
 
           {/* FAQ */}
           <div className="mt-16 mx-auto max-w-2xl">
@@ -823,7 +841,7 @@ export default function HomePage() {
             <p className="mt-3 text-lg text-gray-500">Fill out the form and we'll set you up within 24 hours.</p>
             <div className="mt-4 inline-flex items-center gap-2 rounded-full bg-blue-50 px-4 py-2 text-sm text-blue-700 font-medium">
               <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" /></svg>
-              Based in France {'\u{1F1EB}\u{1F1F7}'}
+              Based in Casablanca, Morocco {'\u{1F1F2}\u{1F1E6}'}
             </div>
           </div>
 
@@ -847,7 +865,7 @@ export default function HomePage() {
               <a href="#" className="hover:text-gray-900 transition-colors">Privacy</a>
               <a href="#contact" className="hover:text-gray-900 transition-colors">Contact</a>
             </div>
-            <p className="text-sm text-gray-400">Made with {'\u2764\u{FE0F}'} in France</p>
+            <p className="text-sm text-gray-400">Made with {'\u2764\u{FE0F}'} in Morocco</p>
             <p className="text-xs text-gray-300">{'\u00A9'} 2026 Win & Win. All rights reserved.</p>
           </div>
         </div>

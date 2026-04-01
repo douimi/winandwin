@@ -1,8 +1,6 @@
 import { Hono } from 'hono'
 import { eq, and, sql, gte } from 'drizzle-orm'
-import { merchants, games, prizes, players, gamePlays, coupons, ctas, platformSettings } from '@winandwin/db/schema'
-import { TIER_LIMITS } from '@winandwin/shared/constants'
-import type { Database } from '@winandwin/db'
+import { merchants, games, prizes, players, gamePlays, coupons, ctas } from '@winandwin/db/schema'
 import {
   calculateCouponDates,
   determineGameOutcome,
@@ -10,46 +8,8 @@ import {
   type PrizeConfig,
 } from '../lib/game-engine'
 import { sendCouponEmail } from '../lib/email'
+import { getTierLimits } from '../lib/tier-limits'
 import type { AppEnv } from '../types'
-
-// Module-level cache for tier limits from DB
-let cachedMergedLimits: Record<string, Record<string, unknown>> | null = null
-let tierLimitsCachedAt = 0
-const TIER_LIMITS_CACHE_TTL = 30 * 1000 // 30 seconds (short cache for quick updates)
-
-/** Deep merge DB tier limits over hardcoded defaults */
-async function getTierLimits(db: Database): Promise<typeof TIER_LIMITS> {
-  const now = Date.now()
-  if (cachedMergedLimits && now - tierLimitsCachedAt < TIER_LIMITS_CACHE_TTL) {
-    return cachedMergedLimits as unknown as typeof TIER_LIMITS
-  }
-
-  try {
-    const result = await db
-      .select()
-      .from(platformSettings)
-      .where(eq(platformSettings.key, 'tier_limits'))
-      .limit(1)
-
-    if (result.length > 0 && result[0]!.value) {
-      const dbLimits = result[0]!.value as Record<string, Record<string, unknown>>
-      // Deep merge: for each tier, merge DB values over defaults
-      const merged: Record<string, Record<string, unknown>> = {}
-      for (const tier of Object.keys(TIER_LIMITS)) {
-        const defaults = TIER_LIMITS[tier as keyof typeof TIER_LIMITS]
-        const overrides = dbLimits[tier] || {}
-        merged[tier] = { ...defaults, ...overrides }
-      }
-      cachedMergedLimits = merged
-      tierLimitsCachedAt = now
-      return merged as unknown as typeof TIER_LIMITS
-    }
-  } catch (err) {
-    console.error('Failed to fetch tier limits from DB, using defaults:', err)
-  }
-
-  return TIER_LIMITS
-}
 
 export const playRouter = new Hono<AppEnv>()
 
@@ -95,7 +55,7 @@ playRouter.get('/:slug', async (c) => {
       )
     }
 
-    // Get enabled CTAs for this merchant
+    // Get enabled CTAs for this merchant (needed for config and replay logic)
     const enabledCtas = await db
       .select()
       .from(ctas)
@@ -133,6 +93,7 @@ playRouter.get('/:slug', async (c) => {
           id: activeGame.id,
           type: activeGame.type,
           name: activeGame.name,
+          description: activeGame.description || undefined,
           branding: {
             primaryColor: merchantData.primaryColor || (gameBranding?.primaryColor as string) || '#6366f1',
             secondaryColor: merchantData.secondaryColor || (gameBranding?.secondaryColor as string) || '#ec4899',
@@ -239,6 +200,13 @@ playRouter.get('/:slug/state', async (c) => {
         .limit(1)
     }
 
+    // Get enabled CTAs for this merchant (for replay logic)
+    const enabledCtasForState = await db
+      .select()
+      .from(ctas)
+      .where(and(eq(ctas.merchantId, merchantData.id), eq(ctas.enabled, true)))
+    const totalCtaTypes = enabledCtasForState.map((ct) => ct.type)
+
     if (playerResult.length === 0) {
       const maxPlaysPerDay = activeGame.frequencyLimit?.maxPlaysPerDay ?? 1
       return c.json({
@@ -252,6 +220,7 @@ playRouter.get('/:slug/state', async (c) => {
           canPlay: true,
           lastPlayResult: null,
           lastCoupon: null,
+          allCtasCompleted: false,
         },
       })
     }
@@ -298,7 +267,21 @@ playRouter.get('/:slug/state', async (c) => {
     const maxWinsReached = winsInPeriod >= (merchantData.maxWinsPerPeriod || 5)
 
     const playsInCooldown = recentPlays.length
-    const canPlay = playsInCooldown < maxPlaysPerDay && !maxWinsReached
+
+    // New replay logic: check if player has won in the cooldown period
+    const hasWonInCooldown = recentPlays.some((p) => p.result === 'win')
+
+    // Check if all CTAs have been completed ever
+    const allCtasCompleted = totalCtaTypes.length > 0 && totalCtaTypes.every((t) => completedActionsEver.includes(t))
+
+    // canPlay = true if:
+    // 1. They haven't won in the cooldown period AND
+    // 2. There are still uncompleted CTAs (or it's first play) AND
+    // 3. Max wins not reached
+    // Old logic kept as fallback for no-CTA setups
+    const canPlay = totalCtaTypes.length > 0
+      ? (!hasWonInCooldown && !allCtasCompleted && !maxWinsReached)
+      : (playsInCooldown < maxPlaysPerDay && !maxWinsReached)
 
     // Calculate next play time
     let nextPlayAt: string | null = null
@@ -385,6 +368,8 @@ playRouter.get('/:slug/state', async (c) => {
         nextPlayAt,
         maxWinsReached,
         cooldownHours,
+        allCtasCompleted,
+        hasWonInCooldown,
       },
     })
   } catch (err) {
@@ -548,35 +533,80 @@ playRouter.post('/:slug/spin', async (c) => {
         .where(eq(players.id, playerId))
     }
 
-    // Step d: Check frequency limits (plays today by this player for this game)
-    const todayStart = new Date()
-    todayStart.setUTCHours(0, 0, 0, 0)
+    // Step d: Check frequency limits — new replay logic
+    const isTestMode = c.req.query('testmode') === 'unlimited'
+    const cooldownHours = merchantData.cooldownHours || 24
+    const cooldownMs = cooldownHours * 60 * 60 * 1000
+    const cooldownStart = new Date(Date.now() - cooldownMs)
 
-    const playsToday = await db
-      .select({ count: sql<number>`count(*)::int` })
+    // Get recent plays in cooldown period
+    const recentPlays = await db
+      .select()
       .from(gamePlays)
       .where(
         and(
           eq(gamePlays.gameId, activeGame.id),
           eq(gamePlays.playerId, playerId),
-          gte(gamePlays.playedAt, todayStart),
+          gte(gamePlays.playedAt, cooldownStart),
         ),
       )
 
-    const playsTodayCount = playsToday[0]?.count ?? 0
-    const maxPlaysPerDay = activeGame.frequencyLimit?.maxPlaysPerDay ?? 1
+    // Check if player has already WON in the cooldown period
+    const hasWonInCooldown = recentPlays.some((p) => p.result === 'win')
 
-    // Test mode bypass: ?testmode=unlimited skips frequency limit
-    const isTestMode = c.req.query('testmode') === 'unlimited'
-    if (playsTodayCount >= maxPlaysPerDay && !isTestMode) {
-      return c.json(
-        {
-          success: false,
-          error: { code: 'LIMIT_REACHED', message: 'You have reached the daily play limit' },
-        },
-        429,
-      )
+    // Get enabled CTAs to check if there are still uncompleted ones
+    const enabledCtasForSpin = await db
+      .select()
+      .from(ctas)
+      .where(and(eq(ctas.merchantId, merchantData.id), eq(ctas.enabled, true)))
+    const totalCtaTypes = enabledCtasForSpin.map((ct) => ct.type)
+
+    // Get ALL actions ever completed by this player
+    const allPlaysForActions = await db
+      .select({ completedActions: gamePlays.completedActions })
+      .from(gamePlays)
+      .where(eq(gamePlays.playerId, playerId))
+
+    const completedActionsEver: string[] = []
+    for (const play of allPlaysForActions) {
+      const actions = play.completedActions as string[] | null
+      if (actions) {
+        for (const action of actions) {
+          if (!completedActionsEver.includes(action)) {
+            completedActionsEver.push(action)
+          }
+        }
+      }
     }
+
+    const allCtasCompleted = totalCtaTypes.length > 0 && totalCtaTypes.every((t) => completedActionsEver.includes(t))
+
+    if (!isTestMode) {
+      // Block if player already WON in this cooldown period
+      if (hasWonInCooldown) {
+        return c.json(
+          {
+            success: false,
+            error: { code: 'ALREADY_WON', message: 'You already won in this period! Come back later.' },
+          },
+          429,
+        )
+      }
+
+      // Block if all CTAs are exhausted (no more replays possible)
+      if (totalCtaTypes.length > 0 && allCtasCompleted) {
+        return c.json(
+          {
+            success: false,
+            error: { code: 'ALL_CTAS_COMPLETED', message: 'You have completed all actions. Come back later!' },
+          },
+          429,
+        )
+      }
+    }
+
+    const todayStart = new Date()
+    todayStart.setUTCHours(0, 0, 0, 0)
 
     // Step e: Count today's wins per prize for game engine
     const todayWinsPerPrize = await db

@@ -30,6 +30,7 @@ export default function GameDetailPage() {
 
   // Editable fields
   const [name, setName] = useState('')
+  const [description, setDescription] = useState('')
   const [status, setStatus] = useState('')
   const [globalWinRate, setGlobalWinRate] = useState(30)
 
@@ -51,6 +52,7 @@ export default function GameDetailPage() {
         if (!cancelled) {
           setGame(data)
           setName(data.name)
+          setDescription(data.description || '')
           setStatus(data.status)
           setGlobalWinRate(
             Math.round(Number(data.globalWinRate) || 30),
@@ -82,13 +84,14 @@ export default function GameDetailPage() {
     try {
       const payload: UpdateGamePayload = {
         name,
+        description,
         status,
         globalWinRate,
       }
       await updateGame(gameId, payload)
       setSaveSuccess(true)
       // Update local game state to reflect changes
-      setGame((prev) => (prev ? { ...prev, name, status, globalWinRate: String(globalWinRate) } : prev))
+      setGame((prev) => (prev ? { ...prev, name, description, status, globalWinRate: String(globalWinRate) } : prev))
       setTimeout(() => setSaveSuccess(false), 3000)
     } catch (err) {
       setSaveError(err instanceof Error ? err.message : 'Failed to save changes')
@@ -172,6 +175,17 @@ export default function GameDetailPage() {
                 value={name}
                 onChange={(e) => setName((e.target as HTMLInputElement).value)}
                 required
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="gameDescription">Game Description</Label>
+              <textarea
+                id="gameDescription"
+                placeholder="Describe your game to players (e.g., 'Spin the wheel and win a free dessert!')"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                rows={3}
+                className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
               />
             </div>
             <div className="space-y-2">
