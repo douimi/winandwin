@@ -63,6 +63,17 @@ export default async function DashboardPage() {
     <div className="space-y-6">
       <div className="flex items-center gap-3">
         <h1 className="text-2xl font-bold">Overview</h1>
+        <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${
+          merchantTier === 'enterprise'
+            ? 'bg-purple-100 text-purple-800'
+            : merchantTier === 'pro'
+              ? 'bg-indigo-100 text-indigo-800'
+              : merchantTier === 'starter'
+                ? 'bg-blue-100 text-blue-800'
+                : 'bg-gray-100 text-gray-700'
+        }`}>
+          {merchantTier.charAt(0).toUpperCase() + merchantTier.slice(1)} Plan
+        </span>
         {apiOffline && (
           <span className="rounded-full bg-yellow-100 px-2.5 py-0.5 text-xs font-medium text-yellow-800">
             API offline

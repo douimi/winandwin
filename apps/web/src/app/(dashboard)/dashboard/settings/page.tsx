@@ -3,12 +3,14 @@
 import { Card, CardContent, CardHeader, CardTitle, Button, Input, Label } from '@winandwin/ui'
 import { useEffect, useState, useCallback } from 'react'
 import { fetchMerchant, updateMerchant } from '@/lib/api'
-import { useMerchantId } from '@/lib/merchant-context'
+import { useMerchantId, useMerchantTier } from '@/lib/merchant-context'
+import { hasFeature } from '@/lib/tier-features'
 import { QRSection } from './qr-section'
 import type { Merchant } from '@winandwin/shared'
 
 export default function SettingsPage() {
   const merchantId = useMerchantId()
+  const merchantTier = useMerchantTier()
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -315,7 +317,7 @@ export default function SettingsPage() {
                 placeholder="https://example.com/background.jpg"
               />
             </div>
-            <div className="space-y-2">
+            <div className="relative space-y-2">
               <Label htmlFor="description">Business Description</Label>
               <textarea
                 id="description"
@@ -324,11 +326,19 @@ export default function SettingsPage() {
                 placeholder="A short description shown on the player welcome screen..."
                 maxLength={500}
                 rows={3}
-                className="flex w-full rounded-lg border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                disabled={!hasFeature(merchantTier, 'game.description')}
+                className="flex w-full rounded-lg border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50"
               />
               <p className="text-xs text-muted-foreground text-right">
                 {description.length}/500 characters
               </p>
+              {!hasFeature(merchantTier, 'game.description') && (
+                <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-white/60">
+                  <a href="/dashboard/upgrade" className="flex items-center gap-1 text-sm font-medium text-primary hover:underline">
+                    {'🔒'} Pro feature - Upgrade to unlock
+                  </a>
+                </div>
+              )}
             </div>
             {/* Preview */}
             <div className="rounded-lg border p-4">
@@ -368,7 +378,7 @@ export default function SettingsPage() {
       </Card>
 
       {/* Game Atmosphere */}
-      <Card>
+      <Card className="relative">
         <CardHeader>
           <CardTitle>{'\uD83C\uDFA8'} Game Atmosphere</CardTitle>
         </CardHeader>
@@ -376,7 +386,16 @@ export default function SettingsPage() {
           <p className="text-sm text-muted-foreground mb-4">
             Choose a visual theme for your player game page. This changes the entire look and feel.
           </p>
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {!hasFeature(merchantTier, 'branding.customAtmosphere') && (
+            <div className="absolute inset-0 z-10 flex flex-col items-center justify-center rounded-lg bg-white/70">
+              <span className="text-2xl">{'🔒'}</span>
+              <p className="mt-1 text-sm font-medium">Custom Atmosphere</p>
+              <a href="/dashboard/upgrade" className="mt-1 text-xs font-medium text-primary hover:underline">
+                Upgrade to Pro {'->'}
+              </a>
+            </div>
+          )}
+          <div className={`grid gap-3 sm:grid-cols-2 lg:grid-cols-3 ${!hasFeature(merchantTier, 'branding.customAtmosphere') ? 'pointer-events-none opacity-30 blur-[2px]' : ''}`}>
             {[
               { key: 'joyful', label: 'Joyful & Fun', emoji: '🎉', colors: ['#667eea', '#764ba2', '#f093fb'] },
               { key: 'premium', label: 'Premium & Elegant', emoji: '✨', colors: ['#0a0a0a', '#1a1a2e', '#daa520'] },
@@ -495,9 +514,9 @@ export default function SettingsPage() {
             }}
             className="space-y-4"
           >
-            <div className="space-y-2">
+            <div className="relative space-y-2">
               <Label>CTA Workflow Mode</Label>
-              <div className="grid gap-3 sm:grid-cols-2">
+              <div className={`grid gap-3 sm:grid-cols-2 ${!hasFeature(merchantTier, 'game.ctaReplay') ? 'pointer-events-none opacity-30 blur-[2px]' : ''}`}>
                 <button
                   type="button"
                   onClick={() => setCtaMode('one_and_done')}
@@ -515,6 +534,13 @@ export default function SettingsPage() {
                   <p className="text-xs text-muted-foreground mt-1">If player loses, they can replay by completing the next CTA. One CTA per play, until all are used.</p>
                 </button>
               </div>
+              {!hasFeature(merchantTier, 'game.ctaReplay') && (
+                <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-white/60">
+                  <a href="/dashboard/upgrade" className="flex items-center gap-1 text-sm font-medium text-primary hover:underline">
+                    {'🔒'} Pro feature - Upgrade to unlock
+                  </a>
+                </div>
+              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="cooldownHours">Cooldown between plays (hours)</Label>

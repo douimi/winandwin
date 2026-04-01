@@ -3,13 +3,15 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@winandwin/ui'
 import { useEffect, useState, useCallback, useMemo } from 'react'
 import { fetchPlayers, type PlayerData } from '@/lib/api'
-import { useMerchantId } from '@/lib/merchant-context'
+import { useMerchantId, useMerchantTier } from '@/lib/merchant-context'
+import { hasFeature } from '@/lib/tier-features'
 
 type SortField = 'name' | 'totalPlays' | 'totalWins' | 'points' | 'lastSeenAt' | 'createdAt'
 type SortDir = 'asc' | 'desc'
 
 export default function PlayersPage() {
   const merchantId = useMerchantId()
+  const tier = useMerchantTier()
   const [players, setPlayers] = useState<PlayerData[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -98,8 +100,50 @@ export default function PlayersPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <h1 className="text-2xl font-bold">Players</h1>
-        <div className="text-sm text-muted-foreground">
-          {!loading && `${totalPlayers} player${totalPlayers !== 1 ? 's' : ''}`}
+        <div className="flex items-center gap-3">
+          {!loading && players.length > 0 && (
+            hasFeature(tier, 'players.export') ? (
+              <button
+                type="button"
+                onClick={() => {
+                  const header = 'Name,Email,Plays,Wins,Win %,Last Active,Joined\n'
+                  const rows = players.map(p => {
+                    const winPct = p.totalPlays > 0 ? Math.round((p.totalWins / p.totalPlays) * 100) : 0
+                    return [
+                      `"${(p.name || 'Anonymous').replace(/"/g, '""')}"`,
+                      `"${(p.email || '').replace(/"/g, '""')}"`,
+                      p.totalPlays,
+                      p.totalWins,
+                      `${winPct}%`,
+                      p.lastSeenAt,
+                      p.createdAt,
+                    ].join(',')
+                  }).join('\n')
+                  const blob = new Blob([header + rows], { type: 'text/csv' })
+                  const url = URL.createObjectURL(blob)
+                  const a = document.createElement('a')
+                  a.href = url
+                  a.download = `players-${new Date().toISOString().slice(0, 10)}.csv`
+                  a.click()
+                  URL.revokeObjectURL(url)
+                }}
+                className="inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm font-medium text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
+              >
+                {'📥'} Export CSV
+              </button>
+            ) : (
+              <a
+                href="/dashboard/upgrade"
+                className="inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm font-medium text-muted-foreground hover:bg-accent transition-colors"
+              >
+                {'🔒'} Export CSV
+                <span className="text-xs text-primary">Pro</span>
+              </a>
+            )
+          )}
+          <div className="text-sm text-muted-foreground">
+            {!loading && `${totalPlayers} player${totalPlayers !== 1 ? 's' : ''}`}
+          </div>
         </div>
       </div>
 

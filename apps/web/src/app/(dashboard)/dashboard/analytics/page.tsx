@@ -3,7 +3,9 @@
 import { Button, Card, CardContent, CardHeader, CardTitle } from '@winandwin/ui'
 import { useEffect, useState } from 'react'
 import { fetchAnalytics, type AnalyticsData } from '@/lib/api'
-import { useMerchantId } from '@/lib/merchant-context'
+import { useMerchantId, useMerchantTier } from '@/lib/merchant-context'
+import { hasFeature } from '@/lib/tier-features'
+import { ProFeatureLock } from '@/components/pro-feature-lock'
 
 type Period = 'today' | 'week' | 'month' | 'all'
 
@@ -18,6 +20,7 @@ const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 
 export default function AnalyticsPage() {
   const merchantId = useMerchantId()
+  const tier = useMerchantTier()
   const [data, setData] = useState<AnalyticsData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -181,19 +184,37 @@ export default function AnalyticsPage() {
       {/* Header with period selector */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-2xl font-bold">Analytics</h1>
-        <div className="flex gap-1 rounded-lg border bg-muted/50 p-1">
-          {(Object.keys(PERIOD_LABELS) as Period[]).map((p) => (
-            <Button
-              key={p}
-              variant={period === p ? 'default' : 'ghost'}
-              size="sm"
-              className="h-8 px-3 text-xs sm:text-sm"
-              onClick={() => setPeriod(p)}
+        {hasFeature(tier, 'analytics.periodSelector') ? (
+          <div className="flex gap-1 rounded-lg border bg-muted/50 p-1">
+            {(Object.keys(PERIOD_LABELS) as Period[]).map((p) => (
+              <Button
+                key={p}
+                variant={period === p ? 'default' : 'ghost'}
+                size="sm"
+                className="h-8 px-3 text-xs sm:text-sm"
+                onClick={() => setPeriod(p)}
+              >
+                {PERIOD_LABELS[p]}
+              </Button>
+            ))}
+          </div>
+        ) : (
+          <div className="relative">
+            <div className="pointer-events-none opacity-40 blur-[1px] flex gap-1 rounded-lg border bg-muted/50 p-1">
+              {(Object.keys(PERIOD_LABELS) as Period[]).map((p) => (
+                <Button key={p} variant="ghost" size="sm" className="h-8 px-3 text-xs sm:text-sm">
+                  {PERIOD_LABELS[p]}
+                </Button>
+              ))}
+            </div>
+            <a
+              href="/dashboard/upgrade"
+              className="absolute inset-0 flex items-center justify-center text-xs font-medium text-primary hover:underline"
             >
-              {PERIOD_LABELS[p]}
-            </Button>
-          ))}
-        </div>
+              {'🔒'} Pro
+            </a>
+          </div>
+        )}
       </div>
 
       {/* Section 1: KPI Cards */}
@@ -263,40 +284,42 @@ export default function AnalyticsPage() {
           <CardTitle>Conversion Funnel</CardTitle>
         </CardHeader>
         <CardContent>
-          {!hasFunnelData ? (
-            <div className="flex flex-col items-center justify-center py-8">
-              <p className="text-sm text-muted-foreground">No data</p>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {data.funnel.map((step, i) => {
-                const barWidth = Math.min((step.value / funnelMax) * 100, 100)
-                // Decreasing opacity for each funnel step
-                const opacities = ['bg-indigo-600', 'bg-indigo-500', 'bg-indigo-400', 'bg-indigo-300']
-                const barColor = opacities[i] ?? 'bg-indigo-300'
+          <ProFeatureLock locked={!hasFeature(tier, 'analytics.funnel')} label="Advanced Analytics">
+            {!hasFunnelData ? (
+              <div className="flex flex-col items-center justify-center py-8">
+                <p className="text-sm text-muted-foreground">No data</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {data.funnel.map((step, i) => {
+                  const barWidth = Math.min((step.value / funnelMax) * 100, 100)
+                  // Decreasing opacity for each funnel step
+                  const opacities = ['bg-indigo-600', 'bg-indigo-500', 'bg-indigo-400', 'bg-indigo-300']
+                  const barColor = opacities[i] ?? 'bg-indigo-300'
 
-                return (
-                  <div key={step.label} className="flex items-center gap-3">
-                    <span className="w-20 shrink-0 truncate text-sm font-medium sm:w-24">
-                      {step.label}
-                    </span>
-                    <div className="relative flex-1">
-                      <div className="h-8 w-full rounded bg-muted/50">
-                        <div
-                          className={`h-8 rounded ${barColor} transition-all duration-500`}
-                          style={{ width: `${barWidth}%`, minWidth: step.value > 0 ? '4px' : '0' }}
-                        />
+                  return (
+                    <div key={step.label} className="flex items-center gap-3">
+                      <span className="w-20 shrink-0 truncate text-sm font-medium sm:w-24">
+                        {step.label}
+                      </span>
+                      <div className="relative flex-1">
+                        <div className="h-8 w-full rounded bg-muted/50">
+                          <div
+                            className={`h-8 rounded ${barColor} transition-all duration-500`}
+                            style={{ width: `${barWidth}%`, minWidth: step.value > 0 ? '4px' : '0' }}
+                          />
+                        </div>
                       </div>
+                      <span className="w-28 shrink-0 text-right text-sm tabular-nums sm:w-32">
+                        <span className="font-semibold">{step.value.toLocaleString()}</span>
+                        <span className="ml-1 text-muted-foreground">({step.percentage}%)</span>
+                      </span>
                     </div>
-                    <span className="w-28 shrink-0 text-right text-sm tabular-nums sm:w-32">
-                      <span className="font-semibold">{step.value.toLocaleString()}</span>
-                      <span className="ml-1 text-muted-foreground">({step.percentage}%)</span>
-                    </span>
-                  </div>
-                )
-              })}
-            </div>
-          )}
+                  )
+                })}
+              </div>
+            )}
+          </ProFeatureLock>
         </CardContent>
       </Card>
 
@@ -308,39 +331,41 @@ export default function AnalyticsPage() {
             <CardTitle>Top Actions by Completion</CardTitle>
           </CardHeader>
           <CardContent>
-            {topActionsSlice.length === 0 ? (
-              <p className="py-4 text-center text-sm text-muted-foreground">
-                No action data yet.
-              </p>
-            ) : (
-              <div className="space-y-3">
-                {topActionsSlice.map((action) => {
-                  const barWidth = Math.min((action.count / topActionsMax) * 100, 100)
-                  return (
-                    <div key={action.label} className="space-y-1">
-                      <div className="flex items-center justify-between gap-2 text-sm">
-                        <span className="flex items-center gap-1.5 truncate">
-                          <span className="shrink-0">{action.icon}</span>
-                          <span className="truncate">{action.label}</span>
-                        </span>
-                        <span className="shrink-0 tabular-nums text-muted-foreground">
-                          {action.count.toLocaleString()}
-                        </span>
+            <ProFeatureLock locked={!hasFeature(tier, 'analytics.topActions')} label="Top Actions Breakdown">
+              {topActionsSlice.length === 0 ? (
+                <p className="py-4 text-center text-sm text-muted-foreground">
+                  No action data yet.
+                </p>
+              ) : (
+                <div className="space-y-3">
+                  {topActionsSlice.map((action) => {
+                    const barWidth = Math.min((action.count / topActionsMax) * 100, 100)
+                    return (
+                      <div key={action.label} className="space-y-1">
+                        <div className="flex items-center justify-between gap-2 text-sm">
+                          <span className="flex items-center gap-1.5 truncate">
+                            <span className="shrink-0">{action.icon}</span>
+                            <span className="truncate">{action.label}</span>
+                          </span>
+                          <span className="shrink-0 tabular-nums text-muted-foreground">
+                            {action.count.toLocaleString()}
+                          </span>
+                        </div>
+                        <div className="h-2 w-full rounded-full bg-muted">
+                          <div
+                            className="h-2 rounded-full bg-indigo-500/70 transition-all duration-500"
+                            style={{
+                              width: `${barWidth}%`,
+                              minWidth: action.count > 0 ? '4px' : '0',
+                            }}
+                          />
+                        </div>
                       </div>
-                      <div className="h-2 w-full rounded-full bg-muted">
-                        <div
-                          className="h-2 rounded-full bg-indigo-500/70 transition-all duration-500"
-                          style={{
-                            width: `${barWidth}%`,
-                            minWidth: action.count > 0 ? '4px' : '0',
-                          }}
-                        />
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-            )}
+                    )
+                  })}
+                </div>
+              )}
+            </ProFeatureLock>
           </CardContent>
         </Card>
 
@@ -350,41 +375,43 @@ export default function AnalyticsPage() {
             <CardTitle>Prize Popularity</CardTitle>
           </CardHeader>
           <CardContent>
-            {data.prizePopularity.length === 0 ? (
-              <p className="py-4 text-center text-sm text-muted-foreground">
-                No prize data yet.
-              </p>
-            ) : (
-              <div className="space-y-3">
-                {[...data.prizePopularity]
-                  .sort((a, b) => b.count - a.count)
-                  .map((prize) => {
-                    const barWidth = Math.min((prize.count / prizeMax) * 100, 100)
-                    return (
-                      <div key={prize.label} className="space-y-1">
-                        <div className="flex items-center justify-between gap-2 text-sm">
-                          <span className="flex items-center gap-1.5 truncate">
-                            <span className="shrink-0">{prize.icon}</span>
-                            <span className="truncate">{prize.label}</span>
-                          </span>
-                          <span className="shrink-0 tabular-nums text-muted-foreground">
-                            {prize.count.toLocaleString()}
-                          </span>
+            <ProFeatureLock locked={!hasFeature(tier, 'analytics.prizePopularity')} label="Prize Popularity">
+              {data.prizePopularity.length === 0 ? (
+                <p className="py-4 text-center text-sm text-muted-foreground">
+                  No prize data yet.
+                </p>
+              ) : (
+                <div className="space-y-3">
+                  {[...data.prizePopularity]
+                    .sort((a, b) => b.count - a.count)
+                    .map((prize) => {
+                      const barWidth = Math.min((prize.count / prizeMax) * 100, 100)
+                      return (
+                        <div key={prize.label} className="space-y-1">
+                          <div className="flex items-center justify-between gap-2 text-sm">
+                            <span className="flex items-center gap-1.5 truncate">
+                              <span className="shrink-0">{prize.icon}</span>
+                              <span className="truncate">{prize.label}</span>
+                            </span>
+                            <span className="shrink-0 tabular-nums text-muted-foreground">
+                              {prize.count.toLocaleString()}
+                            </span>
+                          </div>
+                          <div className="h-2 w-full rounded-full bg-muted">
+                            <div
+                              className="h-2 rounded-full bg-indigo-500/70 transition-all duration-500"
+                              style={{
+                                width: `${barWidth}%`,
+                                minWidth: prize.count > 0 ? '4px' : '0',
+                              }}
+                            />
+                          </div>
                         </div>
-                        <div className="h-2 w-full rounded-full bg-muted">
-                          <div
-                            className="h-2 rounded-full bg-indigo-500/70 transition-all duration-500"
-                            style={{
-                              width: `${barWidth}%`,
-                              minWidth: prize.count > 0 ? '4px' : '0',
-                            }}
-                          />
-                        </div>
-                      </div>
-                    )
-                  })}
-              </div>
-            )}
+                      )
+                    })}
+                </div>
+              )}
+            </ProFeatureLock>
           </CardContent>
         </Card>
       </div>
@@ -395,27 +422,29 @@ export default function AnalyticsPage() {
           <CardTitle>Activity This Week</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex items-end justify-between gap-2 sm:gap-4" style={{ height: 160 }}>
-            {DAYS.map((day, i) => {
-              const value = weeklyActivity[i] ?? 0
-              const heightPct = Math.max((value / weeklyMax) * 100, 4)
+          <ProFeatureLock locked={!hasFeature(tier, 'analytics.weeklyChart')} label="Weekly Activity Chart">
+            <div className="flex items-end justify-between gap-2 sm:gap-4" style={{ height: 160 }}>
+              {DAYS.map((day, i) => {
+                const value = weeklyActivity[i] ?? 0
+                const heightPct = Math.max((value / weeklyMax) * 100, 4)
 
-              return (
-                <div key={day} className="flex flex-1 flex-col items-center gap-1">
-                  <span className="text-xs tabular-nums font-medium text-muted-foreground">
-                    {value > 0 ? value.toLocaleString() : ''}
-                  </span>
-                  <div className="relative w-full" style={{ height: 120 }}>
-                    <div
-                      className="absolute bottom-0 w-full rounded-t bg-indigo-500/80 transition-all duration-500"
-                      style={{ height: `${heightPct}%`, minHeight: 4 }}
-                    />
+                return (
+                  <div key={day} className="flex flex-1 flex-col items-center gap-1">
+                    <span className="text-xs tabular-nums font-medium text-muted-foreground">
+                      {value > 0 ? value.toLocaleString() : ''}
+                    </span>
+                    <div className="relative w-full" style={{ height: 120 }}>
+                      <div
+                        className="absolute bottom-0 w-full rounded-t bg-indigo-500/80 transition-all duration-500"
+                        style={{ height: `${heightPct}%`, minHeight: 4 }}
+                      />
+                    </div>
+                    <span className="text-xs font-medium text-muted-foreground">{day}</span>
                   </div>
-                  <span className="text-xs font-medium text-muted-foreground">{day}</span>
-                </div>
-              )
-            })}
-          </div>
+                )
+              })}
+            </div>
+          </ProFeatureLock>
         </CardContent>
       </Card>
     </div>

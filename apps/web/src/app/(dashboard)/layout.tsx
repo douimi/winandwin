@@ -22,7 +22,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
   }
 
   return (
-    <MerchantProvider merchantId={merchantId ?? ''}>
+    <MerchantProvider merchantId={merchantId ?? ''} merchantTier={merchantTier}>
       <DashboardShell
         user={session.user}
         merchantName={merchantName}

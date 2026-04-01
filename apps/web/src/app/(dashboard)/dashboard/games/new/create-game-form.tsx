@@ -4,7 +4,8 @@ import { Button, Card, CardContent, CardHeader, CardTitle, Input, Label } from '
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { createGame } from '@/lib/api'
-import { useMerchantId } from '@/lib/merchant-context'
+import { useMerchantId, useMerchantTier } from '@/lib/merchant-context'
+import { hasFeature } from '@/lib/tier-features'
 
 const GAME_TYPES = [
   { value: 'wheel', label: 'Wheel of Fortune', icon: '🎡', description: 'Spin a wheel with configurable segments' },
@@ -24,6 +25,7 @@ interface Prize {
 export function CreateGameForm() {
   const router = useRouter()
   const merchantId = useMerchantId()
+  const tier = useMerchantTier()
   const [gameType, setGameType] = useState<string>('wheel')
   const [gameName, setGameName] = useState('')
   const [gameDescription, setGameDescription] = useState('')
@@ -123,7 +125,7 @@ export function CreateGameForm() {
               required
             />
           </div>
-          <div className="space-y-2">
+          <div className="relative space-y-2">
             <Label htmlFor="gameDescription">Game Description</Label>
             <textarea
               id="gameDescription"
@@ -131,8 +133,16 @@ export function CreateGameForm() {
               value={gameDescription}
               onChange={(e) => setGameDescription((e.target as HTMLTextAreaElement).value)}
               rows={3}
-              className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              disabled={!hasFeature(tier, 'game.description')}
+              className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50"
             />
+            {!hasFeature(tier, 'game.description') && (
+              <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-white/60">
+                <a href="/dashboard/upgrade" className="flex items-center gap-1 text-sm font-medium text-primary hover:underline">
+                  {'🔒'} Pro feature - Upgrade to unlock
+                </a>
+              </div>
+            )}
           </div>
           <div className="space-y-2">
             <Label htmlFor="winRate">
