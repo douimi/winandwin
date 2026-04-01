@@ -113,6 +113,7 @@ playRouter.get('/:slug', async (c) => {
           config: cta.config,
         })),
         cooldownHours: merchantData.cooldownHours || 24,
+        ctaMode: merchantData.ctaMode || 'one_and_done',
         atmosphere: merchantData.atmosphere || 'joyful',
         customColors: (merchantData.atmosphere === 'custom') ? {
           c1: (merchantData as Record<string, unknown>).customColor1 as string || '#6366f1',

@@ -24,6 +24,7 @@ export default function SettingsPage() {
   const [savingPin, setSavingPin] = useState(false)
 
   // Game Rules state
+  const [ctaMode, setCtaMode] = useState<'one_and_done' | 'replay_with_ctas'>('one_and_done')
   const [cooldownHours, setCooldownHours] = useState(24)
   const [maxWinsPerPeriod, setMaxWinsPerPeriod] = useState(5)
   const [winPeriodDays, setWinPeriodDays] = useState(7)
@@ -54,6 +55,7 @@ export default function SettingsPage() {
       setTimezone(merchant.timezone)
       setPhone(merchant.phone ?? '')
       setValidationPin((merchant as unknown as Record<string, string>).validationPin ?? '0000')
+      setCtaMode(((merchant as unknown as Record<string, string>).ctaMode as 'one_and_done' | 'replay_with_ctas') ?? 'one_and_done')
       setCooldownHours((merchant as unknown as Record<string, number>).cooldownHours ?? 24)
       setMaxWinsPerPeriod((merchant as unknown as Record<string, number>).maxWinsPerPeriod ?? 5)
       setWinPeriodDays((merchant as unknown as Record<string, number>).winPeriodDays ?? 7)
@@ -483,7 +485,7 @@ export default function SettingsPage() {
               setSavingRules(true)
               setError(null)
               try {
-                await updateMerchant(merchantId, { cooldownHours, maxWinsPerPeriod, winPeriodDays })
+                await updateMerchant(merchantId, { ctaMode, cooldownHours, maxWinsPerPeriod, winPeriodDays })
                 showSuccess('Game rules updated successfully.')
               } catch (err) {
                 setError(err instanceof Error ? err.message : 'Failed to save')
@@ -493,6 +495,27 @@ export default function SettingsPage() {
             }}
             className="space-y-4"
           >
+            <div className="space-y-2">
+              <Label>CTA Workflow Mode</Label>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <button
+                  type="button"
+                  onClick={() => setCtaMode('one_and_done')}
+                  className={`rounded-lg border-2 p-3 text-left transition-all ${ctaMode === 'one_and_done' ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'}`}
+                >
+                  <p className="text-sm font-semibold">{'\uD83C\uDFAF'} One & Done</p>
+                  <p className="text-xs text-muted-foreground mt-1">Player completes one CTA, plays once, then waits for the cooldown period.</p>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCtaMode('replay_with_ctas')}
+                  className={`rounded-lg border-2 p-3 text-left transition-all ${ctaMode === 'replay_with_ctas' ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'}`}
+                >
+                  <p className="text-sm font-semibold">{'\uD83D\uDD01'} Replay with CTAs</p>
+                  <p className="text-xs text-muted-foreground mt-1">If player loses, they can replay by completing the next CTA. One CTA per play, until all are used.</p>
+                </button>
+              </div>
+            </div>
             <div className="space-y-2">
               <Label htmlFor="cooldownHours">Cooldown between plays (hours)</Label>
               <Input

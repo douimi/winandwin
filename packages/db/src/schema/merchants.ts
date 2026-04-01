@@ -55,6 +55,7 @@ export const merchants = pgTable('merchants', {
   validationPin: varchar('validation_pin', { length: 6 }).notNull().default('0000'),
   disabled: boolean('disabled').notNull().default(false),
   atmosphere: varchar('atmosphere', { length: 30 }).notNull().default('joyful'),
+  ctaMode: varchar('cta_mode', { length: 20 }).notNull().default('one_and_done'),
   cooldownHours: integer('cooldown_hours').notNull().default(24),
   maxWinsPerPeriod: integer('max_wins_per_period').notNull().default(5),
   winPeriodDays: integer('win_period_days').notNull().default(7),

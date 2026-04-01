@@ -414,11 +414,12 @@ export function App() {
     }
   }
 
-  /** Check if a replay (try again) is possible: there are uncompleted CTAs remaining */
+  /** Check if a replay (try again) is possible: only in replay_with_ctas mode + uncompleted CTAs */
   function canTryAgain(): boolean {
-    if (!config || IS_TEST_MODE) return !!config // always allow in test mode
+    if (!config) return false
+    // Only allow replay in "replay_with_ctas" mode
+    if (config.ctaMode !== 'replay_with_ctas' && !IS_TEST_MODE) return false
     const completedEver = playerState?.completedActionsEver ?? []
-    // Include the actions we just completed in this session
     const allCompleted = [...new Set([...completedEver, ...completedActions])]
     const remaining = config.requiredActions.filter((a) => !allCompleted.includes(a.type))
     return remaining.length > 0

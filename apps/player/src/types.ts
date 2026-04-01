@@ -7,6 +7,7 @@ export interface GameConfig {
   customColors?: { c1: string; c2: string; c3: string }
   monthlyLimitReached?: boolean
   cooldownHours?: number
+  ctaMode?: 'one_and_done' | 'replay_with_ctas'
   game: {
     id: string
     type: 'wheel' | 'slots' | 'mystery_box'

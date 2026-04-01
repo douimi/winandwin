@@ -227,6 +227,7 @@ export async function updateMerchant(
     customColor1: string
     customColor2: string
     customColor3: string
+    ctaMode: string
     cooldownHours: number
     maxWinsPerPeriod: number
     winPeriodDays: number
