@@ -330,6 +330,12 @@ export function App() {
         const segments = buildWheelSegments(config.game.prizes, bizTheme.tryAgainText, bizTheme.tryAgainEmoji)
         const idx = findTargetIndex(segments, spinResult.outcome, spinResult.prize?.name)
         setTargetIndex(idx)
+      } else {
+        // For slots/mystery_box: set targetIndex so the game component can animate
+        const idx = spinResult.outcome === 'win'
+          ? config.game.prizes.findIndex(p => p.name === spinResult.prize?.name)
+          : config.game.prizes.length // "lose" index = beyond prizes array
+        setTargetIndex(idx >= 0 ? idx : 0)
       }
     }).catch((err) => {
       setError(classifyError(err))

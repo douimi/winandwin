@@ -59,6 +59,15 @@ export function Slots({
   const animRef = useRef<number | null>(null)
   const startTimeRef = useRef(0)
 
+  // Reset hasSpun when not spinning (allows replay after try again)
+  useEffect(() => {
+    if (!spinning && targetIndex === null) {
+      hasSpun.current = false
+      setStopped([false, false, false])
+      setFinalSymbols([])
+    }
+  }, [spinning, targetIndex])
+
   function handlePull() {
     if (spinning || hasSpun.current) return
     hasSpun.current = true
