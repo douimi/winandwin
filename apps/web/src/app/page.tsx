@@ -112,6 +112,13 @@ function GameDemo() {
 
           {/* Screen content */}
           <div className="flex flex-col items-center justify-center h-full px-4 pt-6 bg-gradient-to-b from-indigo-600 to-purple-700">
+            {/* Brand & Logo inside phone */}
+            <div className="text-center mb-2">
+              <div className="mx-auto w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-xs font-bold text-white/80 border border-white/30">
+                Logo
+              </div>
+              <p className="text-white/70 text-xs mt-1 font-medium">Your Brand</p>
+            </div>
             <p className="text-white/90 font-bold text-sm mb-3">Spin to Win!</p>
 
             {/* SVG Wheel */}
@@ -197,14 +204,6 @@ function GameDemo() {
               </button>
             )}
           </div>
-        </div>
-
-        {/* Personalization badges */}
-        <div className="absolute -right-16 top-[35%] rounded-full bg-white px-3 py-1.5 text-xs font-semibold text-indigo-600 shadow-lg border border-indigo-100" style={{ animation: 'float 4s ease-in-out infinite' }}>
-          Your Brand {'\u2728'}
-        </div>
-        <div className="absolute -left-14 top-[50%] rounded-full bg-white px-3 py-1.5 text-xs font-semibold text-pink-600 shadow-lg border border-pink-100" style={{ animation: 'float 4s ease-in-out 1s infinite' }}>
-          Your Logo {'\u{1F3A8}'}
         </div>
 
         {/* Glow behind phone */}
@@ -490,27 +489,35 @@ export default function HomePage() {
 
                   {/* Screen content */}
                   <div className="flex flex-col items-center justify-center h-full px-6 pt-8">
+                    {/* Brand & Logo inside phone */}
+                    <div className="text-center mb-2">
+                      <div className="mx-auto w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-xs font-bold text-white/80 border border-white/30">
+                        Logo
+                      </div>
+                      <p className="text-white/70 text-xs mt-1 font-medium">Your Brand</p>
+                    </div>
                     <p className="text-white/90 font-bold text-lg mb-2">Spin to Win!</p>
                     <div
                       className="w-44 h-44"
-                      style={{ animation: 'phoneWheel 8s linear infinite' }}
+                      style={{ position: 'relative', animation: 'phoneWheel 8s linear infinite' }}
                     >
                       <PhoneWheelSVG />
                     </div>
-                    <div className="mt-4 w-0 h-0 border-l-[10px] border-r-[10px] border-t-[16px] border-l-transparent border-r-transparent border-t-amber-400" style={{ marginTop: '-8px' }} />
+                    {/* Pointer */}
+                    <div style={{
+                      marginTop: '-8px',
+                      width: 0,
+                      height: 0,
+                      borderLeft: '10px solid transparent',
+                      borderRight: '10px solid transparent',
+                      borderTop: '18px solid #ef4444',
+                      filter: 'drop-shadow(0 2px 3px rgba(0,0,0,0.3))',
+                    }} />
                     <p className="mt-4 text-white/80 text-sm text-center">Tap the wheel to win a prize!</p>
                     <div className="mt-4 rounded-full bg-white/20 px-6 py-2 text-white font-semibold text-sm">
                       {'\u{1F389}'} You won 10% off!
                     </div>
                   </div>
-                </div>
-
-                {/* Personalization badges */}
-                <div className="absolute -right-16 top-[35%] rounded-full bg-white px-3 py-1.5 text-xs font-semibold text-indigo-600 shadow-lg border border-indigo-100 animate-slideUp-d3">
-                  Your Brand {'\u2728'}
-                </div>
-                <div className="absolute -left-14 top-[50%] rounded-full bg-white px-3 py-1.5 text-xs font-semibold text-pink-600 shadow-lg border border-pink-100 animate-slideUp-d3">
-                  Your Logo {'\u{1F3A8}'}
                 </div>
 
                 {/* Glow behind phone */}

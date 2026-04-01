@@ -5,7 +5,6 @@ import { AlreadyPlayedScreen } from './components/already-played'
 import { LoadingScreen } from './components/loading-screen'
 import { RegisterScreen } from './components/register-screen'
 import { ResultScreen } from './components/result-screen'
-import { WelcomeScreen } from './components/welcome-screen'
 import { LimitReachedScreen } from './components/limit-reached'
 import { MysteryBox } from './components/mystery-box'
 import { Slots } from './components/slots'
@@ -148,6 +147,7 @@ export function App() {
   const [playerEmail, setPlayerEmail] = useState<string | null>(null)
   const [singleAction, setSingleAction] = useState<GameConfig['requiredActions'][number] | null>(null)
   const [showActionOverlay, setShowActionOverlay] = useState(false)
+  const [showLoseAnimation, setShowLoseAnimation] = useState(false)
   const [preCompletedAction, setPreCompletedAction] = useState(() => {
     const s = window.location.pathname.replace(/^\//, '') || 'demo'
     return checkPendingAction(s)
@@ -237,17 +237,8 @@ export function App() {
         if (state) {
           setPlayerState(state)
 
-          // Helper: determine initial screen
-          const goToGameOrWelcome = () => {
-            if (gameConfig.game.type === 'wheel') {
-              setScreen('game')
-            } else {
-              setScreen('welcome')
-            }
-          }
-
           // If returning from a CTA (preCompletedAction already captured from localStorage)
-          if (preCompletedAction && gameConfig.game.type === 'wheel') {
+          if (preCompletedAction) {
             // Find the matching action and auto-show the overlay for verification
             const matchingAction = gameConfig.requiredActions.find(
               (a: { type: string }) => a.type === preCompletedAction
@@ -255,22 +246,10 @@ export function App() {
             if (matchingAction) {
               setSingleAction(matchingAction)
               setShowActionOverlay(true)
-              // pending action already cleared by checkPendingAction
             }
             setScreen('game')
-          } else if (preCompletedAction && gameConfig.game.type !== 'wheel') {
-            // Non-wheel games: return from CTA, go to action screen for verification
-            const matchingAction = gameConfig.requiredActions.find(
-              (a: { type: string }) => a.type === preCompletedAction
-            )
-            if (matchingAction) {
-              setSingleAction(matchingAction)
-              setScreen('action') // Go to action screen which will auto-verify
-            } else {
-              setScreen('welcome')
-            }
           } else if (IS_TEST_MODE) {
-            goToGameOrWelcome()
+            setScreen('game')
           } else if (state.hasWonInCooldown) {
             // Won in this cooldown period -- show already-played
             setScreen('already-played')
@@ -283,15 +262,11 @@ export function App() {
             setCompletedActions(state.completedActionsToday)
             setScreen('game')
           } else {
-            goToGameOrWelcome()
+            setScreen('game')
           }
         } else {
-          // No state returned (new player)
-          if (gameConfig.game.type === 'wheel') {
-            setScreen('game')
-          } else {
-            setScreen('welcome')
-          }
+          // No state returned (new player) -- go straight to game
+          setScreen('game')
         }
       } catch (err) {
         if (!cancelled) {
@@ -308,24 +283,8 @@ export function App() {
     return () => { cancelled = true }
   }, [slug])
 
-  function handlePlayClick() {
-    if (!config) return
-
-    // Determine which single action to show
-    const completedEver = playerState?.completedActionsEver ?? []
-    const action = pickSingleAction(config.requiredActions, completedEver)
-
-    if (action) {
-      setSingleAction(action)
-      setScreen('action')
-    } else {
-      // No actions configured -- go straight to game
-      setScreen('game')
-    }
-  }
-
-  /** For wheel games: when SPIN is clicked, check if action needed first */
-  function handleWheelSpinClick() {
+  /** When player tries to play (spin/pull/tap), check if CTA action is needed first */
+  function handleGamePlayClick() {
     if (!config || spinning) return
 
     // If we already have completed actions, proceed to spin
@@ -349,16 +308,12 @@ export function App() {
 
   function handleActionComplete(actions: string[]) {
     setCompletedActions(actions)
-    // If we were showing the overlay (wheel flow), close it and spin
-    if (showActionOverlay) {
-      setShowActionOverlay(false)
-      // Small delay to let the overlay close, then spin
-      setTimeout(() => {
-        handleSpinAfterAction(actions)
-      }, 400)
-    } else {
-      setScreen('game')
-    }
+    // Close overlay and auto-trigger game play
+    setShowActionOverlay(false)
+    // Small delay to let the overlay close, then spin/play
+    setTimeout(() => {
+      handleSpinAfterAction(actions)
+    }, 400)
   }
 
   /** Trigger spin after action is completed in overlay mode */
@@ -450,7 +405,12 @@ export function App() {
     if (currentResult?.outcome === 'win') {
       setScreen('register')
     } else {
-      setScreen('result')
+      // Show lose animation overlay for 2.5s before going to result
+      setShowLoseAnimation(true)
+      setTimeout(() => {
+        setShowLoseAnimation(false)
+        setScreen('result')
+      }, 2500)
     }
   }
 
@@ -485,7 +445,12 @@ export function App() {
       setCompletedActions([])
       setPreCompletedAction(null)
       setSingleAction(action)
-      setScreen('action')
+      // Go to game screen and show CTA as overlay
+      setScreen('game')
+      // Small delay to ensure game screen is rendered first
+      setTimeout(() => {
+        setShowActionOverlay(true)
+      }, 100)
     } else {
       // No more CTAs -- stay on result screen
       setScreen('already-played')
@@ -549,29 +514,6 @@ export function App() {
           style={{
             backgroundImage: `url(${config.game.branding.backgroundUrl})`,
           }}
-        />
-      )}
-
-      {screen === 'welcome' && (
-        <WelcomeScreen config={config} onPlay={handlePlayClick} businessTheme={bizTheme} />
-      )}
-
-      {screen === 'action' && singleAction && (
-        <ActionScreen
-          config={config}
-          onComplete={handleActionComplete}
-          preCompleted={preCompletedAction}
-          singleAction={singleAction}
-        />
-      )}
-
-      {/* Legacy multi-action screen (backward compat) */}
-      {screen === 'actions' && (
-        <ActionScreen
-          config={config}
-          onComplete={handleActionComplete}
-          preCompleted={preCompletedAction}
-          previouslyCompleted={playerState?.completedActionsEver}
         />
       )}
 
@@ -640,7 +582,7 @@ export function App() {
             prizes={config.game.prizes}
             branding={config.game.branding}
             spinning={spinning}
-            onSpin={handleWheelSpinClick}
+            onSpin={handleGamePlayClick}
             onSpinComplete={handleSpinComplete}
             targetIndex={targetIndex}
             wheelColors={theme.wheelColors}
@@ -697,11 +639,42 @@ export function App() {
               </div>
             </div>
           )}
+
+          {/* Lose animation overlay */}
+          {showLoseAnimation && (
+            <div class="lose-animation-overlay">
+              <div class="lose-animation-content">
+                <span class="lose-animation-emoji">{bizTheme?.accentEmoji || '\uD83C\uDF40'}</span>
+                <h2 class="lose-animation-title">{bizTheme?.loseTitle || 'Almost!'}</h2>
+                <p class="lose-animation-sub">Better luck next time!</p>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
       {screen === 'game' && config.game.type !== 'wheel' && (
-        <div class="screen game-screen">
+        <div class="screen game-screen immersive-game-screen">
+          {/* Floating themed emojis */}
+          <div class="themed-bg-emojis">
+            {bizTheme.bgEmojis.map((emoji, i) => (
+              <span
+                key={`biz-emoji-${i}`}
+                class="themed-emoji"
+                style={{
+                  left: `${[5, 85, 10, 90, 15, 80, 25, 70][i % 8]}%`,
+                  top: `${[10, 20, 40, 55, 70, 85, 30, 65][i % 8]}%`,
+                  '--float-duration': `${5 + (i % 4) * 1.5}s`,
+                  '--float-delay': `${i * 0.7}s`,
+                  '--emoji-size': `${1.2 + (i % 3) * 0.4}rem`,
+                  opacity: 0.08 + (i % 3) * 0.03,
+                } as Record<string, string | number>}
+              >
+                {emoji}
+              </span>
+            ))}
+          </div>
+
           {/* Sparkle particles in background */}
           <div class="game-sparkles">
             <div class="sparkle s1" />
@@ -712,20 +685,36 @@ export function App() {
             <div class="sparkle s6" />
           </div>
 
-          <div class="game-header-banner">
-            <div class="game-header-ornament left" />
-            <h1 class="game-title">{config.game.name}</h1>
-            <div class="game-header-ornament right" />
+          {/* Merchant branding header */}
+          <div class="immersive-header">
+            <div class="immersive-logo-frame">
+              {config.merchantLogo ? (
+                <img
+                  class="immersive-logo-img"
+                  src={config.merchantLogo}
+                  alt={config.merchantName}
+                />
+              ) : (
+                <span class="immersive-logo-initial">{initial}</span>
+              )}
+            </div>
+            <p class="immersive-merchant-name">{config.merchantName}</p>
           </div>
 
-          <p class="game-merchant-sub">{config.merchantName}</p>
+          {/* Game title */}
+          <h1 class="immersive-game-title" style={{ fontSize: theme.titleSize, fontWeight: theme.fontWeight }}>
+            {config.game.name || bizTheme.defaultTitle}
+          </h1>
+
+          {/* Subtitle */}
+          <p class="immersive-subtitle">{config.game.description || config.merchantDescription || bizTheme.defaultSubtitle}</p>
 
           {config.game.type === 'slots' && (
             <Slots
               prizes={config.game.prizes}
               branding={config.game.branding}
               spinning={spinning}
-              onSpin={handleSpin}
+              onSpin={handleGamePlayClick}
               onSpinComplete={handleSpinComplete}
               targetIndex={targetIndex}
             />
@@ -737,10 +726,16 @@ export function App() {
               branding={config.game.branding}
               onComplete={() => {
                 setSpinning(false)
-                if (result?.outcome === 'win') {
+                const currentResult = resultRef.current
+                if (currentResult?.outcome === 'win') {
                   setScreen('register')
                 } else {
-                  setScreen('result')
+                  // Show lose animation overlay for 2.5s before going to result
+                  setShowLoseAnimation(true)
+                  setTimeout(() => {
+                    setShowLoseAnimation(false)
+                    setScreen('result')
+                  }, 2500)
                 }
               }}
               targetIndex={targetIndex}
@@ -748,9 +743,68 @@ export function App() {
             />
           )}
 
-          {/* Mystery box: auto-trigger spin API when game screen loads */}
+          {/* Mystery box: auto-trigger the game play flow when game screen loads */}
           {config.game.type === 'mystery_box' && !spinning && !result && (
-            <MysteryBoxAutoSpin onSpin={handleSpin} />
+            <MysteryBoxAutoSpin onSpin={handleGamePlayClick} />
+          )}
+
+          {/* Powered by */}
+          <p class="immersive-powered">Powered by Win & Win</p>
+
+          {/* Action overlay (bottom sheet) */}
+          {showActionOverlay && singleAction && (
+            <div class="action-overlay-backdrop" onClick={() => setShowActionOverlay(false)}>
+              <div class="action-overlay-sheet" onClick={(e) => e.stopPropagation()}>
+                <div class="action-overlay-handle" />
+
+                {/* Action progression: show completed + current */}
+                {config.requiredActions.length > 1 && (
+                  <div class="action-progress-list">
+                    {config.requiredActions
+                      .sort((a, b) => (b.weight || 0) - (a.weight || 0))
+                      .map((action) => {
+                        const everCompleted = playerState?.completedActionsEver?.includes(action.type)
+                        const isCurrent = action.type === singleAction.type
+                        const meta = ACTION_META_MAP[action.type]
+                        return (
+                          <div
+                            key={action.type}
+                            class={`action-progress-item ${everCompleted ? 'done' : ''} ${isCurrent ? 'current' : ''}`}
+                          >
+                            <span class="action-progress-icon">
+                              {everCompleted ? '\u2705' : (meta?.icon || '\u2B50')}
+                            </span>
+                            <span class="action-progress-label">
+                              {meta?.label || action.type.replace(/_/g, ' ')}
+                            </span>
+                            {isCurrent && !everCompleted && (
+                              <span class="action-progress-badge">Current</span>
+                            )}
+                          </div>
+                        )
+                      })}
+                  </div>
+                )}
+
+                <ActionScreen
+                  config={config}
+                  onComplete={handleActionComplete}
+                  preCompleted={preCompletedAction}
+                  singleAction={singleAction}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Lose animation overlay */}
+          {showLoseAnimation && (
+            <div class="lose-animation-overlay">
+              <div class="lose-animation-content">
+                <span class="lose-animation-emoji">{bizTheme?.accentEmoji || '\uD83C\uDF40'}</span>
+                <h2 class="lose-animation-title">{bizTheme?.loseTitle || 'Almost!'}</h2>
+                <p class="lose-animation-sub">Better luck next time!</p>
+              </div>
+            </div>
           )}
         </div>
       )}

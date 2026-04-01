@@ -2534,3 +2534,60 @@ button:active {
   color: #fff;
   letter-spacing: 0.5px;
 }
+
+/* ============================================
+   Immersive Game Screen (non-wheel)
+   ============================================ */
+
+.immersive-game-screen {
+  padding-top: 1.25rem !important;
+  padding-bottom: 1.25rem !important;
+  gap: 0 !important;
+  justify-content: flex-start !important;
+}
+
+/* ============================================
+   Lose Animation Overlay
+   ============================================ */
+
+.lose-animation-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,0.6);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  animation: overlayFadeIn 0.3s ease;
+}
+.lose-animation-content {
+  text-align: center;
+  animation: losePopIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.lose-animation-emoji {
+  font-size: 4rem;
+  display: block;
+  animation: loseAnimFloat 2s ease-in-out infinite;
+}
+.lose-animation-title {
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--atm-text, #fff);
+  margin-top: 1rem;
+  text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+}
+.lose-animation-sub {
+  font-size: 1rem;
+  color: var(--atm-text-secondary, rgba(255,255,255,0.7));
+  margin-top: 0.5rem;
+}
+@keyframes losePopIn {
+  0% { transform: scale(0.3); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+@keyframes loseAnimFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
