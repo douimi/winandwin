@@ -275,14 +275,16 @@ playRouter.get('/:slug/state', async (c) => {
     // Check if all CTAs have been completed ever
     const allCtasCompleted = totalCtaTypes.length > 0 && totalCtaTypes.every((t) => completedActionsEver.includes(t))
 
-    // canPlay = true if:
-    // 1. They haven't won in the cooldown period AND
-    // 2. There are still uncompleted CTAs (or it's first play) AND
-    // 3. Max wins not reached
-    // Old logic kept as fallback for no-CTA setups
-    const canPlay = totalCtaTypes.length > 0
-      ? (!hasWonInCooldown && !allCtasCompleted && !maxWinsReached)
-      : (playsInCooldown < maxPlaysPerDay && !maxWinsReached)
+    // canPlay depends on ctaMode
+    const ctaMode = merchantData.ctaMode || 'one_and_done'
+    let canPlay: boolean
+    if (ctaMode === 'one_and_done') {
+      // One play per cooldown period, regardless of outcome
+      canPlay = playsInCooldown === 0 && !maxWinsReached
+    } else {
+      // replay_with_ctas: can play if haven't won + CTAs remaining
+      canPlay = !hasWonInCooldown && !allCtasCompleted && !maxWinsReached
+    }
 
     // Calculate next play time
     let nextPlayAt: string | null = null
@@ -583,6 +585,8 @@ playRouter.post('/:slug/spin', async (c) => {
     const allCtasCompleted = totalCtaTypes.length > 0 && totalCtaTypes.every((t) => completedActionsEver.includes(t))
 
     if (!isTestMode) {
+      const ctaMode = merchantData.ctaMode || 'one_and_done'
+
       // Block if player already WON in this cooldown period
       if (hasWonInCooldown) {
         return c.json(
@@ -594,8 +598,19 @@ playRouter.post('/:slug/spin', async (c) => {
         )
       }
 
-      // Block if all CTAs are exhausted (no more replays possible)
-      if (totalCtaTypes.length > 0 && allCtasCompleted) {
+      // In "one_and_done" mode: block if player has already played in cooldown period (any result)
+      if (ctaMode === 'one_and_done' && recentPlays.length > 0) {
+        return c.json(
+          {
+            success: false,
+            error: { code: 'COOLDOWN_ACTIVE', message: 'You have already played. Come back later!' },
+          },
+          429,
+        )
+      }
+
+      // In "replay_with_ctas" mode: block if all CTAs are exhausted
+      if (ctaMode === 'replay_with_ctas' && totalCtaTypes.length > 0 && allCtasCompleted) {
         return c.json(
           {
             success: false,
