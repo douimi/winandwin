@@ -371,6 +371,7 @@ playRouter.get('/:slug/state', async (c) => {
         cooldownHours,
         allCtasCompleted,
         hasWonInCooldown,
+        playerHasEmail: !!playerData.email,
       },
     })
   } catch (err) {

@@ -58,6 +58,7 @@ export interface PlayerState {
   cooldownHours?: number
   allCtasCompleted?: boolean
   hasWonInCooldown?: boolean
+  playerHasEmail?: boolean
 }
 
 export type PlayerScreen = 'loading' | 'welcome' | 'action' | 'actions' | 'register' | 'game' | 'result' | 'already-played' | 'limit-reached' | 'merchant-disabled'

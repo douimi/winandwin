@@ -250,8 +250,12 @@ export function App() {
             setScreen('game')
           } else if (IS_TEST_MODE) {
             setScreen('game')
+          } else if (state.hasWonInCooldown && !state.playerHasEmail) {
+            // Won but haven't provided email yet -- show register to claim prize
+            setResult({ outcome: 'win', prize: undefined, coupon: state.lastCoupon || undefined })
+            setScreen('register')
           } else if (state.hasWonInCooldown) {
-            // Won in this cooldown period -- show already-played
+            // Won and already registered -- show already-played
             setScreen('already-played')
           } else if (state.allCtasCompleted) {
             // All CTAs completed -- no more replays possible
@@ -287,15 +291,18 @@ export function App() {
   function handleGamePlayClick() {
     if (!config || spinning) return
 
-    // If we already have completed actions, proceed to spin
-    if (completedActions.length > 0) {
+    // Check if a NEW CTA needs to be completed for this play
+    // Include both server-side completedActionsEver AND actions completed in this session
+    const completedEver = playerState?.completedActionsEver ?? []
+    const allCompletedSoFar = [...new Set([...completedEver, ...completedActions])]
+    const action = pickSingleAction(config.requiredActions, allCompletedSoFar)
+
+    // If no CTA needed (either all done or none configured), and we have
+    // at least one action completed in this session, proceed to spin
+    if (!action && completedActions.length > 0) {
       handleSpin()
       return
     }
-
-    // Determine which single action to show
-    const completedEver = playerState?.completedActionsEver ?? []
-    const action = pickSingleAction(config.requiredActions, completedEver)
 
     if (action) {
       setSingleAction(action)
