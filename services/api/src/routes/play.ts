@@ -272,30 +272,6 @@ playRouter.get('/:slug/state', async (c) => {
     // New replay logic: check if player has won in the cooldown period
     const hasWonInCooldown = recentPlays.some((p) => p.result === 'win')
 
-    // Check if all CTAs have been completed ever
-    const allCtasCompleted = totalCtaTypes.length > 0 && totalCtaTypes.every((t) => completedActionsEver.includes(t))
-
-    // canPlay depends on ctaMode
-    const ctaMode = merchantData.ctaMode || 'one_and_done'
-    let canPlay: boolean
-    if (ctaMode === 'one_and_done') {
-      // One play per cooldown period, regardless of outcome
-      canPlay = playsInCooldown === 0 && !maxWinsReached
-    } else {
-      // replay_with_ctas: can play if haven't won + CTAs remaining
-      canPlay = !hasWonInCooldown && !allCtasCompleted && !maxWinsReached
-    }
-
-    // Calculate next play time
-    let nextPlayAt: string | null = null
-    if (recentPlays.length > 0 && !canPlay) {
-      const sorted = recentPlays.sort(
-        (a, b) => new Date(b.playedAt).getTime() - new Date(a.playedAt).getTime(),
-      )
-      const lastPlayTime = new Date(sorted[0]!.playedAt).getTime()
-      nextPlayAt = new Date(lastPlayTime + cooldownMs).toISOString()
-    }
-
     // Extract actions completed in cooldown period
     const completedActionsToday: string[] = []
     for (const play of recentPlays) {
@@ -320,6 +296,28 @@ playRouter.get('/:slug/state', async (c) => {
           }
         }
       }
+    }
+
+    // Check if all CTAs have been completed ever (must be after completedActionsEver is populated)
+    const allCtasCompleted = totalCtaTypes.length > 0 && totalCtaTypes.every((t) => completedActionsEver.includes(t))
+
+    // canPlay depends on ctaMode
+    const ctaMode = merchantData.ctaMode || 'one_and_done'
+    let canPlay: boolean
+    if (ctaMode === 'one_and_done') {
+      canPlay = playsInCooldown === 0 && !maxWinsReached
+    } else {
+      canPlay = !hasWonInCooldown && !allCtasCompleted && !maxWinsReached
+    }
+
+    // Calculate next play time
+    let nextPlayAt: string | null = null
+    if (recentPlays.length > 0 && !canPlay) {
+      const sorted = [...recentPlays].sort(
+        (a, b) => new Date(b.playedAt).getTime() - new Date(a.playedAt).getTime(),
+      )
+      const lastPlayTime = new Date(sorted[0]!.playedAt).getTime()
+      nextPlayAt = new Date(lastPlayTime + cooldownMs).toISOString()
     }
 
     // Determine last play result
