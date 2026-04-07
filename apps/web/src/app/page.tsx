@@ -293,13 +293,14 @@ function ScratchCard() {
     ctx.fillStyle = grad
     ctx.fillRect(0, 0, w, h)
 
-    // Decorative text
-    ctx.fillStyle = 'rgba(255,255,255,0.25)'
-    ctx.font = 'bold 16px sans-serif'
+    // Decorative text — bold and clearly visible
+    ctx.fillStyle = '#ffffff'
+    ctx.font = 'bold 22px sans-serif'
     ctx.textAlign = 'center'
-    ctx.fillText('SCRATCH HERE', w / 2, h / 2 - 8)
-    ctx.font = '12px sans-serif'
-    ctx.fillText('Use your finger or mouse', w / 2, h / 2 + 12)
+    ctx.fillText('✨ SCRATCH HERE ✨', w / 2, h / 2 - 8)
+    ctx.fillStyle = 'rgba(255,255,255,0.8)'
+    ctx.font = 'bold 13px sans-serif'
+    ctx.fillText('Use your finger or mouse', w / 2, h / 2 + 16)
 
     // Sparkle dots
     for (let i = 0; i < 30; i++) {
@@ -804,7 +805,7 @@ export default function HomePage() {
             <div className="grid gap-10 md:grid-cols-3">
               {[
                 { emoji: '\u{1F3AE}', title: 'Create Your Game', desc: 'Choose Wheel of Fortune, Slots, or Mystery Box. Set your prizes and branding in minutes.', color: 'bg-indigo-500/20 text-indigo-400', iconBg: 'bg-indigo-500', delay: 'animate-slideUp-d1' },
-                { emoji: '\u{1F4F1}', title: 'Share Your QR Code', desc: 'Print it on table tents, menus, or receipts. Customers scan with any phone.', color: 'bg-purple-500/20 text-purple-400', iconBg: 'bg-purple-500', delay: 'animate-slideUp-d2' },
+                { emoji: '\u{1F4F2}', title: 'Share Your QR Code', desc: 'Print it on table tents, menus, or receipts. Customers scan with any phone.', color: 'bg-purple-500/20 text-purple-400', iconBg: 'bg-purple-500', delay: 'animate-slideUp-d2' },
                 { emoji: '\u{1F389}', title: 'Customers Play & Win', desc: 'They complete an action (Google review, Instagram follow), play your game, and win prizes.', color: 'bg-pink-500/20 text-pink-400', iconBg: 'bg-pink-500', delay: 'animate-slideUp-d3' },
               ].map((step, i) => (
                 <div key={i} className={`relative flex flex-col items-center text-center ${step.delay}`} style={{ transform: i === 1 ? 'translateY(30px)' : 'none' }}>
