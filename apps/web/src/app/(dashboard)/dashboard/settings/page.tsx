@@ -40,6 +40,9 @@ export default function SettingsPage() {
   const [description, setDescription] = useState('')
   const [savingBrand, setSavingBrand] = useState(false)
 
+  // Language state
+  const [language, setLanguage] = useState<'en' | 'fr' | 'es' | 'ar'>('en')
+
   // Atmosphere state
   const [atmosphere, setAtmosphere] = useState('joyful')
   const [savingAtmosphere, setSavingAtmosphere] = useState(false)
@@ -66,6 +69,7 @@ export default function SettingsPage() {
       setLogoUrl((merchant as unknown as Record<string, string>).logoUrl ?? '')
       setBackgroundUrl((merchant as unknown as Record<string, string>).backgroundUrl ?? '')
       setDescription((merchant as unknown as Record<string, string>).description ?? '')
+      setLanguage(((merchant as unknown as Record<string, string>).language as 'en' | 'fr' | 'es' | 'ar') ?? 'en')
       setAtmosphere((merchant as unknown as Record<string, string>).atmosphere ?? 'joyful')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load settings')
@@ -374,6 +378,43 @@ export default function SettingsPage() {
               {savingBrand ? 'Saving...' : 'Save Brand Identity'}
             </Button>
           </form>
+        </CardContent>
+      </Card>
+
+      {/* Language */}
+      <Card>
+        <CardHeader>
+          <CardTitle>{'\uD83C\uDF0D'} Language</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted-foreground mb-4">
+            Choose the language for your player-facing game page. All text shown to players will be translated.
+          </p>
+          <div className="grid gap-2 sm:grid-cols-4">
+            {(['en', 'fr', 'es', 'ar'] as const).map((lang) => (
+              <button
+                key={lang}
+                type="button"
+                onClick={async () => {
+                  setLanguage(lang)
+                  if (merchantId) {
+                    try {
+                      await updateMerchant(merchantId, { language: lang })
+                      showSuccess('Language updated')
+                    } catch (err) {
+                      setError(err instanceof Error ? err.message : 'Failed to update language')
+                    }
+                  }
+                }}
+                className={`rounded-lg border-2 p-3 text-center transition-all ${
+                  language === lang ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/50'
+                }`}
+              >
+                <span className="text-lg">{lang === 'en' ? '\uD83C\uDDEC\uD83C\uDDE7' : lang === 'fr' ? '\uD83C\uDDEB\uD83C\uDDF7' : lang === 'es' ? '\uD83C\uDDEA\uD83C\uDDF8' : '\uD83C\uDDF8\uD83C\uDDE6'}</span>
+                <p className="text-sm font-medium mt-1">{{'en': 'English', 'fr': 'Fran\u00e7ais', 'es': 'Espa\u00f1ol', 'ar': '\u0627\u0644\u0639\u0631\u0628\u064a\u0629'}[lang]}</p>
+              </button>
+            ))}
+          </div>
         </CardContent>
       </Card>
 

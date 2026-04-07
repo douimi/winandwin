@@ -10,6 +10,7 @@ import { MysteryBox } from './components/mystery-box'
 import { Slots } from './components/slots'
 import { Wheel, buildWheelSegments, findTargetIndex } from './components/wheel'
 import { generateFingerprint, getHardwareFingerprint } from './lib/fingerprint'
+import { setLocale, useT } from './lib/i18n'
 import { getAtmosphere } from './lib/atmospheres'
 import type { AtmosphereTheme } from './lib/atmospheres'
 import { getBusinessTheme } from './lib/business-themes'
@@ -132,6 +133,7 @@ function applyAtmosphereTheme(theme: AtmosphereTheme) {
 }
 
 export function App() {
+  const t = useT()
   const [screen, setScreen] = useState<PlayerScreen>('loading')
   const [config, setConfig] = useState<GameConfig | null>(null)
   const [completedActions, setCompletedActions] = useState<string[]>([])
@@ -227,6 +229,11 @@ export function App() {
         if (cancelled) return
 
         setConfig(gameConfig)
+
+        // Set locale from merchant language
+        if (gameConfig.language) {
+          setLocale(gameConfig.language)
+        }
 
         // Check monthly limit
         if (gameConfig.monthlyLimitReached) {
@@ -498,7 +505,7 @@ export function App() {
           <h1 class="error-title">{title}</h1>
           <p class="error-message">{error.message}</p>
           <button class="retry-button" onClick={handleRetry}>
-            Try Again
+            {t.common.tryAgain}
           </button>
         </div>
       </div>
@@ -607,7 +614,7 @@ export function App() {
           />
 
           {/* Powered by */}
-          <p class="immersive-powered">Powered by Win & Win</p>
+          <p class="immersive-powered">{t.player.poweredBy}</p>
 
           {/* Action overlay (bottom sheet) */}
           {showActionOverlay && singleAction && (
@@ -636,7 +643,7 @@ export function App() {
                               {meta?.label || action.type.replace(/_/g, ' ')}
                             </span>
                             {isCurrent && !everCompleted && (
-                              <span class="action-progress-badge">Current</span>
+                              <span class="action-progress-badge">{t.player.current}</span>
                             )}
                           </div>
                         )
@@ -660,7 +667,7 @@ export function App() {
               <div class="lose-animation-content">
                 <span class="lose-animation-emoji">{bizTheme?.accentEmoji || '\uD83C\uDF40'}</span>
                 <h2 class="lose-animation-title">{bizTheme?.loseTitle || 'Almost!'}</h2>
-                <p class="lose-animation-sub">Better luck next time!</p>
+                <p class="lose-animation-sub">{t.player.almostMessage}</p>
               </div>
             </div>
           )}
@@ -763,7 +770,7 @@ export function App() {
           )}
 
           {/* Powered by */}
-          <p class="immersive-powered">Powered by Win & Win</p>
+          <p class="immersive-powered">{t.player.poweredBy}</p>
 
           {/* Action overlay (bottom sheet) */}
           {showActionOverlay && singleAction && (
@@ -792,7 +799,7 @@ export function App() {
                               {meta?.label || action.type.replace(/_/g, ' ')}
                             </span>
                             {isCurrent && !everCompleted && (
-                              <span class="action-progress-badge">Current</span>
+                              <span class="action-progress-badge">{t.player.current}</span>
                             )}
                           </div>
                         )
@@ -816,7 +823,7 @@ export function App() {
               <div class="lose-animation-content">
                 <span class="lose-animation-emoji">{bizTheme?.accentEmoji || '\uD83C\uDF40'}</span>
                 <h2 class="lose-animation-title">{bizTheme?.loseTitle || 'Almost!'}</h2>
-                <p class="lose-animation-sub">Better luck next time!</p>
+                <p class="lose-animation-sub">{t.player.almostMessage}</p>
               </div>
             </div>
           )}

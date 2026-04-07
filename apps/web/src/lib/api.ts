@@ -224,6 +224,7 @@ export async function updateMerchant(
     description: string
     logoUrl: string
     atmosphere: string
+    language: string
     customColor1: string
     customColor2: string
     customColor3: string

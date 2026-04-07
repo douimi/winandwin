@@ -1,4 +1,5 @@
 import { useState } from 'preact/hooks'
+import { useT } from '../lib/i18n'
 import type { SpinResult } from '../types'
 
 interface Props {
@@ -11,6 +12,7 @@ function isValidEmail(email: string): boolean {
 }
 
 export function RegisterScreen({ onRegister, result }: Props) {
+  const t = useT()
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [errors, setErrors] = useState<{ name?: string; email?: string }>({})
@@ -46,7 +48,7 @@ export function RegisterScreen({ onRegister, result }: Props) {
 
       <div class="register-header">
         <span class="register-congrats-emoji">{'\u{1F389}'}</span>
-        <h1 class="register-congrats-title">Congratulations!</h1>
+        <h1 class="register-congrats-title">{t.player.congratulations}</h1>
       </div>
 
       {/* Prize display card */}
@@ -55,12 +57,12 @@ export function RegisterScreen({ onRegister, result }: Props) {
         <span class="register-prize-name">{prizeName}</span>
       </div>
 
-      <p class="register-intro">Enter your details to receive your prize by email</p>
+      <p class="register-intro">{t.player.enterDetails}</p>
 
       <form class="register-form" onSubmit={handleSubmit}>
         <div class="register-field">
           <label class="register-label" htmlFor="reg-name">
-            Your Name
+            {t.player.name}
           </label>
           <input
             id="reg-name"
@@ -79,7 +81,7 @@ export function RegisterScreen({ onRegister, result }: Props) {
 
         <div class="register-field">
           <label class="register-label" htmlFor="reg-email">
-            Email Address
+            {t.player.email}
           </label>
           <input
             id="reg-email"
@@ -101,11 +103,11 @@ export function RegisterScreen({ onRegister, result }: Props) {
             <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
             <path d="M7 11V7a5 5 0 0 1 10 0v4" />
           </svg>
-          <span>Your information is secure</span>
+          <span>{t.player.secureInfo}</span>
         </div>
 
         <button type="submit" class="register-submit">
-          Claim My Prize {'\u2192'}
+          {t.player.claimPrize} {'\u2192'}
         </button>
       </form>
     </div>

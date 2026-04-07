@@ -14,6 +14,9 @@ importers:
 
   apps/player:
     dependencies:
+      '@winandwin/shared':
+        specifier: workspace:*
+        version: link:../../packages/shared
       preact:
         specifier: ^10.25.0
         version: 10.29.0

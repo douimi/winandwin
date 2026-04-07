@@ -54,6 +54,7 @@ export const merchants = pgTable('merchants', {
   description: text('description'),
   validationPin: varchar('validation_pin', { length: 6 }).notNull().default('0000'),
   disabled: boolean('disabled').notNull().default(false),
+  language: varchar('language', { length: 5 }).notNull().default('en'),
   atmosphere: varchar('atmosphere', { length: 30 }).notNull().default('joyful'),
   ctaMode: varchar('cta_mode', { length: 20 }).notNull().default('one_and_done'),
   cooldownHours: integer('cooldown_hours').notNull().default(24),

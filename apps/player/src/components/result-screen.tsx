@@ -1,5 +1,6 @@
 import type { SpinResult } from '../types'
 import type { BusinessTheme } from '../lib/business-themes'
+import { useT } from '../lib/i18n'
 import { Confetti } from './confetti'
 
 interface Props {
@@ -12,6 +13,7 @@ interface Props {
 }
 
 export function ResultScreen({ result, merchantName, playerEmail, businessTheme, canTryAgain, onTryAgain }: Props) {
+  const t = useT()
   const isWin = result.outcome === 'win'
 
   if (isWin) {
@@ -25,14 +27,14 @@ export function ResultScreen({ result, merchantName, playerEmail, businessTheme,
         <div class="result-banner">
           <div class="result-banner-inner">
             <span class="result-banner-star">&#9733;</span>
-            CONGRATULATIONS!
+            {t.player.congratulations.toUpperCase()}
             <span class="result-banner-star">&#9733;</span>
           </div>
         </div>
 
         <div class="result-emoji">{result.prize?.emoji || '\u{1F389}'}</div>
 
-        <h1 class="result-title result-title-win">{businessTheme?.winTitle || 'You Won!'}</h1>
+        <h1 class="result-title result-title-win">{businessTheme?.winTitle || t.player.youWon}</h1>
 
         <div class="result-prize-card">
           <div class="result-prize-emoji">{result.prize?.emoji || '\u{1F381}'}</div>
@@ -55,7 +57,7 @@ export function ResultScreen({ result, merchantName, playerEmail, businessTheme,
               Check your email at <strong>{playerEmail}</strong> for your coupon code.
             </p>
             <p class="result-email-spam-note">
-              Didn't receive it? Check your spam folder.
+              {t.player.checkSpam}
             </p>
           </div>
         )}
@@ -80,9 +82,9 @@ export function ResultScreen({ result, merchantName, playerEmail, businessTheme,
             onClick={onTryAgain}
             type="button"
           >
-            {'\u{1F504}'} Try Again!
+            {'\u{1F504}'} {t.player.tryAgain}
           </button>
-          <p class="try-again-hint">Complete another action to play again!</p>
+          <p class="try-again-hint">{t.player.tryAgainMessage}</p>
         </div>
       ) : (
         <div class="lose-comeback">
