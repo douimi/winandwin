@@ -38,17 +38,17 @@ export function SignInForm() {
         <img src="/logo.svg" alt="Win & Win" className="h-32 w-auto" />
       </a>
 
-      <Card className="w-full shadow-xl shadow-black/5 border-0 bg-white/80 backdrop-blur-sm">
+      <Card className="w-full border-0" style={{ background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.15)' }}>
         <CardHeader className="text-center pb-2">
-          <CardTitle className="text-2xl font-bold">Welcome back</CardTitle>
-          <p className="text-sm text-muted-foreground">
+          <CardTitle className="text-2xl font-bold text-white">Welcome back</CardTitle>
+          <p className="text-sm text-white/60">
             Sign in to access your dashboard
           </p>
         </CardHeader>
         <CardContent className="pt-4">
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <label htmlFor="email" className="text-sm font-medium leading-none">
+              <label htmlFor="email" className="text-sm font-medium leading-none text-white/80">
                 Email
               </label>
               <input
@@ -58,17 +58,17 @@ export function SignInForm() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="flex h-11 w-full rounded-lg border border-input bg-white px-3 py-2 text-sm shadow-sm transition-colors focus:border-[#6366f1] focus:outline-none focus:ring-2 focus:ring-[#6366f1]/20 placeholder:text-muted-foreground"
+                className="flex h-11 w-full rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-sm text-white shadow-sm transition-colors focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-400/30 placeholder:text-white/40"
               />
             </div>
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <label htmlFor="password" className="text-sm font-medium leading-none">
+                <label htmlFor="password" className="text-sm font-medium leading-none text-white/80">
                   Password
                 </label>
                 <a
                   href="#"
-                  className="text-xs font-medium text-[#6366f1] transition-colors hover:text-[#6366f1]/80"
+                  className="text-xs font-medium text-indigo-300 transition-colors hover:text-indigo-200"
                 >
                   Forgot password?
                 </a>
@@ -81,12 +81,12 @@ export function SignInForm() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  className="flex h-11 w-full rounded-lg border border-input bg-white px-3 py-2 pr-10 text-sm shadow-sm transition-colors focus:border-[#6366f1] focus:outline-none focus:ring-2 focus:ring-[#6366f1]/20 placeholder:text-muted-foreground"
+                  className="flex h-11 w-full rounded-lg border border-white/20 bg-white/10 px-3 py-2 pr-10 text-sm text-white shadow-sm transition-colors focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-400/30 placeholder:text-white/40"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 transition-colors hover:text-white/70"
                   tabIndex={-1}
                 >
                   {showPassword ? (
@@ -130,11 +130,11 @@ export function SignInForm() {
             </Button>
           </form>
 
-          <div className="mt-6 text-center text-sm text-muted-foreground">
+          <div className="mt-6 text-center text-sm text-white/50">
             Don&apos;t have an account?{' '}
             <a
               href="/sign-up"
-              className="font-semibold text-[#6366f1] transition-colors hover:text-[#6366f1]/80"
+              className="font-semibold text-indigo-300 transition-colors hover:text-indigo-200"
             >
               Create one free
             </a>

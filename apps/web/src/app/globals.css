@@ -106,3 +106,21 @@ html { scroll-behavior: smooth; }
   height: 2px;
   background: linear-gradient(90deg, transparent, rgba(99,102,241,0.2), rgba(236,72,153,0.2), transparent);
 }
+
+/* Gamified UI */
+@keyframes shimmerBorder {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
+}
+@keyframes subtleFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+@keyframes barFillIn {
+  from { width: 0; }
+}
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}

@@ -63,11 +63,12 @@ export function DashboardShell({ user, merchantName, merchantSlug, merchantTier,
             <a
               key={item.href}
               href={item.href}
-              className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors hover:bg-accent ${
+              className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200 ${
                 active
-                  ? 'bg-primary/10 text-primary border-l-2 border-primary'
-                  : 'text-muted-foreground hover:text-foreground'
+                  ? 'text-white shadow-md'
+                  : 'text-muted-foreground hover:bg-indigo-50 hover:text-foreground'
               }`}
+              style={active ? { background: 'linear-gradient(135deg, #6366f1, #a855f7)' } : undefined}
               onClick={() => setSidebarOpen(false)}
             >
               <span className="text-base">{item.icon}</span>
@@ -115,7 +116,7 @@ export function DashboardShell({ user, merchantName, merchantSlug, merchantTier,
       </nav>
       <div className="mt-auto border-t p-4">
         <div className="flex items-center gap-3">
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-xs font-medium text-primary-foreground">
+          <div className="flex h-8 w-8 items-center justify-center rounded-full text-xs font-medium text-white" style={{ background: 'linear-gradient(135deg, #6366f1, #a855f7)' }}>
             {user.name.charAt(0).toUpperCase()}
           </div>
           <div className="flex-1 min-w-0">
@@ -147,7 +148,7 @@ export function DashboardShell({ user, merchantName, merchantSlug, merchantTier,
   return (
     <div className="flex min-h-screen">
       {/* Desktop sidebar */}
-      <aside className="hidden w-64 flex-col border-r bg-card lg:flex sticky top-0 h-screen">
+      <aside className="hidden w-64 flex-col border-r lg:flex sticky top-0 h-screen" style={{ background: 'linear-gradient(180deg, #f8f7ff 0%, #ffffff 100%)' }}>
         {sidebarContent}
       </aside>
 
@@ -167,7 +168,7 @@ export function DashboardShell({ user, merchantName, merchantSlug, merchantTier,
       )}
 
       <main className="flex-1 min-w-0">
-        <header className="flex h-14 items-center border-b px-6 gap-3">
+        <header className="flex h-14 items-center px-6 gap-3" style={{ borderBottom: '2px solid transparent', borderImage: 'linear-gradient(90deg, #6366f1, #a855f7, #ec4899) 1' }}>
           {/* Mobile hamburger */}
           <button
             type="button"
