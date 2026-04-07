@@ -458,6 +458,13 @@ const LANDING_TEXT = {
     seePlans: 'See Plans',
     contactUs: 'Contact Us',
     tryNow: 'Try it now — scratch to see what your customers experience',
+    // Nav (short labels)
+    navHow: 'How',
+    navGames: 'Games',
+    navFeatures: 'Features',
+    navPlans: 'Plans',
+    navContact: 'Contact',
+    // Section headings
     howItWorks: 'How It Works',
     howItWorksSubtitle: 'Engage your customers, collect valuable feedback and grow your business with three simple steps:',
     step1: 'Create Your Game',
@@ -467,8 +474,8 @@ const LANDING_TEXT = {
     step3: 'Customers Play & Win',
     step3Desc: 'They complete an action (Google review, Instagram follow), play your game, and win prizes.',
     games: 'Three Games. Endless Fun.',
-    features: 'Everything You Need to Engage Customers',
-    plans: 'Choose Your Plan',
+    features: 'Everything You Need',
+    plans: 'Plans',
     trialNote: '14-day free trial included. No credit card required.',
     getStarted: 'Ready to Get Started?',
     getStartedSub: 'Fill out the form and we\'ll set you up within 24 hours.',
@@ -525,6 +532,11 @@ const LANDING_TEXT = {
     seePlans: 'Voir les Plans',
     contactUs: 'Contactez-nous',
     tryNow: 'Essayez \u2014 grattez pour voir ce que vos clients vivent',
+    navHow: 'Comment',
+    navGames: 'Jeux',
+    navFeatures: 'Fonctions',
+    navPlans: 'Plans',
+    navContact: 'Contact',
     howItWorks: 'Comment \u00C7a Marche',
     howItWorksSubtitle: 'Engagez vos clients, collectez des retours pr\u00E9cieux et d\u00E9veloppez votre activit\u00E9 en trois \u00E9tapes simples :',
     step1: 'Cr\u00E9ez Votre Jeu',
@@ -730,11 +742,11 @@ export default function HomePage() {
             <img src="/logo.png" alt="Win & Win" className="h-28 w-auto" />
           </a>
           <nav className="hidden items-center gap-8 text-sm font-medium text-gray-400 md:flex">
-            <a href="#how-it-works" className="transition-colors hover:text-white">{txt.howItWorks}</a>
-            <a href="#games" className="transition-colors hover:text-white">{txt.games}</a>
-            <a href="#features" className="transition-colors hover:text-white">{txt.features}</a>
-            <a href="#plans" className="transition-colors hover:text-white">{txt.plans}</a>
-            <a href="#contact" className="transition-colors hover:text-white">{txt.contact}</a>
+            <a href="#how-it-works" className="transition-colors hover:text-white">{txt.navHow}</a>
+            <a href="#games" className="transition-colors hover:text-white">{txt.navGames}</a>
+            <a href="#features" className="transition-colors hover:text-white">{txt.navFeatures}</a>
+            <a href="#plans" className="transition-colors hover:text-white">{txt.navPlans}</a>
+            <a href="#contact" className="transition-colors hover:text-white">{txt.navContact}</a>
           </nav>
           <div className="flex gap-3" style={{ minWidth: 140 }}>
             {isLoggedIn === null ? (
