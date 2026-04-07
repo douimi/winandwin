@@ -714,7 +714,7 @@ function ContactForm({ lang }: { lang: 'en' | 'fr' }) {
 /* ═══════════════════════════  MAIN PAGE  ═══════════════════════════ */
 export default function HomePage() {
   const isLoggedIn = useIsLoggedIn()
-  const [lang, setLang] = useState<'en' | 'fr'>('fr')
+  const lang = 'en' as const
   const txt = LANDING_TEXT[lang]
   const howItWorksReveal = useScrollReveal()
   const gamesReveal = useScrollReveal()
@@ -736,13 +736,6 @@ export default function HomePage() {
             <a href="#plans" className="transition-colors hover:text-white">{txt.plans}</a>
             <a href="#contact" className="transition-colors hover:text-white">{txt.contact}</a>
           </nav>
-          <button
-            type="button"
-            onClick={() => setLang(lang === 'en' ? 'fr' : 'en')}
-            className="rounded-full border border-white/20 px-3 py-1.5 text-xs font-bold text-white/80 hover:bg-white/10 transition-colors"
-          >
-            {lang === 'en' ? '🇫🇷 FR' : '🇬🇧 EN'}
-          </button>
           <div className="flex gap-3" style={{ minWidth: 140 }}>
             {isLoggedIn === null ? (
               /* Loading — show a subtle placeholder to prevent layout shift */
