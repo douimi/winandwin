@@ -40,7 +40,7 @@ export function AdminShell({ user, children }: AdminShellProps) {
       {/* Logo */}
       <div className="border-b border-gray-200 px-4 py-4">
         <a href="/admin" className="block">
-          <img src="/logo.svg" alt="Win & Win" className="h-10 w-auto" />
+          <img src="/logo.png" alt="Win & Win" className="h-10 w-auto" />
         </a>
         <span className="mt-2 inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider" style={{ background: '#94ffe5', color: '#0a0a1a' }}>
           Admin

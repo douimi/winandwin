@@ -585,7 +585,7 @@ export default function HomePage() {
       <header className="sticky top-0 z-50 border-b border-white/10 bg-[#0a0a1a]/80 backdrop-blur-md">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
           <a href="/">
-            <img src="/logo.svg" alt="Win & Win" className="h-20 w-auto" />
+            <img src="/logo.png" alt="Win & Win" className="h-20 w-auto" />
           </a>
           <nav className="hidden items-center gap-8 text-sm font-medium text-gray-400 md:flex">
             <a href="#how-it-works" className="transition-colors hover:text-white">How It Works</a>
