@@ -635,6 +635,7 @@ export function App() {
                         const everCompleted = playerState?.completedActionsEver?.includes(action.type)
                         const isCurrent = action.type === singleAction.type
                         const meta = ACTION_META_MAP[action.type]
+                        const ctaShortKey = action.type as keyof typeof t.player.ctaShort
                         return (
                           <div
                             key={action.type}
@@ -644,7 +645,7 @@ export function App() {
                               {everCompleted ? '\u2705' : (meta?.icon || '\u2B50')}
                             </span>
                             <span class="action-progress-label">
-                              {meta?.label || action.type.replace(/_/g, ' ')}
+                              {t.player.ctaShort[ctaShortKey] || meta?.label || action.type.replace(/_/g, ' ')}
                             </span>
                             {isCurrent && !everCompleted && (
                               <span class="action-progress-badge">{t.player.current}</span>
@@ -670,7 +671,7 @@ export function App() {
             <div class="lose-animation-overlay">
               <div class="lose-animation-content">
                 <span class="lose-animation-emoji">{bizTheme?.accentEmoji || '\uD83C\uDF40'}</span>
-                <h2 class="lose-animation-title">{bizTheme?.loseTitle || 'Almost!'}</h2>
+                <h2 class="lose-animation-title">{bizTheme?.loseTitle || t.player.almostTitle}</h2>
                 <p class="lose-animation-sub">{t.player.almostMessage}</p>
               </div>
             </div>
@@ -795,6 +796,7 @@ export function App() {
                         const everCompleted = playerState?.completedActionsEver?.includes(action.type)
                         const isCurrent = action.type === singleAction.type
                         const meta = ACTION_META_MAP[action.type]
+                        const ctaShortKey2 = action.type as keyof typeof t.player.ctaShort
                         return (
                           <div
                             key={action.type}
@@ -804,7 +806,7 @@ export function App() {
                               {everCompleted ? '\u2705' : (meta?.icon || '\u2B50')}
                             </span>
                             <span class="action-progress-label">
-                              {meta?.label || action.type.replace(/_/g, ' ')}
+                              {t.player.ctaShort[ctaShortKey2] || meta?.label || action.type.replace(/_/g, ' ')}
                             </span>
                             {isCurrent && !everCompleted && (
                               <span class="action-progress-badge">{t.player.current}</span>
@@ -830,7 +832,7 @@ export function App() {
             <div class="lose-animation-overlay">
               <div class="lose-animation-content">
                 <span class="lose-animation-emoji">{bizTheme?.accentEmoji || '\uD83C\uDF40'}</span>
-                <h2 class="lose-animation-title">{bizTheme?.loseTitle || 'Almost!'}</h2>
+                <h2 class="lose-animation-title">{bizTheme?.loseTitle || t.player.almostTitle}</h2>
                 <p class="lose-animation-sub">{t.player.almostMessage}</p>
               </div>
             </div>
@@ -861,6 +863,7 @@ export function App() {
 }
 
 function MerchantDisabledScreen() {
+  const t = useT()
   return (
     <div class="app-container">
       <div class="screen" style={{
@@ -880,7 +883,7 @@ function MerchantDisabledScreen() {
           marginBottom: '0.5rem',
           color: '#fff',
         }}>
-          Game Unavailable
+          {t.player.gameUnavailable}
         </h1>
         <p style={{
           fontSize: '1.05rem',
@@ -889,7 +892,7 @@ function MerchantDisabledScreen() {
           lineHeight: 1.5,
           marginBottom: '1.5rem',
         }}>
-          This game is currently unavailable. Please check back later or contact the business for more information.
+          {t.player.gameUnavailableDetail}
         </p>
         <div style={{
           background: 'rgba(255,255,255,0.1)',
@@ -904,7 +907,7 @@ function MerchantDisabledScreen() {
             color: 'rgba(255,255,255,0.6)',
             margin: 0,
           }}>
-            We apologize for the inconvenience. The game may resume shortly.
+            {t.player.weApologize}
           </p>
         </div>
         <p style={{
@@ -912,7 +915,7 @@ function MerchantDisabledScreen() {
           fontSize: '0.75rem',
           color: 'rgba(255,255,255,0.4)',
         }}>
-          Powered by Win & Win
+          {t.player.poweredBy}
         </p>
       </div>
     </div>

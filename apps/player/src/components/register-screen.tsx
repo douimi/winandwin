@@ -22,12 +22,12 @@ export function RegisterScreen({ onRegister, result }: Props) {
     const newErrors: { name?: string; email?: string } = {}
 
     if (!name.trim()) {
-      newErrors.name = 'Name is required'
+      newErrors.name = t.player.nameRequired
     }
     if (!email.trim()) {
-      newErrors.email = 'Email is required'
+      newErrors.email = t.player.emailRequired
     } else if (!isValidEmail(email.trim())) {
-      newErrors.email = 'Please enter a valid email'
+      newErrors.email = t.player.validEmail
     }
 
     if (Object.keys(newErrors).length > 0) {

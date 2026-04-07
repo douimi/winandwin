@@ -1,8 +1,11 @@
+import { useT } from '../lib/i18n'
+
 interface Props {
   merchantName: string
 }
 
 export function LimitReachedScreen({ merchantName }: Props) {
+  const t = useT()
   return (
     <div class="screen" style={{
       display: 'flex',
@@ -20,7 +23,7 @@ export function LimitReachedScreen({ merchantName }: Props) {
         marginBottom: '0.5rem',
         color: 'var(--atm-text, #fff)',
       }}>
-        Game Paused
+        {t.player.gamePaused}
       </h1>
       <p style={{
         fontSize: '1.05rem',
@@ -29,7 +32,7 @@ export function LimitReachedScreen({ merchantName }: Props) {
         lineHeight: 1.5,
         marginBottom: '1.5rem',
       }}>
-        {merchantName} has reached the maximum number of plays for this month.
+        {merchantName} {t.player.gamePausedMessage}
       </p>
       <div style={{
         background: 'var(--atm-card-bg, rgba(255,255,255,0.1))',
@@ -44,7 +47,7 @@ export function LimitReachedScreen({ merchantName }: Props) {
           color: 'var(--atm-text-secondary, rgba(255,255,255,0.7))',
           margin: 0,
         }}>
-          The game will be back soon! Check back next month or contact the business for more information.
+          {t.player.gameBackSoon}
         </p>
       </div>
       <p style={{
@@ -52,7 +55,7 @@ export function LimitReachedScreen({ merchantName }: Props) {
         fontSize: '0.75rem',
         color: 'var(--atm-text-secondary, rgba(255,255,255,0.4))',
       }}>
-        Powered by Win & Win
+        {t.player.poweredBy}
       </p>
     </div>
   )

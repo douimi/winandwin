@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'preact/hooks'
+import { useT } from '../lib/i18n'
 import type { GameConfig } from '../types'
 
 interface SingleActionProps {
@@ -36,6 +37,7 @@ const ACTION_META: Record<string, { icon: string; label: string; hint: string }>
 const VERIFY_DURATION = 3000
 
 function SingleActionScreen({ config, singleAction, onComplete, preCompleted }: SingleActionProps) {
+  const t = useT()
   const [completed, setCompleted] = useState(false)
   const [clicked, setClicked] = useState(false)
   const [email, setEmail] = useState('')
@@ -243,12 +245,20 @@ function SingleActionScreen({ config, singleAction, onComplete, preCompleted }: 
   }
 
   function getActionLabel() {
-    const meta = ACTION_META[singleAction.type]
-    return meta?.label || singleAction.label
+    const ctaKey = singleAction.type as keyof typeof t.player.cta
+    return t.player.cta[ctaKey] || ACTION_META[singleAction.type]?.label || singleAction.label
   }
 
   function getActionIcon() {
     return ACTION_META[singleAction.type]?.icon || '\uD83D\uDCCB'
+  }
+
+  function getConfirmLabel() {
+    const ctaType = singleAction.type as keyof typeof t.player.ctaConfirm
+    if (ctaType in t.player.ctaConfirm) {
+      return t.player.ctaConfirm[ctaType]
+    }
+    return t.player.ctaConfirm.default
   }
 
   const isDone = completed
@@ -257,6 +267,7 @@ function SingleActionScreen({ config, singleAction, onComplete, preCompleted }: 
   const needsConfirm = ['google_review', 'tripadvisor_review', 'instagram_follow', 'facebook_like', 'tiktok_follow', 'book_appointment', 'whatsapp_join']
   const showConfirm = !isDone && !isVerifying && clicked && needsConfirm.includes(singleAction.type)
   const showEmail = (singleAction.type === 'email_collect' || singleAction.type === 'survey_feedback') && emailExpanded && !isDone
+  const hasHint = ACTION_META[singleAction.type]?.hint
 
   return (
     <div class="screen action-screen">
@@ -267,13 +278,13 @@ function SingleActionScreen({ config, singleAction, onComplete, preCompleted }: 
           <h1 class="action-merchant-name">{config.merchantName}</h1>
         </div>
         <p class="action-instruction">
-          Complete this step to unlock your game!
+          {t.player.completeStep}
         </p>
         <div class="action-step-dots">
           <span class="action-step-dot active" />
           <span class="action-step-dot" />
         </div>
-        <p class="action-step-label">Step 1 of 2</p>
+        <p class="action-step-label">{t.player.step} 1 {t.player.of} 2</p>
       </div>
 
       <div class="action-list">
@@ -290,8 +301,8 @@ function SingleActionScreen({ config, singleAction, onComplete, preCompleted }: 
             </span>
             <span class="action-card-label">
               {getActionLabel()}
-              {ACTION_META[singleAction.type]?.hint && !isDone && (
-                <span class="action-card-hint">{ACTION_META[singleAction.type]!.hint}</span>
+              {hasHint && !isDone && (
+                <span class="action-card-hint">{t.player.proofMayBeRequested}</span>
               )}
             </span>
             {singleAction.weight > 1 && (
@@ -314,7 +325,7 @@ function SingleActionScreen({ config, singleAction, onComplete, preCompleted }: 
                     )}
                   </div>
                   <span class="verify-text">
-                    {isVerifyDone ? 'Action verified!' : 'Verifying your action...'}
+                    {isVerifyDone ? t.player.verified : t.player.verifying}
                   </span>
                 </div>
                 <div class="verify-progress-track">
@@ -330,15 +341,7 @@ function SingleActionScreen({ config, singleAction, onComplete, preCompleted }: 
               onClick={handleConfirmClick}
               type="button"
             >
-              {singleAction.type === 'google_review' || singleAction.type === 'tripadvisor_review'
-                ? "I've left my review"
-                : singleAction.type === 'facebook_like'
-                  ? "I've liked the page"
-                  : singleAction.type === 'book_appointment'
-                    ? "I've booked"
-                    : singleAction.type === 'whatsapp_join'
-                      ? "I've joined"
-                      : "I've followed"}
+              {getConfirmLabel()}
             </button>
           </div>
 
@@ -363,7 +366,7 @@ function SingleActionScreen({ config, singleAction, onComplete, preCompleted }: 
                   onClick={handleEmailSubmit}
                   type="button"
                 >
-                  Submit
+                  {t.player.submit}
                 </button>
               </div>
             </div>
@@ -410,6 +413,7 @@ export function ActionScreen({ config, onComplete, preCompleted, previouslyCompl
 
 /** Original multi-action screen (backward compat) */
 function MultiActionScreen({ config, onComplete, preCompleted, previouslyCompleted }: Omit<Props, 'singleAction'>) {
+  const t = useT()
   const [completed, setCompleted] = useState<Set<string>>(() => {
     const initial = new Set<string>()
     for (const a of config.requiredActions) {
@@ -622,12 +626,20 @@ function MultiActionScreen({ config, onComplete, preCompleted, previouslyComplet
   }
 
   function getActionLabel(action: typeof config.requiredActions[number]) {
-    const meta = ACTION_META[action.type]
-    return meta?.label || action.label
+    const ctaKey = action.type as keyof typeof t.player.cta
+    return t.player.cta[ctaKey] || ACTION_META[action.type]?.label || action.label
   }
 
   function getActionIcon(type: string) {
     return ACTION_META[type]?.icon || '\uD83D\uDCCB'
+  }
+
+  function getConfirmLabel(type: string) {
+    const ctaType = type as keyof typeof t.player.ctaConfirm
+    if (ctaType in t.player.ctaConfirm) {
+      return t.player.ctaConfirm[ctaType]
+    }
+    return t.player.ctaConfirm.default
   }
 
   return (
@@ -639,7 +651,7 @@ function MultiActionScreen({ config, onComplete, preCompleted, previouslyComplet
           <h1 class="action-merchant-name">{config.merchantName}</h1>
         </div>
         <p class="action-instruction">
-          Complete {config.minActionsRequired === 1 ? 'an action' : `${config.minActionsRequired} actions`} to unlock your game!
+          {config.minActionsRequired === 1 ? t.player.completeAnAction : t.player.completeActions.replace('{count}', String(config.minActionsRequired))}
         </p>
       </div>
 
@@ -668,7 +680,7 @@ function MultiActionScreen({ config, onComplete, preCompleted, previouslyComplet
                 <span class="action-card-label">
                   {getActionLabel(action)}
                   {ACTION_META[action.type]?.hint && !isDone && (
-                    <span class="action-card-hint">{ACTION_META[action.type]!.hint}</span>
+                    <span class="action-card-hint">{t.player.proofMayBeRequested}</span>
                   )}
                 </span>
                 {action.weight > 1 && (
@@ -691,7 +703,7 @@ function MultiActionScreen({ config, onComplete, preCompleted, previouslyComplet
                         )}
                       </div>
                       <span class="verify-text">
-                        {isVerifyDone ? 'Action verified!' : 'Verifying your action...'}
+                        {isVerifyDone ? t.player.verified : t.player.verifying}
                       </span>
                     </div>
                     <div class="verify-progress-track">
@@ -707,15 +719,7 @@ function MultiActionScreen({ config, onComplete, preCompleted, previouslyComplet
                   onClick={() => handleConfirmClick(action.type)}
                   type="button"
                 >
-                  {action.type === 'google_review' || action.type === 'tripadvisor_review'
-                    ? "I've left my review"
-                    : action.type === 'facebook_like'
-                      ? "I've liked the page"
-                      : action.type === 'book_appointment'
-                        ? "I've booked"
-                        : action.type === 'whatsapp_join'
-                          ? "I've joined"
-                          : "I've followed"}
+                  {getConfirmLabel(action.type)}
                 </button>
               </div>
 
@@ -740,7 +744,7 @@ function MultiActionScreen({ config, onComplete, preCompleted, previouslyComplet
                       onClick={handleEmailSubmit}
                       type="button"
                     >
-                      Submit
+                      {t.player.submit}
                     </button>
                   </div>
                 </div>
@@ -762,7 +766,7 @@ function MultiActionScreen({ config, onComplete, preCompleted, previouslyComplet
 
       <div class="play-button-wrap">
         <p class="play-progress">
-          {completed.size}/{config.minActionsRequired} action{config.minActionsRequired !== 1 ? 's' : ''} completed
+          {t.player.actionsCompleted.replace('{completed}', String(completed.size)).replace('{required}', String(config.minActionsRequired))}
         </p>
         <button
           class={`play-button${canPlay ? ' ready' : ''}`}
@@ -770,7 +774,7 @@ function MultiActionScreen({ config, onComplete, preCompleted, previouslyComplet
           onClick={() => canPlay && onComplete(Array.from(completed))}
           type="button"
         >
-          {canPlay ? '\uD83C\uDFAE  Play Now!' : `Complete ${config.minActionsRequired - completed.size} more`}
+          {canPlay ? `\uD83C\uDFAE  ${t.player.playNowButton}` : t.player.completeMore.replace('{count}', String(config.minActionsRequired - completed.size))}
         </button>
       </div>
     </div>

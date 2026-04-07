@@ -52,9 +52,9 @@ export function ResultScreen({ result, merchantName, playerEmail, businessTheme,
                 <path d="M4 14 L24 28 L44 14" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none" />
               </svg>
             </div>
-            <h3 class="result-email-title">Your prize is on its way!</h3>
+            <h3 class="result-email-title">{t.player.prizeOnItsWay}</h3>
             <p class="result-email-text">
-              Check your email at <strong>{playerEmail}</strong> for your coupon code.
+              {t.player.checkEmailAt} <strong>{playerEmail}</strong> {t.player.forCouponCode}
             </p>
             <p class="result-email-spam-note">
               {t.player.checkSpam}
@@ -69,10 +69,10 @@ export function ResultScreen({ result, merchantName, playerEmail, businessTheme,
     <div class="screen result-screen result-lose">
       <div class="result-emoji result-emoji-lose">{'\u{1F340}'}</div>
 
-      <h1 class="result-title">{businessTheme?.loseTitle || 'So Close!'}</h1>
+      <h1 class="result-title">{businessTheme?.loseTitle || t.player.soClose}</h1>
 
       <p class="lose-message">
-        {result.message || businessTheme?.loseMessage || "Almost there! You didn't win this time, but luck could be on your side next time!"}
+        {result.message || businessTheme?.loseMessage || t.player.betterLuckNextTime}
       </p>
 
       {canTryAgain && onTryAgain ? (
@@ -89,12 +89,12 @@ export function ResultScreen({ result, merchantName, playerEmail, businessTheme,
       ) : (
         <div class="lose-comeback">
           <div class="lose-comeback-icon">{'\u{1F31F}'}</div>
-          <span>{businessTheme?.loseMessage || 'Come back tomorrow for another chance!'}</span>
+          <span>{businessTheme?.loseMessage || t.player.comeBackTomorrow}</span>
         </div>
       )}
 
       <p class="lose-encourage">
-        {businessTheme?.accentEmoji || '\u{1F60A}'} Better luck next time at {merchantName}!
+        {businessTheme?.accentEmoji || '\u{1F60A}'} {t.player.betterLuckAt} {merchantName}!
       </p>
     </div>
   )

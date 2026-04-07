@@ -1,4 +1,5 @@
 import { useState } from 'preact/hooks'
+import { useT } from '../lib/i18n'
 
 interface MysteryBoxProps {
   prizes: { id: string; name: string; emoji?: string }[]
@@ -15,6 +16,7 @@ export function MysteryBox({
   targetIndex,
   isWin,
 }: MysteryBoxProps) {
+  const t = useT()
   const [selectedBox, setSelectedBox] = useState<number | null>(null)
   const [revealed, setRevealed] = useState(false)
   const [animating, setAnimating] = useState(false)
@@ -98,7 +100,7 @@ export function MysteryBox({
   return (
     <div class="mystery-container">
       <p class="mystery-instruction">
-        {selectedBox === null ? 'Tap a box to reveal your prize!' : revealed ? (isWin ? 'Congratulations!' : 'Better luck next time!') : 'Opening...'}
+        {selectedBox === null ? t.player.tapToReveal : revealed ? (isWin ? t.player.congratulations : t.player.almostMessage) : t.player.opening}
       </p>
 
       <div class={gridClass}>

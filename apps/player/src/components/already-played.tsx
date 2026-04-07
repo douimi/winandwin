@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'preact/hooks'
+import { useT, getLocale } from '../lib/i18n'
 import type { PlayerState } from '../types'
 import type { BusinessTheme } from '../lib/business-themes'
 
@@ -8,8 +9,8 @@ interface Props {
   businessTheme?: BusinessTheme
 }
 
-function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString('en', {
+function formatDate(dateStr: string, locale?: string): string {
+  return new Date(dateStr).toLocaleDateString(locale || 'en', {
     month: 'short',
     day: 'numeric',
     year: 'numeric',
@@ -29,6 +30,8 @@ function formatCountdown(ms: number): string {
 }
 
 export function AlreadyPlayedScreen({ playerState, merchantName, businessTheme }: Props) {
+  const t = useT()
+  const locale = getLocale()
   const won = playerState.lastPlayResult === 'win'
   const coupon = playerState.lastCoupon
   const validationUrl = coupon
@@ -60,9 +63,9 @@ export function AlreadyPlayedScreen({ playerState, merchantName, businessTheme }
       {won && coupon ? (
         <>
           <div class="already-played-emoji">{'\u{1F389}'}</div>
-          <h1 class="already-played-title">You Won!</h1>
+          <h1 class="already-played-title">{t.player.youWon}</h1>
           <p class="already-played-sub">
-            Here's your coupon from {merchantName}
+            {t.player.hereIsCoupon} {merchantName}
           </p>
 
           {/* Coupon Card */}
@@ -70,14 +73,14 @@ export function AlreadyPlayedScreen({ playerState, merchantName, businessTheme }
             <div class="coupon-perforation coupon-perforation-left" />
             <div class="coupon-perforation coupon-perforation-right" />
             <div class="coupon-inner">
-              <p class="coupon-label">Your Coupon Code</p>
+              <p class="coupon-label">{t.player.couponCode}</p>
               <p class="coupon-code">{coupon.code}</p>
               <div class="coupon-divider" />
               <p class="coupon-validity">
-                Valid from {formatDate(coupon.validFrom)} to {formatDate(coupon.validUntil)}
+                {t.player.validFrom} {formatDate(coupon.validFrom, locale)} {t.player.validUntil} {formatDate(coupon.validUntil, locale)}
               </p>
               <p class="coupon-instruction">
-                {'\u{1F4F1}'} Show this to staff to redeem your prize
+                {'\u{1F4F1}'} {t.player.showToStaff}
               </p>
 
               {validationUrl && (
@@ -90,7 +93,7 @@ export function AlreadyPlayedScreen({ playerState, merchantName, businessTheme }
                     class="coupon-qr-img"
                   />
                   <p class="coupon-qr-note">
-                    Staff: scan to validate
+                    {t.player.scanToValidate}
                   </p>
                 </div>
               )}
@@ -102,14 +105,14 @@ export function AlreadyPlayedScreen({ playerState, merchantName, businessTheme }
             <div class="countdown-section">
               {canPlayNow ? (
                 <>
-                  <p class="countdown-ready">{'\u{1F389}'} You can play again!</p>
+                  <p class="countdown-ready">{'\u{1F389}'} {t.player.playAgainNow}</p>
                   <button class="countdown-refresh-btn" onClick={() => window.location.reload()}>
-                    Play Now
+                    {t.player.playNow}
                   </button>
                 </>
               ) : (
                 <>
-                  <p class="countdown-label">{'\u{23F3}'} Play again in:</p>
+                  <p class="countdown-label">{'\u{23F3}'} {t.player.comeBackIn}</p>
                   <p class="countdown-timer">{formatCountdown(timeLeft)}</p>
                 </>
               )}
@@ -120,12 +123,12 @@ export function AlreadyPlayedScreen({ playerState, merchantName, businessTheme }
         <>
           <div class="already-played-emoji">{'\u{23F0}'}</div>
           <h1 class="already-played-title">
-            {playerState.maxWinsReached ? 'Maximum Wins Reached!' : 'Already Played!'}
+            {playerState.maxWinsReached ? t.player.maxWinsReached : t.player.alreadyPlayed}
           </h1>
           <p class="already-played-sub">
             {playerState.maxWinsReached
-              ? `You've reached the maximum wins this period at ${merchantName}.`
-              : `You've used your play at ${merchantName}.`}
+              ? `${t.player.maxWinsReached} — ${merchantName}`
+              : `${t.player.alreadyPlayed} — ${merchantName}`}
           </p>
 
           {/* Countdown */}
@@ -133,14 +136,14 @@ export function AlreadyPlayedScreen({ playerState, merchantName, businessTheme }
             <div class="countdown-section">
               {canPlayNow ? (
                 <>
-                  <p class="countdown-ready">{'\u{1F389}'} You can play again!</p>
+                  <p class="countdown-ready">{'\u{1F389}'} {t.player.playAgainNow}</p>
                   <button class="countdown-refresh-btn" onClick={() => window.location.reload()}>
-                    Play Now
+                    {t.player.playNow}
                   </button>
                 </>
               ) : (
                 <>
-                  <p class="countdown-label">{'\u{23F3}'} Play again in:</p>
+                  <p class="countdown-label">{'\u{23F3}'} {t.player.comeBackIn}</p>
                   <p class="countdown-timer">{formatCountdown(timeLeft)}</p>
                 </>
               )}
@@ -149,7 +152,7 @@ export function AlreadyPlayedScreen({ playerState, merchantName, businessTheme }
 
           <div class="already-played-encourage">
             <span class="already-played-encourage-icon">{businessTheme?.accentEmoji || '\u{1F340}'}</span>
-            <span>{businessTheme?.loseMessage || 'Come back later for another chance to win!'}</span>
+            <span>{businessTheme?.loseMessage || t.player.comeBackLater}</span>
           </div>
         </>
       )}

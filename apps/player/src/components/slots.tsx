@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'preact/hooks'
+import { useT } from '../lib/i18n'
 
 interface SlotsProps {
   prizes: { id: string; name: string; emoji?: string }[]
@@ -48,6 +49,7 @@ export function Slots({
   onSpinComplete,
   targetIndex,
 }: SlotsProps) {
+  const t = useT()
   const hasSpun = useRef(false)
   const [reelSymbols] = useState(() => {
     const base = buildReelSymbols(prizes)
@@ -213,7 +215,7 @@ export function Slots({
         disabled={spinning}
         type="button"
       >
-        {spinning ? 'Pulling...' : 'PULL!'}
+        {spinning ? t.player.pulling : t.player.pull}
       </button>
     </div>
   )

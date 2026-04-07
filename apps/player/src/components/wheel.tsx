@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'preact/hooks'
+import { useT } from '../lib/i18n'
 import type { BusinessTheme } from '../lib/business-themes'
 
 interface WheelProps {
@@ -137,6 +138,7 @@ function darken(color: string, amount = 0.25): string {
 }
 
 export function Wheel({ prizes, branding, onSpinComplete, spinning, onSpin, targetIndex, wheelColors, wheelBorder, wheelCenter, wheelText, businessTheme }: WheelProps) {
+  const t = useT()
   const [rotation, setRotation] = useState(0)
   const isAnimating = useRef(false)
 
@@ -336,7 +338,7 @@ export function Wheel({ prizes, branding, onSpinComplete, spinning, onSpin, targ
             {/* Center hub */}
             <circle cx={CENTER} cy={CENTER} r={30} fill={wheelCenter || 'url(#hub-grad)'} stroke={wheelCenter ? darken(wheelCenter, 0.2) : '#c0c0c0'} stroke-width="2" filter="url(#hub-shadow)" />
             <circle cx={CENTER} cy={CENTER} r={26} fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="1" />
-            <text x={CENTER} y={CENTER} text-anchor="middle" dominant-baseline="central" fill={wheelText || '#6366f1'} font-size={businessTheme ? '18' : '12'} font-weight="800" letter-spacing={businessTheme ? '0' : '2'}>{businessTheme?.spinButtonIcon || 'SPIN'}</text>
+            <text x={CENTER} y={CENTER} text-anchor="middle" dominant-baseline="central" fill={wheelText || '#6366f1'} font-size={businessTheme ? '18' : '12'} font-weight="800" letter-spacing={businessTheme ? '0' : '2'}>{businessTheme?.spinButtonIcon || t.player.spin.replace('!', '')}</text>
           </svg>
         </div>
       </div>
@@ -347,7 +349,7 @@ export function Wheel({ prizes, branding, onSpinComplete, spinning, onSpin, targ
         disabled={spinning}
         type="button"
       >
-        {spinning ? 'Spinning...' : (businessTheme?.spinButtonText || 'SPIN!')}
+        {spinning ? t.player.spinning : (businessTheme?.spinButtonText || t.player.spin)}
       </button>
     </div>
   )
