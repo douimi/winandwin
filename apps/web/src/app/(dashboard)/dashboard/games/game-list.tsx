@@ -115,13 +115,13 @@ export function GameList() {
 
         return (
           <a key={game.id} href={`/dashboard/games/${game.id}`} className="block">
-          <Card className="transition-shadow hover:shadow-md cursor-pointer">
+          <Card className="hover:-translate-y-1 hover:shadow-lg transition-all duration-200 cursor-pointer">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-lg">
-                {gameType.icon} {game.name}
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <span className="text-3xl">{gameType.icon}</span> {game.name}
               </CardTitle>
               <span
-                className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${statusStyle.bg} ${statusStyle.text}`}
+                className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${statusStyle.bg} ${statusStyle.text} ${game.status === 'active' ? 'shadow-sm shadow-green-500/30' : ''}`}
               >
                 {game.status}
               </span>

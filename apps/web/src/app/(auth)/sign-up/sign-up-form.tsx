@@ -112,17 +112,17 @@ export function SignUpForm() {
         </div>
 
         {/* Form */}
-        <Card className="w-full border-0 bg-white/80 shadow-xl shadow-black/5 backdrop-blur-sm">
+        <Card className="w-full border-0" style={{ background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.15)' }}>
           <CardHeader className="pb-2 text-center">
-            <div className="mb-1 inline-flex items-center gap-1.5 self-center rounded-full bg-[#6366f1]/10 px-3 py-1 text-xs font-medium text-[#6366f1]">
+            <div className="mb-1 inline-flex items-center gap-1.5 self-center rounded-full bg-indigo-500/20 px-3 py-1 text-xs font-medium text-indigo-300">
               <span className="relative flex h-1.5 w-1.5">
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#6366f1] opacity-75" />
                 <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-[#6366f1]" />
               </span>
               Step 1 of 1
             </div>
-            <CardTitle className="text-2xl font-bold">Create your account</CardTitle>
-            <p className="text-sm text-muted-foreground">
+            <CardTitle className="text-2xl font-bold text-white">Create your account</CardTitle>
+            <p className="text-sm text-white/60">
               Start engaging your customers in minutes
             </p>
           </CardHeader>
@@ -130,7 +130,7 @@ export function SignUpForm() {
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
-                  <label htmlFor="name" className="text-sm font-medium leading-none">
+                  <label htmlFor="name" className="text-sm font-medium leading-none text-white/80">
                     Your Name
                   </label>
                   <input
@@ -139,11 +139,11 @@ export function SignUpForm() {
                     value={formData.name}
                     onChange={(e) => updateField('name', e.target.value)}
                     required
-                    className="flex h-11 w-full rounded-lg border border-input bg-white px-3 py-2 text-sm shadow-sm transition-colors focus:border-[#6366f1] focus:outline-none focus:ring-2 focus:ring-[#6366f1]/20 placeholder:text-muted-foreground"
+                    className="flex h-11 w-full rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-sm text-white shadow-sm transition-colors focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-400/30 placeholder:text-white/40"
                   />
                 </div>
                 <div className="space-y-2">
-                  <label htmlFor="email" className="text-sm font-medium leading-none">
+                  <label htmlFor="email" className="text-sm font-medium leading-none text-white/80">
                     Email
                   </label>
                   <input
@@ -153,13 +153,13 @@ export function SignUpForm() {
                     value={formData.email}
                     onChange={(e) => updateField('email', e.target.value)}
                     required
-                    className="flex h-11 w-full rounded-lg border border-input bg-white px-3 py-2 text-sm shadow-sm transition-colors focus:border-[#6366f1] focus:outline-none focus:ring-2 focus:ring-[#6366f1]/20 placeholder:text-muted-foreground"
+                    className="flex h-11 w-full rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-sm text-white shadow-sm transition-colors focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-400/30 placeholder:text-white/40"
                   />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <label htmlFor="password" className="text-sm font-medium leading-none">
+                <label htmlFor="password" className="text-sm font-medium leading-none text-white/80">
                   Password
                 </label>
                 <div className="relative">
@@ -171,12 +171,12 @@ export function SignUpForm() {
                     onChange={(e) => updateField('password', e.target.value)}
                     required
                     minLength={8}
-                    className="flex h-11 w-full rounded-lg border border-input bg-white px-3 py-2 pr-10 text-sm shadow-sm transition-colors focus:border-[#6366f1] focus:outline-none focus:ring-2 focus:ring-[#6366f1]/20 placeholder:text-muted-foreground"
+                    className="flex h-11 w-full rounded-lg border border-white/20 bg-white/10 px-3 py-2 pr-10 text-sm text-white shadow-sm transition-colors focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-400/30 placeholder:text-white/40"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 transition-colors hover:text-white/70"
                     tabIndex={-1}
                   >
                     {showPassword ? (
@@ -196,7 +196,7 @@ export function SignUpForm() {
               </div>
 
               <div className="space-y-2">
-                <label htmlFor="businessName" className="text-sm font-medium leading-none">
+                <label htmlFor="businessName" className="text-sm font-medium leading-none text-white/80">
                   Business Name
                 </label>
                 <input
@@ -205,12 +205,12 @@ export function SignUpForm() {
                   value={formData.businessName}
                   onChange={(e) => updateField('businessName', e.target.value)}
                   required
-                  className="flex h-11 w-full rounded-lg border border-input bg-white px-3 py-2 text-sm shadow-sm transition-colors focus:border-[#6366f1] focus:outline-none focus:ring-2 focus:ring-[#6366f1]/20 placeholder:text-muted-foreground"
+                  className="flex h-11 w-full rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-sm text-white shadow-sm transition-colors focus:border-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-400/30 placeholder:text-white/40"
                 />
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium leading-none">Business Category</label>
+                <label className="text-sm font-medium leading-none text-white/80">Business Category</label>
                 <div className="grid grid-cols-3 gap-2">
                   {CATEGORIES.map((cat) => (
                     <button
@@ -219,12 +219,12 @@ export function SignUpForm() {
                       onClick={() => updateField('category', cat.value)}
                       className={`flex flex-col items-center gap-1 rounded-lg border px-2 py-2.5 text-center transition-all ${
                         formData.category === cat.value
-                          ? 'border-[#6366f1] bg-[#6366f1]/5 ring-2 ring-[#6366f1]/20'
-                          : 'border-input bg-white hover:border-[#6366f1]/40 hover:bg-[#6366f1]/5'
+                          ? 'border-indigo-400 bg-white/15 ring-2 ring-indigo-400/30'
+                          : 'border-white/20 bg-white/5 hover:border-indigo-400/40 hover:bg-white/10'
                       }`}
                     >
                       <span className="text-lg">{cat.icon}</span>
-                      <span className="text-[11px] font-medium leading-tight">{cat.label}</span>
+                      <span className="text-[11px] font-medium leading-tight text-white/80">{cat.label}</span>
                     </button>
                   ))}
                 </div>
@@ -255,11 +255,11 @@ export function SignUpForm() {
               </Button>
             </form>
 
-            <div className="mt-6 text-center text-sm text-muted-foreground">
+            <div className="mt-6 text-center text-sm text-white/50">
               Already have an account?{' '}
               <a
                 href="/sign-in"
-                className="font-semibold text-[#6366f1] transition-colors hover:text-[#6366f1]/80"
+                className="font-semibold text-indigo-300 transition-colors hover:text-indigo-200"
               >
                 Sign in
               </a>

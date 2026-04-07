@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@winandwin/ui'
 import { fetchStatsOverview, fetchGames, fetchUsageStats, fetchMerchant, type StatsOverview, type GameWithStats, type UsageStats } from '@/lib/api'
 import { requireSessionWithMerchant } from '@/lib/session'
+import { AnimatedNumber, SetupProgressBar } from './dashboard-client'
 
 export default async function DashboardPage() {
   const { merchantId } = await requireSessionWithMerchant()
@@ -41,23 +42,29 @@ export default async function DashboardPage() {
       title: 'Active Players Today',
       value: activePlayersToday,
       icon: '\uD83D\uDC65',
+      gradient: 'linear-gradient(135deg, #6366f1, #a855f7)',
     },
     {
       title: 'Games Played',
       value: gamesPlayed,
       icon: '\uD83C\uDFB2',
+      gradient: 'linear-gradient(135deg, #ec4899, #f43f5e)',
     },
     {
       title: 'Actions Completed',
       value: actionsCompleted,
       icon: '\u2705',
+      gradient: 'linear-gradient(135deg, #10b981, #14b8a6)',
     },
     {
       title: 'Coupons Redeemed',
       value: couponsRedeemed,
       icon: '\uD83C\uDF9F\uFE0F',
+      gradient: 'linear-gradient(135deg, #f59e0b, #f97316)',
     },
   ]
+
+  const hasPlays = gamesPlayed > 0
 
   return (
     <div className="space-y-6">
@@ -82,7 +89,7 @@ export default async function DashboardPage() {
       </div>
 
       {merchantTier === 'free' && (
-        <Card className="border-indigo-300 bg-gradient-to-r from-indigo-50 to-purple-50">
+        <Card className="border-indigo-300 bg-gradient-to-r from-indigo-50 to-purple-50 transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5">
           <CardContent className="flex items-center gap-3 py-4">
             <span className="text-2xl">{'\uD83D\uDE80'}</span>
             <div className="flex-1">
@@ -101,17 +108,19 @@ export default async function DashboardPage() {
         </Card>
       )}
 
+      <SetupProgressBar hasGames={!hasNoGames} hasActiveGame={hasActiveGame} hasPlays={hasPlays} />
+
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {kpis.map((kpi) => (
-          <Card key={kpi.title}>
-            <CardHeader className="pb-2">
-              <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+          <Card key={kpi.title} className="transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5">
+            <CardContent className="flex items-center gap-4 py-5">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl" style={{ background: kpi.gradient }}>
                 <span className="text-lg">{kpi.icon}</span>
-                {kpi.title}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold">{kpi.value.toLocaleString()}</div>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">{kpi.title}</p>
+                <div className="text-3xl font-bold"><AnimatedNumber value={kpi.value} /></div>
+              </div>
             </CardContent>
           </Card>
         ))}
@@ -168,7 +177,7 @@ export default async function DashboardPage() {
 
       {/* Quick Start guide — only shown when no games exist */}
       {hasNoGames && (
-        <Card className="border-primary/30 bg-primary/5">
+        <Card className="border-primary/30 bg-primary/5 transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               {'\uD83D\uDE80'} Quick Start Guide
@@ -209,7 +218,7 @@ export default async function DashboardPage() {
 
       {/* If they have games but none active, nudge them */}
       {!hasNoGames && !hasActiveGame && (
-        <Card className="border-yellow-300 bg-yellow-50">
+        <Card className="border-yellow-300 bg-yellow-50 transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5">
           <CardContent className="flex items-center gap-3 py-4">
             <span className="text-2xl">{'\u26A0\uFE0F'}</span>
             <div>

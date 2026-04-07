@@ -4,6 +4,31 @@ import { useEffect, useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@winandwin/ui'
 import { fetchAdminStats, type AdminStats } from '@/lib/admin-api'
 
+function AnimatedNumber({ value, duration = 1500 }: { value: number; duration?: number }) {
+  const [display, setDisplay] = useState(0)
+  useEffect(() => {
+    let start = 0
+    const step = (ts: number) => {
+      if (!start) start = ts
+      const progress = Math.min((ts - start) / duration, 1)
+      setDisplay(Math.floor(progress * value))
+      if (progress < 1) requestAnimationFrame(step)
+    }
+    requestAnimationFrame(step)
+  }, [value, duration])
+  return <>{display.toLocaleString()}</>
+}
+
+const KPI_GRADIENTS = [
+  'linear-gradient(135deg, #6366f1, #a855f7)',
+  'linear-gradient(135deg, #ec4899, #f43f5e)',
+  'linear-gradient(135deg, #10b981, #14b8a6)',
+  'linear-gradient(135deg, #f59e0b, #f97316)',
+  'linear-gradient(135deg, #3b82f6, #6366f1)',
+  'linear-gradient(135deg, #8b5cf6, #d946ef)',
+  'linear-gradient(135deg, #ef4444, #f97316)',
+]
+
 interface ContactRequest {
   id: string
   business_name: string
@@ -72,6 +97,12 @@ export default function AdminOverviewPage() {
 
   return (
     <div className="space-y-8">
+      <style>{`
+        @keyframes fadeSlideIn {
+          from { opacity: 0; transform: translateY(8px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -96,21 +127,23 @@ export default function AdminOverviewPage() {
 
       {/* KPI Cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {kpiConfig.map((kpi) => (
-          <Card key={kpi.key} className="border border-gray-200 bg-white shadow-sm rounded-xl">
+        {kpiConfig.map((kpi, idx) => (
+          <Card key={kpi.key} className="border border-gray-200 bg-white shadow-sm rounded-xl transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5">
             <CardContent className="p-6">
-              <div className="flex items-start justify-between">
-                <div className="space-y-2">
+              <div className="flex items-center gap-4">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl" style={{ background: KPI_GRADIENTS[idx] }}>
+                  <span className="text-lg">{kpi.icon}</span>
+                </div>
+                <div className="space-y-1">
                   <p className="text-sm font-medium text-gray-500">{kpi.label}</p>
                   {loading ? (
                     <div className="h-9 w-24 animate-pulse rounded bg-gray-100" />
                   ) : (
                     <p className="text-3xl font-bold text-indigo-600">
-                      {(stats?.[kpi.key] ?? 0).toLocaleString()}
+                      <AnimatedNumber value={stats?.[kpi.key] ?? 0} />
                     </p>
                   )}
                 </div>
-                <span className="text-2xl">{kpi.icon}</span>
               </div>
             </CardContent>
           </Card>
@@ -120,7 +153,7 @@ export default function AdminOverviewPage() {
       {/* Three-column layout */}
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Top Merchants Table */}
-        <Card className="border border-gray-200 bg-white shadow-sm rounded-xl">
+        <Card className="border border-gray-200 bg-white shadow-sm rounded-xl transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <CardTitle className="text-gray-900">Top Merchants</CardTitle>
@@ -183,7 +216,7 @@ export default function AdminOverviewPage() {
         </Card>
 
         {/* Recent Contacts */}
-        <Card className="border border-gray-200 bg-white shadow-sm rounded-xl">
+        <Card className="border border-gray-200 bg-white shadow-sm rounded-xl transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
               <CardTitle className="text-gray-900">Recent Contacts</CardTitle>
@@ -225,7 +258,7 @@ export default function AdminOverviewPage() {
       </div>
 
       {/* Recent Activity Log */}
-      <Card className="border border-gray-200 bg-white shadow-sm rounded-xl">
+      <Card className="border border-gray-200 bg-white shadow-sm rounded-xl transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5">
         <CardHeader className="pb-3">
           <CardTitle className="text-gray-900">Recent Activity</CardTitle>
         </CardHeader>
@@ -250,8 +283,8 @@ export default function AdminOverviewPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {stats.recentActivity.map((a) => (
-                    <tr key={a.id} className="border-b border-gray-100 transition-colors hover:bg-gray-50">
+                  {stats.recentActivity.map((a, i) => (
+                    <tr key={a.id} className="border-b border-gray-100 transition-colors hover:bg-gray-50" style={{ animation: 'fadeSlideIn 0.4s ease-out both', animationDelay: `${i * 0.1}s` }}>
                       <td className="py-2.5 pr-4">
                         <a
                           href={`/admin/merchants/${a.merchantId}`}

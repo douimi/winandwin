@@ -8,9 +8,9 @@ import { MerchantSearch } from './merchant-search'
 
 const TIER_STYLES: Record<string, string> = {
   free: 'border-gray-300 text-gray-600 bg-white',
-  starter: 'border-blue-300 text-blue-700 bg-white',
-  pro: 'border-indigo-300 text-indigo-700 bg-white',
-  enterprise: 'border-amber-300 text-amber-700 bg-white',
+  starter: 'border-blue-300 text-blue-700 bg-white shadow-sm shadow-blue-500/20',
+  pro: 'border-indigo-300 text-indigo-700 bg-white shadow-sm shadow-indigo-500/20',
+  enterprise: 'border-amber-300 text-amber-700 bg-white shadow-sm shadow-amber-500/20',
 }
 
 function TierBadge({ tier }: { tier: string }) {
@@ -140,7 +140,7 @@ export default function AdminMerchantsPage() {
                     return (
                       <tr
                         key={m.id}
-                        className={`border-b border-gray-100 hover:bg-gray-50 transition-colors cursor-pointer ${idx % 2 === 1 ? 'bg-gray-50/50' : 'bg-white'}`}
+                        className={`border-b border-gray-100 hover:bg-indigo-50/50 transition-colors cursor-pointer ${idx % 2 === 1 ? 'bg-gray-50/50' : 'bg-white'}`}
                         onClick={() => window.location.assign(`/admin/merchants/${m.id}`)}
                       >
                         <td className="px-4 py-3.5">
@@ -200,8 +200,15 @@ export default function AdminMerchantsPage() {
                           {m.monthlyLimit && (
                             <div className="mt-1.5 h-1.5 w-full max-w-[100px] rounded-full bg-gray-100">
                               <div
-                                className={`h-1.5 rounded-full transition-all ${barColor}`}
-                                style={{ width: `${Math.min(usagePercent, 100)}%` }}
+                                className="h-1.5 rounded-full transition-all"
+                                style={{
+                                  width: `${Math.min(usagePercent, 100)}%`,
+                                  background: usagePercent > 90
+                                    ? 'linear-gradient(90deg, #ef4444, #f97316)'
+                                    : usagePercent > 70
+                                      ? 'linear-gradient(90deg, #f59e0b, #f97316)'
+                                      : 'linear-gradient(90deg, #6366f1, #a855f7)',
+                                }}
                               />
                             </div>
                           )}

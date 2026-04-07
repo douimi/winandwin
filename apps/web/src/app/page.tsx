@@ -17,6 +17,59 @@ function useIsLoggedIn() {
 
 /* CSS animations are now in globals.css to avoid re-renders */
 
+/* ─────────────────────────  Animated Counter  ───────────────────────── */
+function AnimatedCounter({ target, suffix = '' }: { target: number; suffix?: string }) {
+  const [count, setCount] = useState(0)
+  const ref = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry?.isIntersecting) {
+        let start = 0
+        const duration = 2000
+        const step = (timestamp: number) => {
+          if (!start) start = timestamp
+          const progress = Math.min((timestamp - start) / duration, 1)
+          setCount(Math.floor(progress * target))
+          if (progress < 1) requestAnimationFrame(step)
+        }
+        requestAnimationFrame(step)
+        observer.disconnect()
+      }
+    })
+    if (ref.current) observer.observe(ref.current)
+    return () => observer.disconnect()
+  }, [target])
+
+  return <span ref={ref}>{count.toLocaleString()}{suffix}</span>
+}
+
+/* ─────────────────────────  Scroll Reveal Hook  ───────────────────────── */
+function useScrollReveal() {
+  const ref = useRef<HTMLDivElement>(null)
+  const [visible, setVisible] = useState(false)
+  useEffect(() => {
+    const observer = new IntersectionObserver(([entry]) => {
+      if (entry?.isIntersecting) { setVisible(true); observer.disconnect() }
+    }, { threshold: 0.1 })
+    if (ref.current) observer.observe(ref.current)
+    return () => observer.disconnect()
+  }, [])
+  return { ref, className: visible ? 'transition-all duration-700 ease-out opacity-100 translate-y-0' : 'opacity-0 translate-y-8 transition-all duration-700 ease-out' }
+}
+
+/* ─────────────────────────  Floating Particles  ───────────────────────── */
+const PARTICLE_COLORS = ['#6366f1', '#a855f7', '#ec4899', '#f59e0b', '#22c55e']
+const PARTICLES = Array.from({ length: 15 }).map((_, i) => ({
+  width: 3 + ((i * 7 + 3) % 4),
+  height: 3 + ((i * 7 + 3) % 4),
+  background: PARTICLE_COLORS[i % 5]!,
+  top: `${((i * 37 + 11) % 100)}%`,
+  left: `${((i * 53 + 7) % 100)}%`,
+  duration: 5 + ((i * 3) % 5),
+  delay: ((i * 2) % 5),
+}))
+
 
 /* ─────────────────────────  SVG Wheel for phone mockup  ───────────────────────── */
 function PhoneWheelSVG() {
@@ -520,6 +573,11 @@ function ContactForm() {
 /* ═══════════════════════════  MAIN PAGE  ═══════════════════════════ */
 export default function HomePage() {
   const isLoggedIn = useIsLoggedIn()
+  const howItWorksReveal = useScrollReveal()
+  const gamesReveal = useScrollReveal()
+  const featuresReveal = useScrollReveal()
+  const plansReveal = useScrollReveal()
+  const contactReveal = useScrollReveal()
   return (
     <div className="min-h-screen bg-[#0a0a1a] text-gray-100">
       {/* ───── Header / Nav ───── */}
@@ -532,7 +590,6 @@ export default function HomePage() {
             <a href="#how-it-works" className="transition-colors hover:text-white">How It Works</a>
             <a href="#games" className="transition-colors hover:text-white">Games</a>
             <a href="#features" className="transition-colors hover:text-white">Features</a>
-            <a href="#demo" className="transition-colors hover:text-white">Try It</a>
             <a href="#plans" className="transition-colors hover:text-white">Plans</a>
             <a href="#contact" className="transition-colors hover:text-white">Contact</a>
           </nav>
@@ -552,7 +609,7 @@ export default function HomePage() {
                   <Button variant="ghost" className="text-gray-300 hover:text-white active:scale-95 transition-transform">Sign In</Button>
                 </Link>
                 <a href="#contact">
-                  <Button className="bg-gradient-to-r from-[#6366f1] to-[#ec4899] font-semibold shadow-lg shadow-indigo-500/25 hover:shadow-xl active:scale-95 transition-transform">
+                  <Button className="font-bold text-white shadow-lg shadow-amber-500/30 hover:shadow-xl hover:scale-105 active:scale-95 transition-all" style={{ background: 'linear-gradient(135deg, #f59e0b, #ef4444)' }}>
                     Contact Us
                   </Button>
                 </a>
@@ -608,6 +665,24 @@ export default function HomePage() {
           />
         </div>
 
+        {/* Floating particles */}
+        <div className="pointer-events-none absolute inset-0 overflow-hidden">
+          {PARTICLES.map((p, i) => (
+            <div key={i} style={{
+              position: 'absolute',
+              width: `${p.width}px`,
+              height: `${p.height}px`,
+              borderRadius: '50%',
+              background: p.background,
+              top: p.top,
+              left: p.left,
+              opacity: 0.3,
+              animation: `subtleFloat ${p.duration}s ease-in-out infinite`,
+              animationDelay: `${p.delay}s`,
+            }} />
+          ))}
+        </div>
+
         <div className="relative mx-auto max-w-7xl px-6 pb-28 pt-20 lg:pt-32">
           <div className="grid items-center gap-12 lg:grid-cols-2">
             {/* Left — Copy */}
@@ -635,7 +710,7 @@ export default function HomePage() {
                   </Button>
                 </a>
                 <a href="#contact">
-                  <Button size="lg" variant="outline" className="px-8 text-base font-semibold text-white border-white/30 hover:bg-white/10 transition-all hover:scale-105">
+                  <Button size="lg" className="px-8 text-base font-bold text-white shadow-lg shadow-amber-500/30 hover:shadow-xl hover:scale-105 transition-all" style={{ background: 'linear-gradient(135deg, #f59e0b, #ef4444)' }}>
                     Contact Us
                   </Button>
                 </a>
@@ -643,65 +718,33 @@ export default function HomePage() {
 
               {/* Stats row */}
               <div className="mt-10 grid grid-cols-3 gap-4 max-w-md lg:mx-0 mx-auto">
-                {[
-                  { value: '500+', label: 'Businesses' },
-                  { value: '2M+', label: 'Games Played' },
-                  { value: '4.8/5', label: 'Satisfaction' },
-                ].map((stat, i) => (
-                  <div key={i} className="text-center">
-                    <div className="text-2xl font-extrabold bg-gradient-to-r from-[#6366f1] to-[#ec4899] bg-clip-text text-transparent">{stat.value}</div>
-                    <div className="text-xs text-gray-400 mt-1">{stat.label}</div>
+                <div className="text-center">
+                  <div className="text-2xl font-extrabold bg-gradient-to-r from-[#6366f1] to-[#ec4899] bg-clip-text text-transparent">
+                    <AnimatedCounter target={500} suffix="+" />
                   </div>
-                ))}
+                  <div className="text-xs text-gray-400 mt-1">Businesses</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-extrabold bg-gradient-to-r from-[#6366f1] to-[#ec4899] bg-clip-text text-transparent">
+                    <AnimatedCounter target={2} suffix="M+" />
+                  </div>
+                  <div className="text-xs text-gray-400 mt-1">Games Played</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-extrabold bg-gradient-to-r from-[#6366f1] to-[#ec4899] bg-clip-text text-transparent">
+                    <AnimatedCounter target={4} suffix=".8/5" />
+                  </div>
+                  <div className="text-xs text-gray-400 mt-1">Satisfaction</div>
+                </div>
               </div>
             </div>
 
-            {/* Right — Phone mockup */}
-            <div className="hidden md:flex justify-center animate-slideUp-d2">
-              <div className="relative">
-                {/* Phone frame */}
-                <div
-                  className="relative h-[560px] w-[280px] overflow-hidden rounded-[3rem] border-[6px] border-gray-900 bg-gradient-to-b from-indigo-600 to-purple-700 shadow-2xl"
-                >
-                  {/* Notch */}
-                  <div className="absolute top-0 left-1/2 -translate-x-1/2 h-6 w-28 rounded-b-2xl bg-gray-900 z-10" />
-
-                  {/* Screen content */}
-                  <div className="flex flex-col items-center justify-center h-full px-6 pt-8">
-                    {/* Brand & Logo inside phone */}
-                    <div className="text-center mb-2">
-                      <div className="mx-auto w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-xs font-bold text-white/80 border border-white/30">
-                        Logo
-                      </div>
-                      <p className="text-white/70 text-xs mt-1 font-medium">Your Brand</p>
-                    </div>
-                    <p className="text-white/90 font-bold text-lg mb-2">Spin to Win!</p>
-                    <div
-                      className="w-44 h-44"
-                      style={{ position: 'relative', animation: 'phoneWheel 8s linear infinite' }}
-                    >
-                      <PhoneWheelSVG />
-                    </div>
-                    {/* Pointer */}
-                    <div style={{
-                      marginTop: '-8px',
-                      width: 0,
-                      height: 0,
-                      borderLeft: '10px solid transparent',
-                      borderRight: '10px solid transparent',
-                      borderTop: '18px solid #ef4444',
-                      filter: 'drop-shadow(0 2px 3px rgba(0,0,0,0.3))',
-                    }} />
-                    <p className="mt-4 text-white/80 text-sm text-center">Tap the wheel to win a prize!</p>
-                    <div className="mt-4 rounded-full bg-white/20 px-6 py-2 text-white font-semibold text-sm">
-                      {'\u{1F389}'} You won 10% off!
-                    </div>
-                  </div>
-                </div>
-
-                {/* Glow behind phone */}
-                <div className="absolute -inset-8 rounded-full bg-indigo-400/20 blur-3xl -z-10" />
-              </div>
+            {/* Right — Phone mockup with Scratch Card */}
+            <div className="hidden md:flex flex-col items-center gap-4 animate-slideUp-d2">
+              <ScratchCard />
+              <p className="text-sm text-gray-400 text-center max-w-[280px]">
+                Try it now — scratch to see what your customers experience
+              </p>
             </div>
           </div>
 
@@ -737,7 +780,7 @@ export default function HomePage() {
 
       {/* ═══════════════════════  SECTION 2: HOW IT WORKS  ═══════════════════════ */}
       <section id="how-it-works" className="py-32 bg-white/[0.02]">
-        <div className="mx-auto max-w-5xl px-6">
+        <div ref={howItWorksReveal.ref} className={`mx-auto max-w-5xl px-6 ${howItWorksReveal.className}`}>
           <div className="text-center mb-16">
             <h2 className="text-3xl font-extrabold tracking-tight sm:text-4xl text-white">How It Works</h2>
             <p className="mt-3 text-lg text-gray-400">Three simple steps to gamify your business</p>
@@ -781,7 +824,7 @@ export default function HomePage() {
 
       {/* ═══════════════════════  SECTION 3: GAME SHOWCASE  ═══════════════════════ */}
       <section id="games" className="py-32">
-        <div className="mx-auto max-w-6xl px-6">
+        <div ref={gamesReveal.ref} className={`mx-auto max-w-6xl px-6 ${gamesReveal.className}`}>
           <div className="text-center mb-16">
             <h2 className="text-3xl font-extrabold tracking-tight sm:text-4xl text-white">Three Games. Endless Fun.</h2>
             <p className="mt-3 text-lg text-gray-400">Each one designed to delight your customers</p>
@@ -789,7 +832,7 @@ export default function HomePage() {
 
           <div className="grid gap-8 md:grid-cols-3">
             {/* Wheel of Fortune */}
-            <div className="game-card rounded-2xl overflow-hidden shadow-lg border border-white/10 animate-slideUp-d1">
+            <div className="game-card rounded-2xl overflow-hidden shadow-lg border border-white/10 animate-slideUp-d1 transition-transform duration-300 hover:shadow-2xl" style={{ transformStyle: 'preserve-3d' }} onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = 'perspective(1000px) rotateY(5deg) translateY(-4px)' }} onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = 'perspective(1000px) rotateY(0deg) translateY(0px)' }}>
               <div className="h-52 flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}>
                 <div className="wheel-spin w-32 h-32">
                   <PhoneWheelSVG />
@@ -802,7 +845,7 @@ export default function HomePage() {
             </div>
 
             {/* Slot Machine */}
-            <div className="game-card rounded-2xl overflow-hidden shadow-lg border border-white/10 animate-slideUp-d2">
+            <div className="game-card rounded-2xl overflow-hidden shadow-lg border border-white/10 animate-slideUp-d2 transition-transform duration-300 hover:shadow-2xl" style={{ transformStyle: 'preserve-3d' }} onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = 'perspective(1000px) rotateY(5deg) translateY(-4px)' }} onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = 'perspective(1000px) rotateY(0deg) translateY(0px)' }}>
               <div className="h-52 flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #f59e0b, #f97316)' }}>
                 <div className="flex gap-3">
                   {['\u{1F352}', '\u2B50', '\u{1F381}'].map((emoji, j) => (
@@ -821,7 +864,7 @@ export default function HomePage() {
             </div>
 
             {/* Mystery Box */}
-            <div className="game-card rounded-2xl overflow-hidden shadow-lg border border-white/10 animate-slideUp-d3">
+            <div className="game-card rounded-2xl overflow-hidden shadow-lg border border-white/10 animate-slideUp-d3 transition-transform duration-300 hover:shadow-2xl" style={{ transformStyle: 'preserve-3d' }} onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = 'perspective(1000px) rotateY(5deg) translateY(-4px)' }} onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = 'perspective(1000px) rotateY(0deg) translateY(0px)' }}>
               <div className="h-52 flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #10b981, #14b8a6)' }}>
                 <div className="flex gap-4">
                   {['\u{1F381}', '\u{1F4E6}', '\u{1F381}'].map((emoji, j) => (
@@ -848,7 +891,7 @@ export default function HomePage() {
 
       {/* ═══════════════════════  SECTION 4: FEATURES  ═══════════════════════ */}
       <section id="features" className="py-32 bg-white/[0.02]">
-        <div className="mx-auto max-w-6xl px-6">
+        <div ref={featuresReveal.ref} className={`mx-auto max-w-6xl px-6 ${featuresReveal.className}`}>
           <div className="text-center mb-16">
             <h2 className="text-3xl font-extrabold tracking-tight sm:text-4xl text-white">Everything You Need to Engage Customers</h2>
             <p className="mt-3 text-lg text-gray-400">Powerful features, simple to use</p>
@@ -882,58 +925,9 @@ export default function HomePage() {
 
       <div className="section-divider" />
 
-      {/* ═══════════════════════  SECTION 4.5: INTERACTIVE GAME DEMO  ═══════════════════════ */}
-      <section id="demo" className="py-32">
-        <div className="mx-auto max-w-4xl px-6">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl font-extrabold tracking-tight sm:text-4xl text-white">Try It Yourself</h2>
-            <p className="mt-3 text-lg text-gray-400">Scratch the card and see what your customers will experience</p>
-          </div>
-
-          <div className="flex flex-col items-center gap-10 lg:flex-row lg:items-center lg:justify-center lg:gap-16">
-            {/* Demo scratch card */}
-            <ScratchCard />
-
-            {/* Explanation text */}
-            <div className="max-w-sm text-center lg:text-left">
-              <h3 className="text-2xl font-bold text-white">This Could Be Your Game</h3>
-              <p className="mt-4 text-gray-400 leading-relaxed">
-                This is a live demo of the Scratch Card. Your customers will see a version customized with your brand colors, logo, and prizes.
-              </p>
-              <ul className="mt-6 space-y-3 text-sm text-gray-300">
-                <li className="flex items-start gap-2">
-                  <span className="text-emerald-400 font-bold mt-0.5">{'\u2713'}</span>
-                  Works on any smartphone — no app needed
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-emerald-400 font-bold mt-0.5">{'\u2713'}</span>
-                  Customers scan your QR code to play
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-emerald-400 font-bold mt-0.5">{'\u2713'}</span>
-                  Winners receive coupons by email instantly
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-emerald-400 font-bold mt-0.5">{'\u2713'}</span>
-                  You track everything from your dashboard
-                </li>
-              </ul>
-              <a
-                href="#contact"
-                className="mt-8 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#6366f1] to-[#ec4899] px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-indigo-500/25 transition-all hover:shadow-xl hover:scale-105"
-              >
-                Want this for your business? {'\u2192'}
-              </a>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <div className="section-divider" />
-
       {/* ═══════════════════════  SECTION 5: PLANS  ═══════════════════════ */}
       <section id="plans" className="py-32 bg-white/[0.02]">
-        <div className="mx-auto max-w-5xl px-6">
+        <div ref={plansReveal.ref} className={`mx-auto max-w-5xl px-6 ${plansReveal.className}`}>
           <div className="text-center mb-16">
             <h2 className="text-3xl font-extrabold tracking-tight sm:text-4xl text-white">Choose Your Plan</h2>
             <p className="mt-3 text-lg text-gray-400">Simple pricing, powerful results</p>
@@ -953,14 +947,14 @@ export default function HomePage() {
                 ))}
               </ul>
               <a href="#contact" className="block mt-8">
-                <Button variant="outline" className="w-full font-semibold">Contact Us</Button>
+                <Button className="w-full font-bold text-white shadow-lg shadow-amber-500/30 hover:shadow-xl hover:scale-105 transition-all" style={{ background: 'linear-gradient(135deg, #f59e0b, #ef4444)' }}>Contact Us</Button>
               </a>
             </div>
 
             {/* Pro — highlighted */}
-            <div className="plan-card relative rounded-2xl bg-white/10 backdrop-blur-sm p-8 shadow-xl ring-2 ring-indigo-500">
-              <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-gradient-to-r from-indigo-500 to-pink-500 px-4 py-1 text-xs font-bold text-white">
-                Most Popular
+            <div className="plan-card relative rounded-2xl bg-white/10 backdrop-blur-sm p-8 shadow-xl ring-2 ring-indigo-500" style={{ animation: 'pulse-glow 2s ease-in-out infinite' }}>
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-gradient-to-r from-indigo-500 to-pink-500 px-4 py-1 text-xs font-bold text-white animate-pulse">
+                RECOMMENDED
               </div>
               <h3 className="text-lg font-bold text-white">Pro</h3>
               <div className="mt-4 flex items-baseline gap-1">
@@ -973,7 +967,7 @@ export default function HomePage() {
                 ))}
               </ul>
               <a href="#contact" className="block mt-8">
-                <Button className="w-full bg-gradient-to-r from-[#6366f1] to-[#ec4899] font-semibold shadow-lg shadow-indigo-500/25">
+                <Button className="w-full font-bold text-white shadow-lg shadow-amber-500/30 hover:shadow-xl hover:scale-105 transition-all" style={{ background: 'linear-gradient(135deg, #f59e0b, #ef4444)' }}>
                   Contact Us
                 </Button>
               </a>
@@ -991,7 +985,7 @@ export default function HomePage() {
                 ))}
               </ul>
               <a href="#contact" className="block mt-8">
-                <Button variant="outline" className="w-full font-semibold">Contact Us</Button>
+                <Button className="w-full font-bold text-white shadow-lg shadow-amber-500/30 hover:shadow-xl hover:scale-105 transition-all" style={{ background: 'linear-gradient(135deg, #f59e0b, #ef4444)' }}>Contact Us</Button>
               </a>
             </div>
           </div>
@@ -1021,7 +1015,7 @@ export default function HomePage() {
 
       {/* ═══════════════════════  SECTION 6: CONTACT  ═══════════════════════ */}
       <section id="contact" className="py-32">
-        <div className="mx-auto max-w-2xl px-6">
+        <div ref={contactReveal.ref} className={`mx-auto max-w-2xl px-6 ${contactReveal.className}`}>
           <div className="text-center mb-12">
             <h2 className="text-3xl font-extrabold tracking-tight sm:text-4xl text-white">Ready to Get Started?</h2>
             <p className="mt-3 text-lg text-gray-400">Fill out the form and we'll set you up within 24 hours.</p>

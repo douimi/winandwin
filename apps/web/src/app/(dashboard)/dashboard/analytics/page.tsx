@@ -7,6 +7,28 @@ import { useMerchantId, useMerchantTier } from '@/lib/merchant-context'
 import { hasFeature } from '@/lib/tier-features'
 import { ProFeatureLock } from '@/components/pro-feature-lock'
 
+function AnimatedNumber({ value, duration = 1500 }: { value: number; duration?: number }) {
+  const [display, setDisplay] = useState(0)
+  useEffect(() => {
+    let start = 0
+    const step = (ts: number) => {
+      if (!start) start = ts
+      const progress = Math.min((ts - start) / duration, 1)
+      setDisplay(Math.floor(progress * value))
+      if (progress < 1) requestAnimationFrame(step)
+    }
+    requestAnimationFrame(step)
+  }, [value, duration])
+  return <>{display.toLocaleString()}</>
+}
+
+const KPI_GRADIENTS = [
+  'linear-gradient(135deg, #6366f1, #a855f7)',
+  'linear-gradient(135deg, #ec4899, #f43f5e)',
+  'linear-gradient(135deg, #10b981, #14b8a6)',
+  'linear-gradient(135deg, #f59e0b, #f97316)',
+]
+
 type Period = 'today' | 'week' | 'month' | 'all'
 
 const PERIOD_LABELS: Record<Period, string> = {
@@ -191,7 +213,8 @@ export default function AnalyticsPage() {
                 key={p}
                 variant={period === p ? 'default' : 'ghost'}
                 size="sm"
-                className="h-8 px-3 text-xs sm:text-sm"
+                className={`h-8 px-3 text-xs sm:text-sm ${period === p ? 'text-white shadow-md' : 'text-muted-foreground hover:bg-gray-100'}`}
+                style={period === p ? { background: 'linear-gradient(135deg, #6366f1, #a855f7)' } : undefined}
                 onClick={() => setPeriod(p)}
               >
                 {PERIOD_LABELS[p]}
@@ -219,22 +242,21 @@ export default function AnalyticsPage() {
 
       {/* Section 1: KPI Cards */}
       <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-        {kpiCards.map((kpi) => {
+        {kpiCards.map((kpi, idx) => {
           const isPositive = kpi.change.startsWith('+')
           const isNegative = kpi.change.startsWith('-')
           const isNeutral = !isPositive && !isNegative
 
           return (
-            <Card key={kpi.title}>
-              <CardHeader className="pb-2">
-                <CardTitle className="flex items-center gap-2 text-sm font-medium text-muted-foreground">
+            <Card key={kpi.title} className="transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5">
+              <CardContent className="flex items-center gap-4 pt-5 pb-4">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl" style={{ background: KPI_GRADIENTS[idx] }}>
                   <span className="text-lg">{kpi.icon}</span>
-                  <span className="truncate">{kpi.title}</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium text-muted-foreground truncate">{kpi.title}</p>
                 <div className="truncate text-xl sm:text-2xl lg:text-3xl font-bold">
-                  {kpi.value.toLocaleString()}
+                  <AnimatedNumber value={kpi.value} />
                 </div>
                 <div className="mt-1 flex items-center gap-1">
                   {isPositive && (
@@ -272,6 +294,7 @@ export default function AnalyticsPage() {
                     {isNeutral ? '' : ' vs last period'}
                   </span>
                 </div>
+                </div>
               </CardContent>
             </Card>
           )
@@ -279,7 +302,7 @@ export default function AnalyticsPage() {
       </div>
 
       {/* Section 2: Conversion Funnel */}
-      <Card>
+      <Card className="transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5">
         <CardHeader>
           <CardTitle>Conversion Funnel</CardTitle>
         </CardHeader>
@@ -305,8 +328,8 @@ export default function AnalyticsPage() {
                       <div className="relative flex-1">
                         <div className="h-8 w-full rounded bg-muted/50">
                           <div
-                            className={`h-8 rounded ${barColor} transition-all duration-500`}
-                            style={{ width: `${barWidth}%`, minWidth: step.value > 0 ? '4px' : '0' }}
+                            className={`h-8 rounded ${barColor}`}
+                            style={{ width: `${barWidth}%`, minWidth: step.value > 0 ? '4px' : '0', transition: 'width 1s ease-out' }}
                           />
                         </div>
                       </div>
@@ -326,7 +349,7 @@ export default function AnalyticsPage() {
       {/* Section 3: Top Actions & Prize Popularity */}
       <div className="grid gap-4 lg:grid-cols-2">
         {/* Top Actions by Completion */}
-        <Card>
+        <Card className="transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5">
           <CardHeader>
             <CardTitle>Top Actions by Completion</CardTitle>
           </CardHeader>
@@ -353,10 +376,11 @@ export default function AnalyticsPage() {
                         </div>
                         <div className="h-2 w-full rounded-full bg-muted">
                           <div
-                            className="h-2 rounded-full bg-indigo-500/70 transition-all duration-500"
+                            className="h-2 rounded-full bg-indigo-500/70"
                             style={{
                               width: `${barWidth}%`,
                               minWidth: action.count > 0 ? '4px' : '0',
+                              transition: 'width 1s ease-out',
                             }}
                           />
                         </div>
@@ -370,7 +394,7 @@ export default function AnalyticsPage() {
         </Card>
 
         {/* Prize Popularity */}
-        <Card>
+        <Card className="transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5">
           <CardHeader>
             <CardTitle>Prize Popularity</CardTitle>
           </CardHeader>
@@ -399,10 +423,11 @@ export default function AnalyticsPage() {
                           </div>
                           <div className="h-2 w-full rounded-full bg-muted">
                             <div
-                              className="h-2 rounded-full bg-indigo-500/70 transition-all duration-500"
+                              className="h-2 rounded-full bg-indigo-500/70"
                               style={{
                                 width: `${barWidth}%`,
                                 minWidth: prize.count > 0 ? '4px' : '0',
+                                transition: 'width 1s ease-out',
                               }}
                             />
                           </div>
@@ -417,7 +442,7 @@ export default function AnalyticsPage() {
       </div>
 
       {/* Section 4: Activity This Week */}
-      <Card>
+      <Card className="transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5">
         <CardHeader>
           <CardTitle>Activity This Week</CardTitle>
         </CardHeader>
@@ -435,8 +460,8 @@ export default function AnalyticsPage() {
                     </span>
                     <div className="relative w-full" style={{ height: 120 }}>
                       <div
-                        className="absolute bottom-0 w-full rounded-t bg-indigo-500/80 transition-all duration-500"
-                        style={{ height: `${heightPct}%`, minHeight: 4 }}
+                        className="absolute bottom-0 w-full rounded-t bg-indigo-500/80"
+                        style={{ height: `${heightPct}%`, minHeight: 4, transition: 'height 1s ease-out' }}
                       />
                     </div>
                     <span className="text-xs font-medium text-muted-foreground">{day}</span>
