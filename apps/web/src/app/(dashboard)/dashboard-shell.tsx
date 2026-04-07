@@ -50,7 +50,7 @@ export function DashboardShell({ user, merchantName, merchantSlug, merchantTier,
     <div className="flex flex-col h-full">
       <div className="border-b px-4 py-4">
         <a href="/dashboard" className="block">
-          <img src="/logo.png" alt="Win & Win" className="h-10 w-auto" />
+          <img src="/logo.png" alt="Win & Win" className="h-16 w-auto" />
         </a>
         {merchantName && (
           <p className="mt-2 text-xs text-muted-foreground truncate">{merchantName}</p>
