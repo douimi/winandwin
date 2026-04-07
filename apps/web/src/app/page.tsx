@@ -446,133 +446,7 @@ function ScratchCard() {
   )
 }
 
-/* ─────────────────────────  Contact Form (client component)  ───────────────────────── */
-function ContactForm() {
-  const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
-  const [form, setForm] = useState({
-    businessName: '',
-    name: '',
-    email: '',
-    phone: '',
-    businessType: '',
-    message: '',
-  })
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    setForm(prev => ({ ...prev, [e.target.name]: e.target.value }))
-  }
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setStatus('loading')
-    try {
-      const res = await fetch('/api/contact', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          businessName: form.businessName,
-          contactName: form.name,
-          email: form.email,
-          phone: form.phone,
-          businessType: form.businessType,
-          message: form.message,
-        }),
-      })
-      if (!res.ok) throw new Error('Failed')
-      setStatus('success')
-    } catch {
-      setStatus('error')
-    }
-  }
-
-  if (status === 'success') {
-    return (
-      <div className="flex flex-col items-center justify-center py-16 text-center">
-        <div
-          className="flex h-20 w-20 items-center justify-center rounded-full bg-emerald-500/20 text-4xl"
-          style={{ animation: 'bounceIn 0.6s ease-out both' }}
-        >
-          ✓
-        </div>
-        <h3 className="mt-6 text-2xl font-bold text-white">Thanks! We'll reach out within 24 hours.</h3>
-        <p className="mt-2 text-gray-400">Check your inbox for a confirmation email.</p>
-      </div>
-    )
-  }
-
-  return (
-    <form onSubmit={handleSubmit} className="space-y-5">
-      <div className="grid gap-5 sm:grid-cols-2">
-        <div className="space-y-1.5">
-          <Label htmlFor="businessName">Business Name *</Label>
-          <Input id="businessName" name="businessName" required value={form.businessName} onChange={handleChange} placeholder="e.g. Café Atlas" />
-        </div>
-        <div className="space-y-1.5">
-          <Label htmlFor="name">Your Name *</Label>
-          <Input id="name" name="name" required value={form.name} onChange={handleChange} placeholder="Amine El Idrissi" />
-        </div>
-      </div>
-      <div className="grid gap-5 sm:grid-cols-2">
-        <div className="space-y-1.5">
-          <Label htmlFor="email">Email *</Label>
-          <Input id="email" name="email" type="email" required value={form.email} onChange={handleChange} placeholder="amine@cafe.ma" />
-        </div>
-        <div className="space-y-1.5">
-          <Label htmlFor="phone">Phone (optional)</Label>
-          <Input id="phone" name="phone" type="tel" value={form.phone} onChange={handleChange} placeholder="+212 6XX XXX XXX" />
-        </div>
-      </div>
-      <div className="space-y-1.5">
-        <Label htmlFor="businessType">Business Type *</Label>
-        <select
-          id="businessType"
-          name="businessType"
-          required
-          value={form.businessType}
-          onChange={handleChange}
-          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-        >
-          <option value="">Select your business type</option>
-          <option value="restaurant">Restaurant</option>
-          <option value="cafe">Cafe</option>
-          <option value="bar">Bar</option>
-          <option value="retail">Retail</option>
-          <option value="salon">Salon</option>
-          <option value="gym">Gym</option>
-          <option value="hotel">Hotel</option>
-          <option value="riad">Riad</option>
-          <option value="other">Other</option>
-        </select>
-      </div>
-      <div className="space-y-1.5">
-        <Label htmlFor="message">Message (optional)</Label>
-        <textarea
-          id="message"
-          name="message"
-          value={form.message}
-          onChange={handleChange}
-          rows={3}
-          placeholder="Tell us about your business and goals..."
-          className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-        />
-      </div>
-      {status === 'error' && (
-        <p className="text-sm text-red-600">Something went wrong. Please try again.</p>
-      )}
-      <Button
-        type="submit"
-        disabled={status === 'loading'}
-        className="w-full py-3 text-base font-bold shadow-lg transition-all hover:shadow-xl hover:shadow-[#94ffe5]/30"
-        style={{ background: '#94ffe5', color: '#0a0a1a' }}
-        size="lg"
-      >
-        {status === 'loading' ? 'Sending...' : 'Get Started'}
-      </Button>
-    </form>
-  )
-}
-
-/* ═══════════════════════════  MAIN PAGE  ═══════════════════════════ */
+/* ═══════════════════════════  TRANSLATIONS  ═══════════════════════════ */
 const LANDING_TEXT = {
   en: {
     heroTitle1: 'Your Customers Play.',
@@ -622,58 +496,222 @@ const LANDING_TEXT = {
     faq3a: 'Most businesses are live within 10 minutes.',
     perMonth: '/mo',
     custom: 'Custom',
+    businesses: 'Businesses',
+    gamesPlayed: 'Games Played',
+    satisfaction: 'Satisfaction',
+    howItWorksSubtitle2: 'Three simple steps to gamify your business',
+    gamesSubtitle: 'Each one designed to delight your customers',
+    featuresSubtitle: 'Powerful features, simple to use',
+    plansSubtitle: 'Simple pricing, powerful results',
+    faqHeading: 'Frequently Asked Questions',
+    terms: 'Terms',
+    privacy: 'Privacy',
+    contact: 'Contact',
+    copyright: '\u00A9 2026 Win & Win. All rights reserved.',
+    selectBusinessType: 'Select your business type',
+    phoneSuffix: '(optional)',
+    messageSuffix: '(optional)',
+    messagePlaceholder: 'Tell us about your business and goals...',
+    confirmEmail: 'Check your inbox for a confirmation email.',
+    errorMsg: 'Something went wrong. Please try again.',
   },
   fr: {
     heroTitle1: 'Vos Clients Jouent.',
     heroTitle2: 'Votre Business Gagne.',
     heroSubtitle: 'Boostez l\'engagement et la croissance avec des',
     heroHighlight1: 'jeux QR code',
-    heroMid: 'dans votre établissement. Collectez des avis, gagnez des abonnés et générez des',
-    heroHighlight2: 'visites récurrentes',
+    heroMid: 'dans votre \u00E9tablissement. Collectez des avis, gagnez des abonn\u00E9s et g\u00E9n\u00E9rez des',
+    heroHighlight2: 'visites r\u00E9currentes',
     seePlans: 'Voir les Plans',
     contactUs: 'Contactez-nous',
-    tryNow: 'Essayez — grattez pour voir ce que vos clients vivent',
-    howItWorks: 'Comment Ça Marche',
-    howItWorksSubtitle: 'Engagez vos clients, collectez des retours précieux et développez votre activité en trois étapes simples :',
-    step1: 'Créez Votre Jeu',
-    step1Desc: 'Choisissez la Roue de la Fortune, les Machines à Sous ou la Boîte Mystère. Configurez vos prix et votre branding en quelques minutes.',
+    tryNow: 'Essayez \u2014 grattez pour voir ce que vos clients vivent',
+    howItWorks: 'Comment \u00C7a Marche',
+    howItWorksSubtitle: 'Engagez vos clients, collectez des retours pr\u00E9cieux et d\u00E9veloppez votre activit\u00E9 en trois \u00E9tapes simples :',
+    step1: 'Cr\u00E9ez Votre Jeu',
+    step1Desc: 'Choisissez la Roue de la Fortune, les Machines \u00E0 Sous ou la Bo\u00EEte Myst\u00E8re. Configurez vos prix et votre branding en quelques minutes.',
     step2: 'Partagez Votre QR Code',
-    step2Desc: 'Imprimez-le sur des chevalets de table, menus ou reçus. Les clients scannent avec n\'importe quel téléphone.',
+    step2Desc: 'Imprimez-le sur des chevalets de table, menus ou re\u00E7us. Les clients scannent avec n\'importe quel t\u00E9l\u00E9phone.',
     step3: 'Les Clients Jouent & Gagnent',
-    step3Desc: 'Ils complètent une action (avis Google, suivi Instagram), jouent et gagnent des prix.',
+    step3Desc: 'Ils compl\u00E8tent une action (avis Google, suivi Instagram), jouent et gagnent des prix.',
     games: 'Trois Jeux. Un Plaisir Infini.',
     features: 'Tout Ce Dont Vous Avez Besoin Pour Engager Vos Clients',
     plans: 'Choisissez Votre Plan',
-    trialNote: 'Essai gratuit de 14 jours inclus. Aucune carte de crédit requise.',
-    getStarted: 'Prêt à Commencer ?',
+    trialNote: 'Essai gratuit de 14 jours inclus. Aucune carte de cr\u00E9dit requise.',
+    getStarted: 'Pr\u00EAt \u00E0 Commencer ?',
     getStartedSub: 'Remplissez le formulaire et nous vous configurerons sous 24 heures.',
     businessName: 'Nom de l\'entreprise',
     yourName: 'Votre Nom',
     email: 'Email',
-    phone: 'Téléphone',
-    businessType: 'Type d\'activité',
+    phone: 'T\u00E9l\u00E9phone',
+    businessType: 'Type d\'activit\u00E9',
     message: 'Message',
     sendBtn: 'Commencer',
     sending: 'Envoi...',
     thankYou: 'Merci ! Nous vous contacterons sous 24 heures.',
-    basedIn: 'Basé à Casablanca, Maroc',
+    basedIn: 'Bas\u00E9 \u00E0 Casablanca, Maroc',
     madeWith: 'Fait avec',
     inMorocco: 'au Maroc',
     signIn: 'Connexion',
     myDashboard: 'Mon Tableau de Bord',
-    trusted: 'Approuvé par plus de 500 entreprises au Maroc',
+    trusted: 'Approuv\u00E9 par plus de 500 entreprises au Maroc',
     faq: 'FAQ',
     faq1q: 'Y a-t-il un essai gratuit ?',
-    faq1a: 'Oui, tous les plans incluent un essai gratuit de 14 jours. Aucune carte de crédit requise.',
+    faq1a: 'Oui, tous les plans incluent un essai gratuit de 14 jours. Aucune carte de cr\u00E9dit requise.',
     faq2q: 'Puis-je changer de plan ?',
-    faq2a: 'Oui, vous pouvez passer à un plan supérieur ou inférieur à tout moment en nous contactant.',
+    faq2a: 'Oui, vous pouvez passer \u00E0 un plan sup\u00E9rieur ou inf\u00E9rieur \u00E0 tout moment en nous contactant.',
     faq3q: 'Combien de temps prend la configuration ?',
     faq3a: 'La plupart des entreprises sont en ligne en moins de 10 minutes.',
     perMonth: '/mois',
     custom: 'Sur mesure',
+    businesses: 'Entreprises',
+    gamesPlayed: 'Parties Jou\u00E9es',
+    satisfaction: 'Satisfaction',
+    howItWorksSubtitle2: 'Trois \u00E9tapes simples pour gamifier votre business',
+    gamesSubtitle: 'Chacun con\u00E7u pour ravir vos clients',
+    featuresSubtitle: 'Des fonctionnalit\u00E9s puissantes, simples \u00E0 utiliser',
+    plansSubtitle: 'Tarification simple, r\u00E9sultats puissants',
+    faqHeading: 'Questions Fr\u00E9quentes',
+    terms: 'Conditions',
+    privacy: 'Confidentialit\u00E9',
+    contact: 'Contact',
+    copyright: '\u00A9 2026 Win & Win. Tous droits r\u00E9serv\u00E9s.',
+    selectBusinessType: 'S\u00E9lectionnez votre type d\'activit\u00E9',
+    phoneSuffix: '(optionnel)',
+    messageSuffix: '(optionnel)',
+    messagePlaceholder: 'Parlez-nous de votre activit\u00E9 et de vos objectifs...',
+    confirmEmail: 'V\u00E9rifiez votre bo\u00EEte de r\u00E9ception pour un email de confirmation.',
+    errorMsg: 'Une erreur est survenue. Veuillez r\u00E9essayer.',
   },
 }
 
+/* ─────────────────────────  Contact Form (client component)  ───────────────────────── */
+function ContactForm({ lang }: { lang: 'en' | 'fr' }) {
+  const txt = LANDING_TEXT[lang]
+  const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
+  const [form, setForm] = useState({
+    businessName: '',
+    name: '',
+    email: '',
+    phone: '',
+    businessType: '',
+    message: '',
+  })
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    setForm(prev => ({ ...prev, [e.target.name]: e.target.value }))
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setStatus('loading')
+    try {
+      const res = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          businessName: form.businessName,
+          contactName: form.name,
+          email: form.email,
+          phone: form.phone,
+          businessType: form.businessType,
+          message: form.message,
+        }),
+      })
+      if (!res.ok) throw new Error('Failed')
+      setStatus('success')
+    } catch {
+      setStatus('error')
+    }
+  }
+
+  if (status === 'success') {
+    return (
+      <div className="flex flex-col items-center justify-center py-16 text-center">
+        <div
+          className="flex h-20 w-20 items-center justify-center rounded-full bg-emerald-500/20 text-4xl"
+          style={{ animation: 'bounceIn 0.6s ease-out both' }}
+        >
+          ✓
+        </div>
+        <h3 className="mt-6 text-2xl font-bold text-white">{txt.thankYou}</h3>
+        <p className="mt-2 text-gray-400">{txt.confirmEmail}</p>
+      </div>
+    )
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-5">
+      <div className="grid gap-5 sm:grid-cols-2">
+        <div className="space-y-1.5">
+          <Label htmlFor="businessName">{txt.businessName} *</Label>
+          <Input id="businessName" name="businessName" required value={form.businessName} onChange={handleChange} placeholder="e.g. Café Atlas" />
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="name">{txt.yourName} *</Label>
+          <Input id="name" name="name" required value={form.name} onChange={handleChange} placeholder="Amine El Idrissi" />
+        </div>
+      </div>
+      <div className="grid gap-5 sm:grid-cols-2">
+        <div className="space-y-1.5">
+          <Label htmlFor="email">{txt.email} *</Label>
+          <Input id="email" name="email" type="email" required value={form.email} onChange={handleChange} placeholder="amine@cafe.ma" />
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="phone">{txt.phone} {txt.phoneSuffix}</Label>
+          <Input id="phone" name="phone" type="tel" value={form.phone} onChange={handleChange} placeholder="+212 6XX XXX XXX" />
+        </div>
+      </div>
+      <div className="space-y-1.5">
+        <Label htmlFor="businessType">{txt.businessType} *</Label>
+        <select
+          id="businessType"
+          name="businessType"
+          required
+          value={form.businessType}
+          onChange={handleChange}
+          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+        >
+          <option value="">{txt.selectBusinessType}</option>
+          <option value="restaurant">Restaurant</option>
+          <option value="cafe">Cafe</option>
+          <option value="bar">Bar</option>
+          <option value="retail">Retail</option>
+          <option value="salon">Salon</option>
+          <option value="gym">Gym</option>
+          <option value="hotel">Hotel</option>
+          <option value="riad">Riad</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+      <div className="space-y-1.5">
+        <Label htmlFor="message">{txt.message} {txt.messageSuffix}</Label>
+        <textarea
+          id="message"
+          name="message"
+          value={form.message}
+          onChange={handleChange}
+          rows={3}
+          placeholder={txt.messagePlaceholder}
+          className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+        />
+      </div>
+      {status === 'error' && (
+        <p className="text-sm text-red-600">{txt.errorMsg}</p>
+      )}
+      <Button
+        type="submit"
+        disabled={status === 'loading'}
+        className="w-full py-3 text-base font-bold shadow-lg transition-all hover:shadow-xl hover:shadow-[#94ffe5]/30"
+        style={{ background: '#94ffe5', color: '#0a0a1a' }}
+        size="lg"
+      >
+        {status === 'loading' ? txt.sending : txt.sendBtn}
+      </Button>
+    </form>
+  )
+}
+
+/* ═══════════════════════════  MAIN PAGE  ═══════════════════════════ */
 export default function HomePage() {
   const isLoggedIn = useIsLoggedIn()
   const [lang, setLang] = useState<'en' | 'fr'>('fr')
@@ -692,11 +730,11 @@ export default function HomePage() {
             <img src="/logo.png" alt="Win & Win" className="h-28 w-auto" />
           </a>
           <nav className="hidden items-center gap-8 text-sm font-medium text-gray-400 md:flex">
-            <a href="#how-it-works" className="transition-colors hover:text-white">How It Works</a>
-            <a href="#games" className="transition-colors hover:text-white">Games</a>
-            <a href="#features" className="transition-colors hover:text-white">Features</a>
-            <a href="#plans" className="transition-colors hover:text-white">Plans</a>
-            <a href="#contact" className="transition-colors hover:text-white">Contact</a>
+            <a href="#how-it-works" className="transition-colors hover:text-white">{txt.howItWorks}</a>
+            <a href="#games" className="transition-colors hover:text-white">{txt.games}</a>
+            <a href="#features" className="transition-colors hover:text-white">{txt.features}</a>
+            <a href="#plans" className="transition-colors hover:text-white">{txt.plans}</a>
+            <a href="#contact" className="transition-colors hover:text-white">{txt.contact}</a>
           </nav>
           <button
             type="button"
@@ -722,7 +760,7 @@ export default function HomePage() {
                 </Link>
                 <a href="#contact">
                   <Button className="font-bold text-white shadow-lg shadow-amber-500/30 hover:shadow-xl hover:scale-105 active:scale-95 transition-all" style={{ background: 'linear-gradient(135deg, #f59e0b, #ef4444)' }}>
-                    Contact Us
+                    {txt.contactUs}
                   </Button>
                 </a>
               </>
@@ -812,13 +850,13 @@ export default function HomePage() {
                   className="bg-clip-text text-transparent"
                   style={{ backgroundImage: 'linear-gradient(135deg, #6366f1 0%, #94ffe5 50%, #ec4899 100%)' }}
                 >
-                  Your Customers Play.
+                  {txt.heroTitle1}
                 </span>
                 <br />
-                <span className="text-white">Your Business Wins.</span>
+                <span className="text-white">{txt.heroTitle2}</span>
               </h1>
               <p className="mt-6 max-w-lg text-lg leading-relaxed text-gray-400 sm:text-xl lg:mx-0 mx-auto">
-                Deploy <span style={{ color: '#94ffe5', fontWeight: 600 }}>QR code games</span> at your business. Collect reviews, grow followers, drive <span style={{ color: '#94ffe5', fontWeight: 600 }}>return visits</span> — all while your customers have fun.
+                {txt.heroSubtitle} <span style={{ color: '#94ffe5', fontWeight: 600 }}>{txt.heroHighlight1}</span> {txt.heroMid} <span style={{ color: '#94ffe5', fontWeight: 600 }}>{txt.heroHighlight2}</span>.
               </p>
               <div className="mt-8 flex flex-col items-center gap-4 sm:flex-row lg:justify-start justify-center">
                 <a href="#plans">
@@ -827,12 +865,12 @@ export default function HomePage() {
                     className="px-8 text-base font-bold shadow-lg transition-all hover:shadow-xl hover:shadow-[#94ffe5]/30 hover:scale-105"
                     style={{ background: '#94ffe5', color: '#0a0a1a' }}
                   >
-                    See Plans
+                    {txt.seePlans}
                   </Button>
                 </a>
                 <a href="#contact">
                   <Button size="lg" className="px-8 text-base font-bold text-white shadow-lg shadow-amber-500/30 hover:shadow-xl hover:scale-105 transition-all" style={{ background: 'linear-gradient(135deg, #f59e0b, #ef4444)' }}>
-                    Contact Us
+                    {txt.contactUs}
                   </Button>
                 </a>
               </div>
@@ -843,19 +881,19 @@ export default function HomePage() {
                   <div className="text-2xl font-extrabold bg-gradient-to-r from-[#6366f1] to-[#ec4899] bg-clip-text text-transparent">
                     <AnimatedCounter target={500} suffix="+" />
                   </div>
-                  <div className="text-xs text-gray-400 mt-1">Businesses</div>
+                  <div className="text-xs text-gray-400 mt-1">{txt.businesses}</div>
                 </div>
                 <div className="text-center">
                   <div className="text-2xl font-extrabold bg-gradient-to-r from-[#6366f1] to-[#ec4899] bg-clip-text text-transparent">
                     <AnimatedCounter target={2} suffix="M+" />
                   </div>
-                  <div className="text-xs text-gray-400 mt-1">Games Played</div>
+                  <div className="text-xs text-gray-400 mt-1">{txt.gamesPlayed}</div>
                 </div>
                 <div className="text-center">
                   <div className="text-2xl font-extrabold bg-gradient-to-r from-[#6366f1] to-[#ec4899] bg-clip-text text-transparent">
                     <AnimatedCounter target={4} suffix=".8/5" />
                   </div>
-                  <div className="text-xs text-gray-400 mt-1">Satisfaction</div>
+                  <div className="text-xs text-gray-400 mt-1">{txt.satisfaction}</div>
                 </div>
               </div>
             </div>
@@ -864,14 +902,14 @@ export default function HomePage() {
             <div className="hidden md:flex flex-col items-center gap-4 animate-slideUp-d2">
               <ScratchCard />
               <p className="text-sm text-gray-400 text-center max-w-[280px]">
-                Try it now — scratch to see what your customers experience
+                {txt.tryNow}
               </p>
             </div>
           </div>
 
           {/* Trust bar */}
           <div className="mt-16 text-center animate-slideUp-d3">
-            <p className="text-sm font-medium text-gray-400 mb-4">Trusted by 500+ businesses across Morocco</p>
+            <p className="text-sm font-medium text-gray-400 mb-4">{txt.trusted}</p>
             <div className="flex flex-wrap items-center justify-center gap-6 text-3xl opacity-40">
               <span title="Restaurant">{'\u{1F37D}\u{FE0F}'}</span>
               <span title="Cafe">{'\u2615'}</span>
@@ -903,8 +941,8 @@ export default function HomePage() {
       <section id="how-it-works" className="py-32 bg-white/[0.02]">
         <div ref={howItWorksReveal.ref} className={`mx-auto max-w-5xl px-6 ${howItWorksReveal.className}`}>
           <div className="text-center mb-16">
-            <h2 className="text-white" style={{ fontSize: 'clamp(2rem, 4vw, 3.5rem)', fontWeight: 900, letterSpacing: '-0.02em' }}>How It Works</h2>
-            <p className="mt-3 text-lg text-gray-400">Three simple steps to gamify your business</p>
+            <h2 className="text-white" style={{ fontSize: 'clamp(2rem, 4vw, 3.5rem)', fontWeight: 900, letterSpacing: '-0.02em' }}>{txt.howItWorks}</h2>
+            <p className="mt-3 text-lg text-gray-400">{txt.howItWorksSubtitle2}</p>
           </div>
 
           {/* Timeline connector */}
@@ -914,9 +952,9 @@ export default function HomePage() {
 
             <div className="grid gap-10 md:grid-cols-3">
               {[
-                { emoji: '\u{1F3AE}', title: 'Create Your Game', desc: 'Choose Wheel of Fortune, Slots, or Mystery Box. Set your prizes and branding in minutes.', color: 'bg-indigo-500/20 text-indigo-400', iconBg: 'bg-indigo-500', delay: 'animate-slideUp-d1' },
-                { emoji: '\u{1F517}', title: 'Share Your QR Code', desc: 'Print it on table tents, menus, or receipts. Customers scan with any phone.', color: 'bg-purple-500/20 text-purple-400', iconBg: 'bg-purple-500', delay: 'animate-slideUp-d2' },
-                { emoji: '\u{1F389}', title: 'Customers Play & Win', desc: 'They complete an action (Google review, Instagram follow), play your game, and win prizes.', color: 'bg-pink-500/20 text-pink-400', iconBg: 'bg-pink-500', delay: 'animate-slideUp-d3' },
+                { emoji: '\u{1F3AE}', title: txt.step1, desc: txt.step1Desc, color: 'bg-indigo-500/20 text-indigo-400', iconBg: 'bg-indigo-500', delay: 'animate-slideUp-d1' },
+                { emoji: '\u{1F517}', title: txt.step2, desc: txt.step2Desc, color: 'bg-purple-500/20 text-purple-400', iconBg: 'bg-purple-500', delay: 'animate-slideUp-d2' },
+                { emoji: '\u{1F389}', title: txt.step3, desc: txt.step3Desc, color: 'bg-pink-500/20 text-pink-400', iconBg: 'bg-pink-500', delay: 'animate-slideUp-d3' },
               ].map((step, i) => (
                 <div key={i} className={`relative flex flex-col items-center text-center ${step.delay}`} style={{ transform: i === 1 ? 'translateY(30px)' : 'none' }}>
                   {/* Circle with emoji + colored ring */}
@@ -925,7 +963,7 @@ export default function HomePage() {
                     style={{ animation: `float 4s ease-in-out ${i * 0.5}s infinite` }}
                   >
                     <div className="flex h-[60px] w-[60px] items-center justify-center rounded-full bg-white/80 text-4xl shadow-inner">
-                      {step.title === 'Share Your QR Code' ? (
+                      {i === 1 ? (
                         <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-purple-600">
                           <rect x="2" y="2" width="8" height="8" rx="1" />
                           <rect x="14" y="2" width="8" height="8" rx="1" />
@@ -960,8 +998,8 @@ export default function HomePage() {
       <section id="games" className="py-32">
         <div ref={gamesReveal.ref} className={`mx-auto max-w-6xl px-6 ${gamesReveal.className}`}>
           <div className="text-center mb-16">
-            <h2 className="text-white" style={{ fontSize: 'clamp(2rem, 4vw, 3.5rem)', fontWeight: 900, letterSpacing: '-0.02em' }}>Three Games. Endless Fun.</h2>
-            <p className="mt-3 text-lg text-gray-400">Each one designed to delight your customers</p>
+            <h2 className="text-white" style={{ fontSize: 'clamp(2rem, 4vw, 3.5rem)', fontWeight: 900, letterSpacing: '-0.02em' }}>{txt.games}</h2>
+            <p className="mt-3 text-lg text-gray-400">{txt.gamesSubtitle}</p>
           </div>
 
           <div className="grid gap-8 md:grid-cols-3">
@@ -1027,8 +1065,8 @@ export default function HomePage() {
       <section id="features" className="py-32 bg-white/[0.02]">
         <div ref={featuresReveal.ref} className={`mx-auto max-w-6xl px-6 ${featuresReveal.className}`}>
           <div className="text-center mb-16">
-            <h2 className="text-white" style={{ fontSize: 'clamp(2rem, 4vw, 3.5rem)', fontWeight: 900, letterSpacing: '-0.02em' }}>Everything You Need to Engage Customers</h2>
-            <p className="mt-3 text-lg text-gray-400">Powerful features, simple to use</p>
+            <h2 className="text-white" style={{ fontSize: 'clamp(2rem, 4vw, 3.5rem)', fontWeight: 900, letterSpacing: '-0.02em' }}>{txt.features}</h2>
+            <p className="mt-3 text-lg text-gray-400">{txt.featuresSubtitle}</p>
           </div>
 
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -1063,8 +1101,8 @@ export default function HomePage() {
       <section id="plans" className="py-32 bg-white/[0.02]">
         <div ref={plansReveal.ref} className={`mx-auto max-w-5xl px-6 ${plansReveal.className}`}>
           <div className="text-center mb-16">
-            <h2 className="text-white" style={{ fontSize: 'clamp(2rem, 4vw, 3.5rem)', fontWeight: 900, letterSpacing: '-0.02em' }}>Choose Your Plan</h2>
-            <p className="mt-3 text-lg text-gray-400">Simple pricing, powerful results</p>
+            <h2 className="text-white" style={{ fontSize: 'clamp(2rem, 4vw, 3.5rem)', fontWeight: 900, letterSpacing: '-0.02em' }}>{txt.plans}</h2>
+            <p className="mt-3 text-lg text-gray-400">{txt.plansSubtitle}</p>
           </div>
 
           <div className="grid gap-8 md:grid-cols-3">
@@ -1073,7 +1111,7 @@ export default function HomePage() {
               <h3 className="text-lg font-bold text-white">Starter</h3>
               <div className="mt-4 flex items-baseline gap-1">
                 <span className="text-4xl font-extrabold text-white">299</span>
-                <span className="text-gray-400">MAD/mo</span>
+                <span className="text-gray-400">MAD{txt.perMonth}</span>
               </div>
               <ul className="mt-6 space-y-3 text-sm text-gray-300">
                 {['500 plays/month', '1 active game', '3 prizes per game', '3 CTA types', 'Basic QR code', 'Email coupons', 'Basic analytics'].map((f, i) => (
@@ -1081,7 +1119,7 @@ export default function HomePage() {
                 ))}
               </ul>
               <a href="#contact" className="block mt-8">
-                <Button className="w-full font-bold text-white shadow-lg shadow-amber-500/30 hover:shadow-xl hover:scale-105 transition-all" style={{ background: 'linear-gradient(135deg, #f59e0b, #ef4444)' }}>Contact Us</Button>
+                <Button className="w-full font-bold text-white shadow-lg shadow-amber-500/30 hover:shadow-xl hover:scale-105 transition-all" style={{ background: 'linear-gradient(135deg, #f59e0b, #ef4444)' }}>{txt.contactUs}</Button>
               </a>
             </div>
 
@@ -1093,7 +1131,7 @@ export default function HomePage() {
               <h3 className="text-lg font-bold text-white">Pro</h3>
               <div className="mt-4 flex items-baseline gap-1">
                 <span className="text-4xl font-extrabold text-white">599</span>
-                <span className="text-gray-400">MAD/mo</span>
+                <span className="text-gray-400">MAD{txt.perMonth}</span>
               </div>
               <ul className="mt-6 space-y-3 text-sm text-gray-300">
                 {['2,000 plays/month', '3 active games', '10 prizes per game', 'All CTA types', 'Branded QR materials', 'Full analytics', 'Marketing automation', 'WhatsApp support'].map((f, i) => (
@@ -1102,7 +1140,7 @@ export default function HomePage() {
               </ul>
               <a href="#contact" className="block mt-8">
                 <Button className="w-full font-bold text-white shadow-lg shadow-amber-500/30 hover:shadow-xl hover:scale-105 transition-all" style={{ background: 'linear-gradient(135deg, #f59e0b, #ef4444)' }}>
-                  Contact Us
+                  {txt.contactUs}
                 </Button>
               </a>
             </div>
@@ -1111,7 +1149,7 @@ export default function HomePage() {
             <div className="plan-card rounded-2xl border border-white/10 bg-white/5 backdrop-blur-sm p-8" style={{ borderTop: '4px solid #a855f7' }}>
               <h3 className="text-lg font-bold text-white">Enterprise</h3>
               <div className="mt-4 flex items-baseline gap-1">
-                <span className="text-4xl font-extrabold text-white">Custom</span>
+                <span className="text-4xl font-extrabold text-white">{txt.custom}</span>
               </div>
               <ul className="mt-6 space-y-3 text-sm text-gray-300">
                 {['Unlimited plays', 'Unlimited games', 'Multi-location support', 'White-label option', 'Dedicated account manager', 'Custom integrations', 'Priority support'].map((f, i) => (
@@ -1119,21 +1157,21 @@ export default function HomePage() {
                 ))}
               </ul>
               <a href="#contact" className="block mt-8">
-                <Button className="w-full font-bold text-white shadow-lg shadow-amber-500/30 hover:shadow-xl hover:scale-105 transition-all" style={{ background: 'linear-gradient(135deg, #f59e0b, #ef4444)' }}>Contact Us</Button>
+                <Button className="w-full font-bold text-white shadow-lg shadow-amber-500/30 hover:shadow-xl hover:scale-105 transition-all" style={{ background: 'linear-gradient(135deg, #f59e0b, #ef4444)' }}>{txt.contactUs}</Button>
               </a>
             </div>
           </div>
 
-          <p className="mt-8 text-center text-sm text-gray-500">14-day free trial included. No credit card required.</p>
+          <p className="mt-8 text-center text-sm text-gray-500">{txt.trialNote}</p>
 
           {/* FAQ */}
           <div className="mt-16 mx-auto max-w-2xl">
-            <h3 className="text-center text-xl font-bold text-white mb-8">Frequently Asked Questions</h3>
+            <h3 className="text-center text-xl font-bold text-white mb-8">{txt.faqHeading}</h3>
             <div className="space-y-6">
               {[
-                { q: 'Is there a free trial?', a: 'Yes, all plans include a 14-day free trial.' },
-                { q: 'Can I change plans?', a: 'Yes, you can upgrade or downgrade at any time.' },
-                { q: 'How long does setup take?', a: 'Most businesses are live within 10 minutes.' },
+                { q: txt.faq1q, a: txt.faq1a },
+                { q: txt.faq2q, a: txt.faq2a },
+                { q: txt.faq3q, a: txt.faq3a },
               ].map((faq, i) => (
                 <div key={i} className="rounded-xl border border-white/10 bg-white/5 p-5">
                   <h4 className="font-semibold text-white">{faq.q}</h4>
@@ -1151,17 +1189,17 @@ export default function HomePage() {
       <section id="contact" className="py-32">
         <div ref={contactReveal.ref} className={`mx-auto max-w-2xl px-6 ${contactReveal.className}`}>
           <div className="text-center mb-12">
-            <h2 className="text-white" style={{ fontSize: 'clamp(2rem, 4vw, 3.5rem)', fontWeight: 900, letterSpacing: '-0.02em' }}>Ready to Get Started?</h2>
-            <p className="mt-3 text-lg text-gray-400">Fill out the form and we'll set you up within 24 hours.</p>
+            <h2 className="text-white" style={{ fontSize: 'clamp(2rem, 4vw, 3.5rem)', fontWeight: 900, letterSpacing: '-0.02em' }}>{txt.getStarted}</h2>
+            <p className="mt-3 text-lg text-gray-400">{txt.getStartedSub}</p>
             <div className="mt-4 inline-flex items-center gap-2 rounded-full bg-blue-500/10 border border-blue-500/20 px-4 py-2 text-sm text-blue-300 font-medium">
               <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" /></svg>
-              Based in Casablanca, Morocco {'\u{1F1F2}\u{1F1E6}'}
+              {txt.basedIn} {'\u{1F1F2}\u{1F1E6}'}
             </div>
           </div>
 
           <Card className="shadow-xl border border-white/10 bg-white/5 backdrop-blur-sm transition-all hover:border-[#94ffe5]/30 hover:shadow-[#94ffe5]/10">
             <CardContent className="p-8">
-              <ContactForm />
+              <ContactForm lang={lang} />
             </CardContent>
           </Card>
         </div>
@@ -1175,12 +1213,12 @@ export default function HomePage() {
               Win &amp; Win
             </span>
             <div className="flex gap-6 text-sm text-gray-500">
-              <a href="#" className="hover:text-white transition-colors">Terms</a>
-              <a href="#" className="hover:text-white transition-colors">Privacy</a>
-              <a href="#contact" className="hover:text-white transition-colors">Contact</a>
+              <a href="#" className="hover:text-white transition-colors">{txt.terms}</a>
+              <a href="#" className="hover:text-white transition-colors">{txt.privacy}</a>
+              <a href="#contact" className="hover:text-white transition-colors">{txt.contact}</a>
             </div>
-            <p className="text-sm text-gray-500">Made with {'\u2764\u{FE0F}'} in Morocco</p>
-            <p className="text-xs text-gray-600">{'\u00A9'} 2026 Win & Win. All rights reserved.</p>
+            <p className="text-sm text-gray-500">{txt.madeWith} {'\u2764\u{FE0F}'} {txt.inMorocco}</p>
+            <p className="text-xs text-gray-600">{txt.copyright}</p>
           </div>
         </div>
       </footer>
