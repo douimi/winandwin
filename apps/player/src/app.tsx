@@ -576,18 +576,22 @@ export function App() {
 
           {/* Merchant branding header */}
           <div class="immersive-header">
-            <div class="immersive-logo-frame">
-              {config.merchantLogo ? (
-                <img
-                  class="immersive-logo-img"
-                  src={config.merchantLogo}
-                  alt={config.merchantName}
-                />
-              ) : (
-                <span class="immersive-logo-initial">{initial}</span>
-              )}
-            </div>
-            <p class="immersive-merchant-name">{config.merchantName}</p>
+            {config.showLogo !== false && (
+              <div class="immersive-logo-frame">
+                {config.merchantLogo ? (
+                  <img
+                    class="immersive-logo-img"
+                    src={config.merchantLogo}
+                    alt={config.merchantName}
+                  />
+                ) : (
+                  <span class="immersive-logo-initial">{initial}</span>
+                )}
+              </div>
+            )}
+            {config.showName !== false && (
+              <p class="immersive-merchant-name">{config.merchantName}</p>
+            )}
           </div>
 
           {/* Game title */}
@@ -708,18 +712,22 @@ export function App() {
 
           {/* Merchant branding header */}
           <div class="immersive-header">
-            <div class="immersive-logo-frame">
-              {config.merchantLogo ? (
-                <img
-                  class="immersive-logo-img"
-                  src={config.merchantLogo}
-                  alt={config.merchantName}
-                />
-              ) : (
-                <span class="immersive-logo-initial">{initial}</span>
-              )}
-            </div>
-            <p class="immersive-merchant-name">{config.merchantName}</p>
+            {config.showLogo !== false && (
+              <div class="immersive-logo-frame">
+                {config.merchantLogo ? (
+                  <img
+                    class="immersive-logo-img"
+                    src={config.merchantLogo}
+                    alt={config.merchantName}
+                  />
+                ) : (
+                  <span class="immersive-logo-initial">{initial}</span>
+                )}
+              </div>
+            )}
+            {config.showName !== false && (
+              <p class="immersive-merchant-name">{config.merchantName}</p>
+            )}
           </div>
 
           {/* Game title */}

@@ -310,10 +310,13 @@ export function Wheel({ prizes, branding, onSpinComplete, spinning, onSpin, targ
                   <text
                     x={labelX} y={labelY}
                     text-anchor="middle" dominant-baseline="central"
-                    fill={seg.isPrize ? (wheelText || '#fff') : `${wheelText || 'rgba(255,255,255,0.5)'}`}
-                    font-size={seg.isPrize ? '11' : '9'}
-                    font-weight={seg.isPrize ? '700' : '500'}
+                    fill={seg.isPrize ? (wheelText || '#fff') : `${wheelText || 'rgba(255,255,255,0.6)'}`}
+                    font-size={seg.isPrize ? '13' : '10'}
+                    font-weight={seg.isPrize ? '800' : '500'}
                     font-style={seg.isPrize ? 'normal' : 'italic'}
+                    stroke={seg.isPrize ? 'rgba(0,0,0,0.4)' : 'none'}
+                    stroke-width={seg.isPrize ? '0.3' : '0'}
+                    paint-order="stroke"
                     transform={`rotate(${textRot}, ${labelX}, ${labelY})`}
                   >
                     {nameStr}

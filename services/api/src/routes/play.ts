@@ -86,6 +86,8 @@ playRouter.get('/:slug', async (c) => {
       data: {
         merchantName: merchantData.name,
         language: merchantData.language || 'en',
+        showLogo: merchantData.showLogo !== false,
+        showName: merchantData.showName !== false,
         monthlyLimitReached,
         merchantLogo: merchantData.logoUrl,
         merchantDescription: merchantData.description,

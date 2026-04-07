@@ -40,6 +40,10 @@ export default function SettingsPage() {
   const [description, setDescription] = useState('')
   const [savingBrand, setSavingBrand] = useState(false)
 
+  // Branding visibility state
+  const [showLogo, setShowLogo] = useState(true)
+  const [showName, setShowName] = useState(true)
+
   // Language state
   const [language, setLanguage] = useState<'en' | 'fr' | 'es' | 'ar'>('en')
 
@@ -69,6 +73,8 @@ export default function SettingsPage() {
       setLogoUrl((merchant as unknown as Record<string, string>).logoUrl ?? '')
       setBackgroundUrl((merchant as unknown as Record<string, string>).backgroundUrl ?? '')
       setDescription((merchant as unknown as Record<string, string>).description ?? '')
+      setShowLogo((merchant as unknown as Record<string, boolean>).showLogo !== false)
+      setShowName((merchant as unknown as Record<string, boolean>).showName !== false)
       setLanguage(((merchant as unknown as Record<string, string>).language as 'en' | 'fr' | 'es' | 'ar') ?? 'en')
       setAtmosphere((merchant as unknown as Record<string, string>).atmosphere ?? 'joyful')
     } catch (err) {
@@ -378,6 +384,56 @@ export default function SettingsPage() {
               {savingBrand ? 'Saving...' : 'Save Brand Identity'}
             </Button>
           </form>
+        </CardContent>
+      </Card>
+
+      {/* Branding Visibility */}
+      <Card>
+        <CardHeader>
+          <CardTitle>{'\uD83D\uDC41\uFE0F'} Branding Visibility</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted-foreground mb-4">
+            Control what branding elements appear on your game page.
+          </p>
+          <div className="space-y-3">
+            <label className="flex items-center justify-between rounded-lg border p-3 cursor-pointer hover:bg-gray-50 transition-colors">
+              <div>
+                <p className="text-sm font-medium">Show Business Logo</p>
+                <p className="text-xs text-muted-foreground">Display your logo on the game page</p>
+              </div>
+              <input
+                type="checkbox"
+                checked={showLogo}
+                onChange={async (e) => {
+                  const val = (e.target as HTMLInputElement).checked
+                  setShowLogo(val)
+                  if (merchantId) {
+                    try { await updateMerchant(merchantId, { showLogo: val }); showSuccess('Updated') } catch {}
+                  }
+                }}
+                className="h-5 w-5 rounded accent-indigo-600"
+              />
+            </label>
+            <label className="flex items-center justify-between rounded-lg border p-3 cursor-pointer hover:bg-gray-50 transition-colors">
+              <div>
+                <p className="text-sm font-medium">Show Business Name</p>
+                <p className="text-xs text-muted-foreground">Display your business name on the game page</p>
+              </div>
+              <input
+                type="checkbox"
+                checked={showName}
+                onChange={async (e) => {
+                  const val = (e.target as HTMLInputElement).checked
+                  setShowName(val)
+                  if (merchantId) {
+                    try { await updateMerchant(merchantId, { showName: val }); showSuccess('Updated') } catch {}
+                  }
+                }}
+                className="h-5 w-5 rounded accent-indigo-600"
+              />
+            </label>
+          </div>
         </CardContent>
       </Card>
 

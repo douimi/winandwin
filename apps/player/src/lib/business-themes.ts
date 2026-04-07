@@ -22,7 +22,7 @@ export const BUSINESS_THEMES: Record<string, BusinessTheme> = {
   restaurant: {
     category: 'restaurant',
     label: 'Restaurant',
-    bgEmojis: ['\u{1F355}', '\u{1F35D}', '\u{1F377}', '\u{1F957}', '\u{1F370}', '\u{1F37D}\u{FE0F}', '\u{1F9D1}\u{200D}\u{1F373}', '\u{1F942}'],
+    bgEmojis: ['\u{1F355}', '\u{1F35D}', '\u{2B50}', '\u{1F957}', '\u{1F370}', '\u{1F37D}\u{FE0F}', '\u{1F9D1}\u{200D}\u{1F373}', '\u{1F381}'],
     spinButtonText: 'SPIN!',
     spinButtonIcon: '\u{1F37D}\u{FE0F}',
     tryAgainText: 'Next time!',

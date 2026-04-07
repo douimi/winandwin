@@ -1,6 +1,8 @@
 export interface GameConfig {
   merchantName: string
   language?: string
+  showLogo?: boolean
+  showName?: boolean
   merchantLogo?: string
   merchantDescription?: string
   merchantCategory?: string

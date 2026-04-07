@@ -21,6 +21,8 @@ const updateMerchantSchema = z.object({
   customColor2: z.string().regex(/^#[0-9a-fA-F]{6}$/).optional(),
   customColor3: z.string().regex(/^#[0-9a-fA-F]{6}$/).optional(),
   language: z.enum(['en', 'fr', 'es', 'ar']).optional(),
+  showLogo: z.boolean().optional(),
+  showName: z.boolean().optional(),
   ctaMode: z.enum(['one_and_done', 'replay_with_ctas']).optional(),
   cooldownHours: z.number().int().min(1).max(720).optional(),
   maxWinsPerPeriod: z.number().int().min(1).max(100).optional(),
@@ -218,6 +220,8 @@ merchantsRouter.patch('/:id', async (c) => {
     if (parsed.data.customColor2 !== undefined) updates.customColor2 = parsed.data.customColor2
     if (parsed.data.customColor3 !== undefined) updates.customColor3 = parsed.data.customColor3
     if (parsed.data.language !== undefined) updates.language = parsed.data.language
+    if (parsed.data.showLogo !== undefined) updates.showLogo = parsed.data.showLogo
+    if (parsed.data.showName !== undefined) updates.showName = parsed.data.showName
     if (parsed.data.ctaMode !== undefined) updates.ctaMode = parsed.data.ctaMode
     if (parsed.data.cooldownHours !== undefined) updates.cooldownHours = parsed.data.cooldownHours
     if (parsed.data.maxWinsPerPeriod !== undefined) updates.maxWinsPerPeriod = parsed.data.maxWinsPerPeriod
