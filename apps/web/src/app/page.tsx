@@ -573,8 +573,111 @@ function ContactForm() {
 }
 
 /* ═══════════════════════════  MAIN PAGE  ═══════════════════════════ */
+const LANDING_TEXT = {
+  en: {
+    heroTitle1: 'Your Customers Play.',
+    heroTitle2: 'Your Business Wins.',
+    heroSubtitle: 'Boost engagement and drive growth with fun',
+    heroHighlight1: 'QR code games',
+    heroMid: 'at your business. Collect reviews, grow followers, and drive',
+    heroHighlight2: 'return visits',
+    seePlans: 'See Plans',
+    contactUs: 'Contact Us',
+    tryNow: 'Try it now — scratch to see what your customers experience',
+    howItWorks: 'How It Works',
+    howItWorksSubtitle: 'Engage your customers, collect valuable feedback and grow your business with three simple steps:',
+    step1: 'Create Your Game',
+    step1Desc: 'Choose Wheel of Fortune, Slots, or Mystery Box. Set your prizes and branding in minutes.',
+    step2: 'Share Your QR Code',
+    step2Desc: 'Print it on table tents, menus, or receipts. Customers scan with any phone.',
+    step3: 'Customers Play & Win',
+    step3Desc: 'They complete an action (Google review, Instagram follow), play your game, and win prizes.',
+    games: 'Three Games. Endless Fun.',
+    features: 'Everything You Need to Engage Customers',
+    plans: 'Choose Your Plan',
+    trialNote: '14-day free trial included. No credit card required.',
+    getStarted: 'Ready to Get Started?',
+    getStartedSub: 'Fill out the form and we\'ll set you up within 24 hours.',
+    businessName: 'Business Name',
+    yourName: 'Your Name',
+    email: 'Email',
+    phone: 'Phone',
+    businessType: 'Business Type',
+    message: 'Message',
+    sendBtn: 'Get Started',
+    sending: 'Sending...',
+    thankYou: 'Thanks! We\'ll reach out within 24 hours.',
+    basedIn: 'Based in Casablanca, Morocco',
+    madeWith: 'Made with',
+    inMorocco: 'in Morocco',
+    signIn: 'Sign In',
+    myDashboard: 'My Dashboard',
+    trusted: 'Trusted by 500+ businesses across Morocco',
+    faq: 'FAQ',
+    faq1q: 'Is there a free trial?',
+    faq1a: 'Yes, all plans include a 14-day free trial. No credit card required.',
+    faq2q: 'Can I change plans?',
+    faq2a: 'Yes, you can upgrade or downgrade at any time by contacting us.',
+    faq3q: 'How long does setup take?',
+    faq3a: 'Most businesses are live within 10 minutes.',
+    perMonth: '/mo',
+    custom: 'Custom',
+  },
+  fr: {
+    heroTitle1: 'Vos Clients Jouent.',
+    heroTitle2: 'Votre Business Gagne.',
+    heroSubtitle: 'Boostez l\'engagement et la croissance avec des',
+    heroHighlight1: 'jeux QR code',
+    heroMid: 'dans votre établissement. Collectez des avis, gagnez des abonnés et générez des',
+    heroHighlight2: 'visites récurrentes',
+    seePlans: 'Voir les Plans',
+    contactUs: 'Contactez-nous',
+    tryNow: 'Essayez — grattez pour voir ce que vos clients vivent',
+    howItWorks: 'Comment Ça Marche',
+    howItWorksSubtitle: 'Engagez vos clients, collectez des retours précieux et développez votre activité en trois étapes simples :',
+    step1: 'Créez Votre Jeu',
+    step1Desc: 'Choisissez la Roue de la Fortune, les Machines à Sous ou la Boîte Mystère. Configurez vos prix et votre branding en quelques minutes.',
+    step2: 'Partagez Votre QR Code',
+    step2Desc: 'Imprimez-le sur des chevalets de table, menus ou reçus. Les clients scannent avec n\'importe quel téléphone.',
+    step3: 'Les Clients Jouent & Gagnent',
+    step3Desc: 'Ils complètent une action (avis Google, suivi Instagram), jouent et gagnent des prix.',
+    games: 'Trois Jeux. Un Plaisir Infini.',
+    features: 'Tout Ce Dont Vous Avez Besoin Pour Engager Vos Clients',
+    plans: 'Choisissez Votre Plan',
+    trialNote: 'Essai gratuit de 14 jours inclus. Aucune carte de crédit requise.',
+    getStarted: 'Prêt à Commencer ?',
+    getStartedSub: 'Remplissez le formulaire et nous vous configurerons sous 24 heures.',
+    businessName: 'Nom de l\'entreprise',
+    yourName: 'Votre Nom',
+    email: 'Email',
+    phone: 'Téléphone',
+    businessType: 'Type d\'activité',
+    message: 'Message',
+    sendBtn: 'Commencer',
+    sending: 'Envoi...',
+    thankYou: 'Merci ! Nous vous contacterons sous 24 heures.',
+    basedIn: 'Basé à Casablanca, Maroc',
+    madeWith: 'Fait avec',
+    inMorocco: 'au Maroc',
+    signIn: 'Connexion',
+    myDashboard: 'Mon Tableau de Bord',
+    trusted: 'Approuvé par plus de 500 entreprises au Maroc',
+    faq: 'FAQ',
+    faq1q: 'Y a-t-il un essai gratuit ?',
+    faq1a: 'Oui, tous les plans incluent un essai gratuit de 14 jours. Aucune carte de crédit requise.',
+    faq2q: 'Puis-je changer de plan ?',
+    faq2a: 'Oui, vous pouvez passer à un plan supérieur ou inférieur à tout moment en nous contactant.',
+    faq3q: 'Combien de temps prend la configuration ?',
+    faq3a: 'La plupart des entreprises sont en ligne en moins de 10 minutes.',
+    perMonth: '/mois',
+    custom: 'Sur mesure',
+  },
+}
+
 export default function HomePage() {
   const isLoggedIn = useIsLoggedIn()
+  const [lang, setLang] = useState<'en' | 'fr'>('fr')
+  const txt = LANDING_TEXT[lang]
   const howItWorksReveal = useScrollReveal()
   const gamesReveal = useScrollReveal()
   const featuresReveal = useScrollReveal()
@@ -595,6 +698,13 @@ export default function HomePage() {
             <a href="#plans" className="transition-colors hover:text-white">Plans</a>
             <a href="#contact" className="transition-colors hover:text-white">Contact</a>
           </nav>
+          <button
+            type="button"
+            onClick={() => setLang(lang === 'en' ? 'fr' : 'en')}
+            className="rounded-full border border-white/20 px-3 py-1.5 text-xs font-bold text-white/80 hover:bg-white/10 transition-colors"
+          >
+            {lang === 'en' ? '🇫🇷 FR' : '🇬🇧 EN'}
+          </button>
           <div className="flex gap-3" style={{ minWidth: 140 }}>
             {isLoggedIn === null ? (
               /* Loading — show a subtle placeholder to prevent layout shift */
@@ -602,13 +712,13 @@ export default function HomePage() {
             ) : isLoggedIn ? (
               <Link href="/dashboard" prefetch={true}>
                 <Button className="bg-gradient-to-r from-[#6366f1] to-[#ec4899] font-semibold shadow-lg shadow-indigo-500/25 hover:shadow-xl active:scale-95 transition-transform">
-                  My Dashboard
+                  {txt.myDashboard}
                 </Button>
               </Link>
             ) : (
               <>
                 <Link href="/sign-in" prefetch={true}>
-                  <Button variant="ghost" className="text-gray-300 hover:text-white active:scale-95 transition-transform">Sign In</Button>
+                  <Button variant="ghost" className="text-gray-300 hover:text-white active:scale-95 transition-transform">{txt.signIn}</Button>
                 </Link>
                 <a href="#contact">
                   <Button className="font-bold text-white shadow-lg shadow-amber-500/30 hover:shadow-xl hover:scale-105 active:scale-95 transition-all" style={{ background: 'linear-gradient(135deg, #f59e0b, #ef4444)' }}>
