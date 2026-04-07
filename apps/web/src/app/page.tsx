@@ -805,7 +805,7 @@ export default function HomePage() {
             <div className="grid gap-10 md:grid-cols-3">
               {[
                 { emoji: '\u{1F3AE}', title: 'Create Your Game', desc: 'Choose Wheel of Fortune, Slots, or Mystery Box. Set your prizes and branding in minutes.', color: 'bg-indigo-500/20 text-indigo-400', iconBg: 'bg-indigo-500', delay: 'animate-slideUp-d1' },
-                { emoji: '\u{1F4F2}', title: 'Share Your QR Code', desc: 'Print it on table tents, menus, or receipts. Customers scan with any phone.', color: 'bg-purple-500/20 text-purple-400', iconBg: 'bg-purple-500', delay: 'animate-slideUp-d2' },
+                { emoji: '\u{1F517}', title: 'Share Your QR Code', desc: 'Print it on table tents, menus, or receipts. Customers scan with any phone.', color: 'bg-purple-500/20 text-purple-400', iconBg: 'bg-purple-500', delay: 'animate-slideUp-d2' },
                 { emoji: '\u{1F389}', title: 'Customers Play & Win', desc: 'They complete an action (Google review, Instagram follow), play your game, and win prizes.', color: 'bg-pink-500/20 text-pink-400', iconBg: 'bg-pink-500', delay: 'animate-slideUp-d3' },
               ].map((step, i) => (
                 <div key={i} className={`relative flex flex-col items-center text-center ${step.delay}`} style={{ transform: i === 1 ? 'translateY(30px)' : 'none' }}>
@@ -815,7 +815,20 @@ export default function HomePage() {
                     style={{ animation: `float 4s ease-in-out ${i * 0.5}s infinite` }}
                   >
                     <div className="flex h-[60px] w-[60px] items-center justify-center rounded-full bg-white/80 text-4xl shadow-inner">
-                      {step.emoji}
+                      {step.title === 'Share Your QR Code' ? (
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-purple-600">
+                          <rect x="2" y="2" width="8" height="8" rx="1" />
+                          <rect x="14" y="2" width="8" height="8" rx="1" />
+                          <rect x="2" y="14" width="8" height="8" rx="1" />
+                          <rect x="14" y="14" width="4" height="4" rx="0.5" />
+                          <rect x="20" y="14" width="2" height="2" rx="0.3" />
+                          <rect x="14" y="20" width="2" height="2" rx="0.3" />
+                          <rect x="18" y="18" width="4" height="4" rx="0.5" />
+                          <rect x="5" y="5" width="2" height="2" fill="currentColor" rx="0.3" />
+                          <rect x="17" y="5" width="2" height="2" fill="currentColor" rx="0.3" />
+                          <rect x="5" y="17" width="2" height="2" fill="currentColor" rx="0.3" />
+                        </svg>
+                      ) : step.emoji}
                     </div>
                   </div>
                   {/* Step number */}
