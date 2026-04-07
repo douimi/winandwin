@@ -113,7 +113,8 @@ export function SignInForm() {
 
             <Button
               type="submit"
-              className="w-full h-11 bg-gradient-to-r from-[#6366f1] to-[#ec4899] font-semibold shadow-lg shadow-[#6366f1]/25 transition-shadow hover:shadow-xl hover:shadow-[#6366f1]/30"
+              className="w-full h-11 font-semibold shadow-lg shadow-[#94ffe5]/25 transition-shadow hover:shadow-xl hover:shadow-[#94ffe5]/30"
+              style={{ background: '#94ffe5', color: '#0a0a1a' }}
               disabled={loading}
             >
               {loading ? (

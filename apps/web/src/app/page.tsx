@@ -561,7 +561,8 @@ function ContactForm() {
       <Button
         type="submit"
         disabled={status === 'loading'}
-        className="w-full bg-gradient-to-r from-[#6366f1] to-[#ec4899] py-3 text-base font-semibold shadow-lg shadow-indigo-500/25 transition-all hover:shadow-xl hover:shadow-indigo-500/30"
+        className="w-full py-3 text-base font-bold shadow-lg transition-all hover:shadow-xl hover:shadow-[#94ffe5]/30"
+        style={{ background: '#94ffe5', color: '#0a0a1a' }}
         size="lg"
       >
         {status === 'loading' ? 'Sending...' : 'Get Started'}
@@ -683,14 +684,22 @@ export default function HomePage() {
           ))}
         </div>
 
+        {/* Decorative stickers */}
+        <div className="pointer-events-none absolute inset-0 overflow-hidden">
+          <div style={{ position: 'absolute', top: '15%', right: '8%', width: 60, height: 60, borderRadius: '50%', border: '3px solid #94ffe5', opacity: 0.3, animation: 'sticker-float 6s ease-in-out infinite' }} />
+          <div style={{ position: 'absolute', bottom: '20%', left: '5%', width: 40, height: 40, background: '#a855f7', borderRadius: 8, transform: 'rotate(45deg)', opacity: 0.15, animation: 'sticker-float 8s ease-in-out infinite 1s' }} />
+          <div style={{ position: 'absolute', top: '60%', right: '15%', width: 30, height: 30, background: '#f59e0b', borderRadius: '50%', opacity: 0.2, animation: 'sticker-float 7s ease-in-out infinite 0.5s' }} />
+          <div style={{ position: 'absolute', top: '40%', left: '12%', width: 50, height: 50, border: '3px solid #ec4899', borderRadius: 12, transform: 'rotate(15deg)', opacity: 0.2, animation: 'sticker-float 9s ease-in-out infinite 2s' }} />
+        </div>
+
         <div className="relative mx-auto max-w-7xl px-6 pb-28 pt-20 lg:pt-32">
           <div className="grid items-center gap-12 lg:grid-cols-2">
             {/* Left — Copy */}
             <div className="text-center lg:text-left animate-slideUp">
-              <h1 className="text-4xl font-extrabold leading-[1.1] tracking-tight sm:text-5xl lg:text-6xl">
+              <h1 style={{ fontSize: 'clamp(2.5rem, 6vw, 5rem)', lineHeight: 1.05, fontWeight: 900, letterSpacing: '-0.03em' }}>
                 <span
                   className="bg-clip-text text-transparent"
-                  style={{ backgroundImage: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 40%, #ec4899 100%)' }}
+                  style={{ backgroundImage: 'linear-gradient(135deg, #6366f1 0%, #94ffe5 50%, #ec4899 100%)' }}
                 >
                   Your Customers Play.
                 </span>
@@ -698,13 +707,14 @@ export default function HomePage() {
                 <span className="text-white">Your Business Wins.</span>
               </h1>
               <p className="mt-6 max-w-lg text-lg leading-relaxed text-gray-400 sm:text-xl lg:mx-0 mx-auto">
-                Deploy QR code games at your business. Collect reviews, grow followers, drive return visits — all while your customers have fun.
+                Deploy <span style={{ color: '#94ffe5', fontWeight: 600 }}>QR code games</span> at your business. Collect reviews, grow followers, drive <span style={{ color: '#94ffe5', fontWeight: 600 }}>return visits</span> — all while your customers have fun.
               </p>
               <div className="mt-8 flex flex-col items-center gap-4 sm:flex-row lg:justify-start justify-center">
                 <a href="#plans">
                   <Button
                     size="lg"
-                    className="bg-gradient-to-r from-[#6366f1] to-[#ec4899] px-8 text-base font-semibold shadow-lg shadow-indigo-500/25 transition-all hover:shadow-xl hover:scale-105"
+                    className="px-8 text-base font-bold shadow-lg transition-all hover:shadow-xl hover:shadow-[#94ffe5]/30 hover:scale-105"
+                    style={{ background: '#94ffe5', color: '#0a0a1a' }}
                   >
                     See Plans
                   </Button>
@@ -782,7 +792,7 @@ export default function HomePage() {
       <section id="how-it-works" className="py-32 bg-white/[0.02]">
         <div ref={howItWorksReveal.ref} className={`mx-auto max-w-5xl px-6 ${howItWorksReveal.className}`}>
           <div className="text-center mb-16">
-            <h2 className="text-3xl font-extrabold tracking-tight sm:text-4xl text-white">How It Works</h2>
+            <h2 className="text-white" style={{ fontSize: 'clamp(2rem, 4vw, 3.5rem)', fontWeight: 900, letterSpacing: '-0.02em' }}>How It Works</h2>
             <p className="mt-3 text-lg text-gray-400">Three simple steps to gamify your business</p>
           </div>
 
@@ -797,7 +807,7 @@ export default function HomePage() {
                 { emoji: '\u{1F4F1}', title: 'Share Your QR Code', desc: 'Print it on table tents, menus, or receipts. Customers scan with any phone.', color: 'bg-purple-500/20 text-purple-400', iconBg: 'bg-purple-500', delay: 'animate-slideUp-d2' },
                 { emoji: '\u{1F389}', title: 'Customers Play & Win', desc: 'They complete an action (Google review, Instagram follow), play your game, and win prizes.', color: 'bg-pink-500/20 text-pink-400', iconBg: 'bg-pink-500', delay: 'animate-slideUp-d3' },
               ].map((step, i) => (
-                <div key={i} className={`relative flex flex-col items-center text-center ${step.delay}`}>
+                <div key={i} className={`relative flex flex-col items-center text-center ${step.delay}`} style={{ transform: i === 1 ? 'translateY(30px)' : 'none' }}>
                   {/* Circle with emoji + colored ring */}
                   <div
                     className={`relative z-10 flex h-32 w-32 items-center justify-center rounded-full ${step.color} shadow-lg ring-4 ring-white/10`}
@@ -826,31 +836,31 @@ export default function HomePage() {
       <section id="games" className="py-32">
         <div ref={gamesReveal.ref} className={`mx-auto max-w-6xl px-6 ${gamesReveal.className}`}>
           <div className="text-center mb-16">
-            <h2 className="text-3xl font-extrabold tracking-tight sm:text-4xl text-white">Three Games. Endless Fun.</h2>
+            <h2 className="text-white" style={{ fontSize: 'clamp(2rem, 4vw, 3.5rem)', fontWeight: 900, letterSpacing: '-0.02em' }}>Three Games. Endless Fun.</h2>
             <p className="mt-3 text-lg text-gray-400">Each one designed to delight your customers</p>
           </div>
 
           <div className="grid gap-8 md:grid-cols-3">
             {/* Wheel of Fortune */}
             <div className="game-card rounded-2xl overflow-hidden shadow-lg border border-white/10 animate-slideUp-d1 transition-transform duration-300 hover:shadow-2xl" style={{ transformStyle: 'preserve-3d' }} onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = 'perspective(1000px) rotateY(5deg) translateY(-4px)' }} onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = 'perspective(1000px) rotateY(0deg) translateY(0px)' }}>
-              <div className="h-52 flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}>
-                <div className="wheel-spin w-32 h-32">
+              <div className="h-64 flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}>
+                <div className="wheel-spin w-36 h-36">
                   <PhoneWheelSVG />
                 </div>
               </div>
               <div className="p-6 bg-white/5 backdrop-blur-sm">
-                <h3 className="text-xl font-bold flex items-center gap-2">{'\u{1F3A1}'} Wheel of Fortune</h3>
-                <p className="mt-2 text-gray-400">The classic spin-to-win. Customers love the anticipation!</p>
+                <h3 className="text-2xl font-black flex items-center gap-2">{'\u{1F3A1}'} Wheel of Fortune</h3>
+                <p className="mt-2 text-base text-gray-400">The classic spin-to-win. Customers love the anticipation!</p>
               </div>
             </div>
 
             {/* Slot Machine */}
             <div className="game-card rounded-2xl overflow-hidden shadow-lg border border-white/10 animate-slideUp-d2 transition-transform duration-300 hover:shadow-2xl" style={{ transformStyle: 'preserve-3d' }} onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = 'perspective(1000px) rotateY(5deg) translateY(-4px)' }} onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = 'perspective(1000px) rotateY(0deg) translateY(0px)' }}>
-              <div className="h-52 flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #f59e0b, #f97316)' }}>
+              <div className="h-64 flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #f59e0b, #f97316)' }}>
                 <div className="flex gap-3">
                   {['\u{1F352}', '\u2B50', '\u{1F381}'].map((emoji, j) => (
-                    <div key={j} className="w-16 h-20 rounded-lg bg-white/20 backdrop-blur-sm flex items-center justify-center overflow-hidden">
-                      <div className="slot-scroll text-3xl" style={{ animationDelay: `${j * 0.1}s` }}>
+                    <div key={j} className="w-18 h-22 rounded-lg bg-white/20 backdrop-blur-sm flex items-center justify-center overflow-hidden">
+                      <div className="slot-scroll text-5xl" style={{ animationDelay: `${j * 0.1}s` }}>
                         {emoji}
                       </div>
                     </div>
@@ -858,19 +868,19 @@ export default function HomePage() {
                 </div>
               </div>
               <div className="p-6 bg-white/5 backdrop-blur-sm">
-                <h3 className="text-xl font-bold flex items-center gap-2">{'\u{1F3B0}'} Slot Machine</h3>
-                <p className="mt-2 text-gray-400">Match symbols to win. Pure casino-style excitement!</p>
+                <h3 className="text-2xl font-black flex items-center gap-2">{'\u{1F3B0}'} Slot Machine</h3>
+                <p className="mt-2 text-base text-gray-400">Match symbols to win. Pure casino-style excitement!</p>
               </div>
             </div>
 
             {/* Mystery Box */}
             <div className="game-card rounded-2xl overflow-hidden shadow-lg border border-white/10 animate-slideUp-d3 transition-transform duration-300 hover:shadow-2xl" style={{ transformStyle: 'preserve-3d' }} onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = 'perspective(1000px) rotateY(5deg) translateY(-4px)' }} onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = 'perspective(1000px) rotateY(0deg) translateY(0px)' }}>
-              <div className="h-52 flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #10b981, #14b8a6)' }}>
+              <div className="h-64 flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #10b981, #14b8a6)' }}>
                 <div className="flex gap-4">
                   {['\u{1F381}', '\u{1F4E6}', '\u{1F381}'].map((emoji, j) => (
                     <div
                       key={j}
-                      className={`text-4xl ${j === 1 ? 'box-bounce' : ''}`}
+                      className={`text-5xl ${j === 1 ? 'box-bounce' : ''}`}
                       style={j === 1 ? { animationDelay: '0s' } : {}}
                     >
                       {emoji}
@@ -879,8 +889,8 @@ export default function HomePage() {
                 </div>
               </div>
               <div className="p-6 bg-white/5 backdrop-blur-sm">
-                <h3 className="text-xl font-bold flex items-center gap-2">{'\u{1F4E6}'} Mystery Box</h3>
-                <p className="mt-2 text-gray-400">Tap to reveal. Simple, fun, and addictive!</p>
+                <h3 className="text-2xl font-black flex items-center gap-2">{'\u{1F4E6}'} Mystery Box</h3>
+                <p className="mt-2 text-base text-gray-400">Tap to reveal. Simple, fun, and addictive!</p>
               </div>
             </div>
           </div>
@@ -893,7 +903,7 @@ export default function HomePage() {
       <section id="features" className="py-32 bg-white/[0.02]">
         <div ref={featuresReveal.ref} className={`mx-auto max-w-6xl px-6 ${featuresReveal.className}`}>
           <div className="text-center mb-16">
-            <h2 className="text-3xl font-extrabold tracking-tight sm:text-4xl text-white">Everything You Need to Engage Customers</h2>
+            <h2 className="text-white" style={{ fontSize: 'clamp(2rem, 4vw, 3.5rem)', fontWeight: 900, letterSpacing: '-0.02em' }}>Everything You Need to Engage Customers</h2>
             <p className="mt-3 text-lg text-gray-400">Powerful features, simple to use</p>
           </div>
 
@@ -929,13 +939,13 @@ export default function HomePage() {
       <section id="plans" className="py-32 bg-white/[0.02]">
         <div ref={plansReveal.ref} className={`mx-auto max-w-5xl px-6 ${plansReveal.className}`}>
           <div className="text-center mb-16">
-            <h2 className="text-3xl font-extrabold tracking-tight sm:text-4xl text-white">Choose Your Plan</h2>
+            <h2 className="text-white" style={{ fontSize: 'clamp(2rem, 4vw, 3.5rem)', fontWeight: 900, letterSpacing: '-0.02em' }}>Choose Your Plan</h2>
             <p className="mt-3 text-lg text-gray-400">Simple pricing, powerful results</p>
           </div>
 
           <div className="grid gap-8 md:grid-cols-3">
             {/* Starter */}
-            <div className="plan-card rounded-2xl border border-white/10 bg-white/5 backdrop-blur-sm p-8">
+            <div className="plan-card rounded-2xl border border-white/10 bg-white/5 backdrop-blur-sm p-8" style={{ borderTop: '4px solid #94ffe5' }}>
               <h3 className="text-lg font-bold text-white">Starter</h3>
               <div className="mt-4 flex items-baseline gap-1">
                 <span className="text-4xl font-extrabold text-white">299</span>
@@ -952,7 +962,7 @@ export default function HomePage() {
             </div>
 
             {/* Pro — highlighted */}
-            <div className="plan-card relative rounded-2xl bg-white/10 backdrop-blur-sm p-8 shadow-xl ring-2 ring-indigo-500" style={{ animation: 'pulse-glow 2s ease-in-out infinite' }}>
+            <div className="plan-card relative rounded-2xl bg-white/10 backdrop-blur-sm p-8 shadow-xl ring-2 ring-indigo-500" style={{ borderTop: '4px solid #f59e0b', animation: 'pulse-glow 2s ease-in-out infinite' }}>
               <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-gradient-to-r from-indigo-500 to-pink-500 px-4 py-1 text-xs font-bold text-white animate-pulse">
                 RECOMMENDED
               </div>
@@ -974,7 +984,7 @@ export default function HomePage() {
             </div>
 
             {/* Enterprise */}
-            <div className="plan-card rounded-2xl border border-white/10 bg-white/5 backdrop-blur-sm p-8">
+            <div className="plan-card rounded-2xl border border-white/10 bg-white/5 backdrop-blur-sm p-8" style={{ borderTop: '4px solid #a855f7' }}>
               <h3 className="text-lg font-bold text-white">Enterprise</h3>
               <div className="mt-4 flex items-baseline gap-1">
                 <span className="text-4xl font-extrabold text-white">Custom</span>
@@ -1017,7 +1027,7 @@ export default function HomePage() {
       <section id="contact" className="py-32">
         <div ref={contactReveal.ref} className={`mx-auto max-w-2xl px-6 ${contactReveal.className}`}>
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-extrabold tracking-tight sm:text-4xl text-white">Ready to Get Started?</h2>
+            <h2 className="text-white" style={{ fontSize: 'clamp(2rem, 4vw, 3.5rem)', fontWeight: 900, letterSpacing: '-0.02em' }}>Ready to Get Started?</h2>
             <p className="mt-3 text-lg text-gray-400">Fill out the form and we'll set you up within 24 hours.</p>
             <div className="mt-4 inline-flex items-center gap-2 rounded-full bg-blue-500/10 border border-blue-500/20 px-4 py-2 text-sm text-blue-300 font-medium">
               <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" /><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" /></svg>
@@ -1025,7 +1035,7 @@ export default function HomePage() {
             </div>
           </div>
 
-          <Card className="shadow-xl border border-white/10 bg-white/5 backdrop-blur-sm">
+          <Card className="shadow-xl border border-white/10 bg-white/5 backdrop-blur-sm transition-all hover:border-[#94ffe5]/30 hover:shadow-[#94ffe5]/10">
             <CardContent className="p-8">
               <ContactForm />
             </CardContent>
@@ -1034,7 +1044,7 @@ export default function HomePage() {
       </section>
 
       {/* ═══════════════════════  SECTION 7: FOOTER  ═══════════════════════ */}
-      <footer className="border-t border-white/10 bg-[#060612] py-12">
+      <footer className="bg-[#060612] py-12" style={{ borderTop: '2px solid #94ffe5' }}>
         <div className="mx-auto max-w-7xl px-6">
           <div className="flex flex-col items-center gap-6 text-center">
             <span className="bg-gradient-to-r from-[#6366f1] to-[#ec4899] bg-clip-text text-2xl font-extrabold tracking-tight text-transparent">

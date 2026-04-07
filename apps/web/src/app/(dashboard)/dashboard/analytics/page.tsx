@@ -81,7 +81,7 @@ export default function AnalyticsPage() {
     return (
       <div className="space-y-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <h1 className="text-2xl font-bold">Analytics</h1>
+          <h1 className="text-2xl font-black tracking-tight">Analytics</h1>
         </div>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {Array.from({ length: 4 }).map((_, i) => (
@@ -106,7 +106,7 @@ export default function AnalyticsPage() {
   if (error) {
     return (
       <div className="space-y-6">
-        <h1 className="text-2xl font-bold">Analytics</h1>
+        <h1 className="text-2xl font-black tracking-tight">Analytics</h1>
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
             <p className="text-sm text-destructive">{error}</p>
@@ -133,7 +133,7 @@ export default function AnalyticsPage() {
   ) {
     return (
       <div className="space-y-6">
-        <h1 className="text-2xl font-bold">Analytics</h1>
+        <h1 className="text-2xl font-black tracking-tight">Analytics</h1>
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-16">
             <p className="text-4xl">{'\uD83D\uDCC9'}</p>
@@ -205,7 +205,7 @@ export default function AnalyticsPage() {
     <div className="space-y-6">
       {/* Header with period selector */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <h1 className="text-2xl font-bold">Analytics</h1>
+        <h1 className="text-2xl font-black tracking-tight">Analytics</h1>
         {hasFeature(tier, 'analytics.periodSelector') ? (
           <div className="flex gap-1 rounded-lg border bg-muted/50 p-1">
             {(Object.keys(PERIOD_LABELS) as Period[]).map((p) => (
@@ -213,8 +213,8 @@ export default function AnalyticsPage() {
                 key={p}
                 variant={period === p ? 'default' : 'ghost'}
                 size="sm"
-                className={`h-8 px-3 text-xs sm:text-sm ${period === p ? 'text-white shadow-md' : 'text-muted-foreground hover:bg-gray-100'}`}
-                style={period === p ? { background: 'linear-gradient(135deg, #6366f1, #a855f7)' } : undefined}
+                className={`h-8 px-3 text-xs sm:text-sm ${period === p ? 'shadow-md' : 'text-muted-foreground hover:bg-gray-100'}`}
+                style={period === p ? { background: '#94ffe5', color: '#0a0a1a' } : undefined}
                 onClick={() => setPeriod(p)}
               >
                 {PERIOD_LABELS[p]}
@@ -304,7 +304,7 @@ export default function AnalyticsPage() {
       {/* Section 2: Conversion Funnel */}
       <Card className="transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5">
         <CardHeader>
-          <CardTitle>Conversion Funnel</CardTitle>
+          <CardTitle className="font-black tracking-tight">Conversion Funnel</CardTitle>
         </CardHeader>
         <CardContent>
           <ProFeatureLock locked={!hasFeature(tier, 'analytics.funnel')} label="Advanced Analytics">
@@ -351,7 +351,7 @@ export default function AnalyticsPage() {
         {/* Top Actions by Completion */}
         <Card className="transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5">
           <CardHeader>
-            <CardTitle>Top Actions by Completion</CardTitle>
+            <CardTitle className="font-black tracking-tight">Top Actions by Completion</CardTitle>
           </CardHeader>
           <CardContent>
             <ProFeatureLock locked={!hasFeature(tier, 'analytics.topActions')} label="Top Actions Breakdown">
@@ -396,7 +396,7 @@ export default function AnalyticsPage() {
         {/* Prize Popularity */}
         <Card className="transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5">
           <CardHeader>
-            <CardTitle>Prize Popularity</CardTitle>
+            <CardTitle className="font-black tracking-tight">Prize Popularity</CardTitle>
           </CardHeader>
           <CardContent>
             <ProFeatureLock locked={!hasFeature(tier, 'analytics.prizePopularity')} label="Prize Popularity">
@@ -444,7 +444,7 @@ export default function AnalyticsPage() {
       {/* Section 4: Activity This Week */}
       <Card className="transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5">
         <CardHeader>
-          <CardTitle>Activity This Week</CardTitle>
+          <CardTitle className="font-black tracking-tight">Activity This Week</CardTitle>
         </CardHeader>
         <CardContent>
           <ProFeatureLock locked={!hasFeature(tier, 'analytics.weeklyChart')} label="Weekly Activity Chart">
@@ -460,8 +460,8 @@ export default function AnalyticsPage() {
                     </span>
                     <div className="relative w-full" style={{ height: 120 }}>
                       <div
-                        className="absolute bottom-0 w-full rounded-t bg-indigo-500/80"
-                        style={{ height: `${heightPct}%`, minHeight: 4, transition: 'height 1s ease-out' }}
+                        className="absolute bottom-0 w-full rounded-t"
+                        style={{ height: `${heightPct}%`, minHeight: 4, transition: 'height 1s ease-out', background: 'linear-gradient(180deg, #94ffe5, #6366f1)' }}
                       />
                     </div>
                     <span className="text-xs font-medium text-muted-foreground">{day}</span>

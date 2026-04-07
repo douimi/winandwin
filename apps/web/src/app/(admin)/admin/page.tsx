@@ -29,6 +29,16 @@ const KPI_GRADIENTS = [
   'linear-gradient(135deg, #ef4444, #f97316)',
 ]
 
+const KPI_BORDER_COLORS = [
+  '#94ffe5',  // mint
+  '#a855f7',  // purple
+  '#ec4899',  // pink
+  '#f59e0b',  // amber
+  '#10b981',  // emerald
+  '#3b82f6',  // blue
+  '#ef4444',  // red
+]
+
 interface ContactRequest {
   id: string
   business_name: string
@@ -106,7 +116,7 @@ export default function AdminOverviewPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Overview</h1>
+          <h1 className="text-2xl font-black text-gray-900">Overview</h1>
           <p className="mt-1 text-sm text-gray-500">{dateStr}</p>
         </div>
         <div className="flex items-center gap-3">
@@ -128,7 +138,7 @@ export default function AdminOverviewPage() {
       {/* KPI Cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {kpiConfig.map((kpi, idx) => (
-          <Card key={kpi.key} className="border border-gray-200 bg-white shadow-sm rounded-xl transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5">
+          <Card key={kpi.key} className="border border-gray-200 bg-white shadow-sm rounded-xl transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5" style={{ borderLeft: `4px solid ${KPI_BORDER_COLORS[idx] ?? '#94ffe5'}` }}>
             <CardContent className="p-6">
               <div className="flex items-center gap-4">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl" style={{ background: KPI_GRADIENTS[idx] }}>
@@ -139,7 +149,7 @@ export default function AdminOverviewPage() {
                   {loading ? (
                     <div className="h-9 w-24 animate-pulse rounded bg-gray-100" />
                   ) : (
-                    <p className="text-3xl font-bold text-indigo-600">
+                    <p className="text-indigo-600" style={{ fontSize: 'clamp(1.5rem, 3vw, 2.5rem)', fontWeight: 900, letterSpacing: '-0.02em' }}>
                       <AnimatedNumber value={stats?.[kpi.key] ?? 0} />
                     </p>
                   )}
@@ -156,7 +166,7 @@ export default function AdminOverviewPage() {
         <Card className="border border-gray-200 bg-white shadow-sm rounded-xl transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-gray-900">Top Merchants</CardTitle>
+              <CardTitle className="text-gray-900 font-black">Top Merchants</CardTitle>
               <a href="/admin/merchants" className="text-xs font-medium text-indigo-600 hover:text-indigo-700 transition-colors">
                 View all
               </a>
@@ -219,7 +229,7 @@ export default function AdminOverviewPage() {
         <Card className="border border-gray-200 bg-white shadow-sm rounded-xl transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-gray-900">Recent Contacts</CardTitle>
+              <CardTitle className="text-gray-900 font-black">Recent Contacts</CardTitle>
               <a href="/admin/contacts" className="text-xs font-medium text-indigo-600 hover:text-indigo-700 transition-colors">
                 View all
               </a>
@@ -260,7 +270,7 @@ export default function AdminOverviewPage() {
       {/* Recent Activity Log */}
       <Card className="border border-gray-200 bg-white shadow-sm rounded-xl transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5">
         <CardHeader className="pb-3">
-          <CardTitle className="text-gray-900">Recent Activity</CardTitle>
+          <CardTitle className="text-gray-900 font-black">Recent Activity</CardTitle>
         </CardHeader>
         <CardContent>
           {loading ? (

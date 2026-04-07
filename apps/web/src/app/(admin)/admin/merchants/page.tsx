@@ -7,10 +7,10 @@ import { fetchAdminMerchants, updateAdminMerchant, type AdminMerchantRow } from 
 import { MerchantSearch } from './merchant-search'
 
 const TIER_STYLES: Record<string, string> = {
-  free: 'border-gray-300 text-gray-600 bg-white',
-  starter: 'border-blue-300 text-blue-700 bg-white shadow-sm shadow-blue-500/20',
-  pro: 'border-indigo-300 text-indigo-700 bg-white shadow-sm shadow-indigo-500/20',
-  enterprise: 'border-amber-300 text-amber-700 bg-white shadow-sm shadow-amber-500/20',
+  free: 'border-gray-300 text-gray-600 bg-gray-50',
+  starter: 'border-cyan-400 text-cyan-700 bg-cyan-50 shadow-sm shadow-cyan-500/20',
+  pro: 'border-purple-400 text-purple-700 bg-purple-50 shadow-sm shadow-purple-500/20',
+  enterprise: 'border-amber-400 text-amber-700 bg-amber-50 shadow-sm shadow-amber-500/20',
 }
 
 function TierBadge({ tier }: { tier: string }) {
@@ -76,7 +76,7 @@ export default function AdminMerchantsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Merchants</h1>
+          <h1 className="text-2xl font-black text-gray-900">Merchants</h1>
           <p className="mt-1 text-sm text-gray-500">
             {loading ? 'Loading...' : `${merchants.length} merchant${merchants.length !== 1 ? 's' : ''} found`}
           </p>
@@ -96,13 +96,13 @@ export default function AdminMerchantsPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-gray-200 text-left bg-gray-50">
-                  <th className="px-4 py-3.5 font-semibold text-gray-600">Name</th>
-                  <th className="px-4 py-3.5 font-semibold text-gray-600">Category</th>
-                  <th className="px-4 py-3.5 font-semibold text-gray-600">Tier</th>
-                  <th className="px-4 py-3.5 font-semibold text-gray-600">Status</th>
-                  <th className="px-4 py-3.5 font-semibold text-gray-600">Monthly Plays</th>
-                  <th className="px-4 py-3.5 font-semibold text-gray-600">Usage</th>
-                  <th className="px-4 py-3.5 font-semibold text-gray-600">Joined</th>
+                  <th className="px-4 py-3.5 font-black text-xs uppercase tracking-wider text-gray-600">Name</th>
+                  <th className="px-4 py-3.5 font-black text-xs uppercase tracking-wider text-gray-600">Category</th>
+                  <th className="px-4 py-3.5 font-black text-xs uppercase tracking-wider text-gray-600">Tier</th>
+                  <th className="px-4 py-3.5 font-black text-xs uppercase tracking-wider text-gray-600">Status</th>
+                  <th className="px-4 py-3.5 font-black text-xs uppercase tracking-wider text-gray-600">Monthly Plays</th>
+                  <th className="px-4 py-3.5 font-black text-xs uppercase tracking-wider text-gray-600">Usage</th>
+                  <th className="px-4 py-3.5 font-black text-xs uppercase tracking-wider text-gray-600">Joined</th>
                 </tr>
               </thead>
               <tbody>

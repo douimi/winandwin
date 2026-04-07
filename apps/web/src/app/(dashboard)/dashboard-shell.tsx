@@ -68,10 +68,10 @@ export function DashboardShell({ user, merchantName, merchantSlug, merchantTier,
                   ? 'text-white shadow-md'
                   : 'text-muted-foreground hover:bg-indigo-50 hover:text-foreground'
               }`}
-              style={active ? { background: 'linear-gradient(135deg, #6366f1, #a855f7)' } : undefined}
+              style={active ? { background: 'linear-gradient(135deg, #6366f1, #06b6d4)' } : undefined}
               onClick={() => setSidebarOpen(false)}
             >
-              <span className="text-base">{item.icon}</span>
+              <span className="text-xl">{item.icon}</span>
               {item.label}
             </a>
           )
@@ -148,7 +148,7 @@ export function DashboardShell({ user, merchantName, merchantSlug, merchantTier,
   return (
     <div className="flex min-h-screen">
       {/* Desktop sidebar */}
-      <aside className="hidden w-64 flex-col border-r lg:flex sticky top-0 h-screen" style={{ background: 'linear-gradient(180deg, #f8f7ff 0%, #ffffff 100%)' }}>
+      <aside className="hidden w-64 flex-col border-r lg:flex sticky top-0 h-screen" style={{ background: 'linear-gradient(180deg, #f8f7ff 0%, #ffffff 100%)', borderTop: '2px solid transparent', borderImage: 'linear-gradient(90deg, #94ffe5, #06b6d4) 1' }}>
         {sidebarContent}
       </aside>
 
@@ -185,7 +185,7 @@ export function DashboardShell({ user, merchantName, merchantSlug, merchantTier,
               />
             </svg>
           </button>
-          <h2 className="text-lg font-semibold">{currentPageLabel}</h2>
+          <h2 className="text-xl font-black tracking-tight">{currentPageLabel}</h2>
         </header>
         <div className="p-6">{children}</div>
       </main>

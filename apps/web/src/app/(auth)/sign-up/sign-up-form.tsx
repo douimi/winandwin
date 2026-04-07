@@ -238,7 +238,8 @@ export function SignUpForm() {
 
               <Button
                 type="submit"
-                className="h-11 w-full bg-gradient-to-r from-[#6366f1] to-[#ec4899] font-semibold shadow-lg shadow-[#6366f1]/25 transition-shadow hover:shadow-xl hover:shadow-[#6366f1]/30"
+                className="h-11 w-full font-semibold shadow-lg shadow-[#94ffe5]/25 transition-shadow hover:shadow-xl hover:shadow-[#94ffe5]/30"
+                style={{ background: '#94ffe5', color: '#0a0a1a' }}
                 disabled={loading}
               >
                 {loading ? (

@@ -43,24 +43,28 @@ export default async function DashboardPage() {
       value: activePlayersToday,
       icon: '\uD83D\uDC65',
       gradient: 'linear-gradient(135deg, #6366f1, #a855f7)',
+      borderColor: '#94ffe5',
     },
     {
       title: 'Games Played',
       value: gamesPlayed,
       icon: '\uD83C\uDFB2',
       gradient: 'linear-gradient(135deg, #ec4899, #f43f5e)',
+      borderColor: '#a855f7',
     },
     {
       title: 'Actions Completed',
       value: actionsCompleted,
       icon: '\u2705',
       gradient: 'linear-gradient(135deg, #10b981, #14b8a6)',
+      borderColor: '#f59e0b',
     },
     {
       title: 'Coupons Redeemed',
       value: couponsRedeemed,
       icon: '\uD83C\uDF9F\uFE0F',
       gradient: 'linear-gradient(135deg, #f59e0b, #f97316)',
+      borderColor: '#ec4899',
     },
   ]
 
@@ -69,7 +73,7 @@ export default async function DashboardPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3">
-        <h1 className="text-2xl font-bold">Overview</h1>
+        <h1 style={{ fontSize: 'clamp(1.5rem, 3vw, 2rem)', fontWeight: 900 }}>Overview</h1>
         <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${
           merchantTier === 'enterprise'
             ? 'bg-purple-100 text-purple-800'
@@ -112,14 +116,14 @@ export default async function DashboardPage() {
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {kpis.map((kpi) => (
-          <Card key={kpi.title} className="transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5">
+          <Card key={kpi.title} className="transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5" style={{ borderLeft: `4px solid ${kpi.borderColor}` }}>
             <CardContent className="flex items-center gap-4 py-5">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl" style={{ background: kpi.gradient }}>
                 <span className="text-lg">{kpi.icon}</span>
               </div>
               <div>
                 <p className="text-sm font-medium text-muted-foreground">{kpi.title}</p>
-                <div className="text-3xl font-bold"><AnimatedNumber value={kpi.value} /></div>
+                <div style={{ fontSize: 'clamp(1.5rem, 3vw, 2.5rem)', fontWeight: 900, letterSpacing: '-0.02em' }}><AnimatedNumber value={kpi.value} /></div>
               </div>
             </CardContent>
           </Card>

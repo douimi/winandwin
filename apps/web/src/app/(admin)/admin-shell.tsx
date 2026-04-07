@@ -42,7 +42,7 @@ export function AdminShell({ user, children }: AdminShellProps) {
         <a href="/admin" className="block">
           <img src="/logo.svg" alt="Win & Win" className="h-10 w-auto" />
         </a>
-        <span className="mt-2 inline-flex items-center rounded-full bg-indigo-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-indigo-700">
+        <span className="mt-2 inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider" style={{ background: '#94ffe5', color: '#0a0a1a' }}>
           Admin
         </span>
       </div>
@@ -60,9 +60,10 @@ export function AdminShell({ user, children }: AdminShellProps) {
               href={item.href}
               className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 ${
                 active
-                  ? 'bg-indigo-50 text-indigo-700 border-l-[3px] border-indigo-600'
+                  ? 'text-white border-l-[3px] border-transparent'
                   : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 border-l-[3px] border-transparent'
               }`}
+              style={active ? { background: 'linear-gradient(135deg, #6366f1, #06b6d4)' } : undefined}
               onClick={() => setSidebarOpen(false)}
             >
               <span className="text-base w-6 text-center">{item.icon}</span>
@@ -109,7 +110,7 @@ export function AdminShell({ user, children }: AdminShellProps) {
   return (
     <div className="flex min-h-screen bg-gray-50">
       {/* Desktop sidebar */}
-      <aside className="hidden w-[260px] flex-col border-r border-gray-200 bg-white lg:flex sticky top-0 h-screen">
+      <aside className="hidden w-[260px] flex-col border-r border-gray-200 bg-white lg:flex sticky top-0 h-screen" style={{ borderTop: '2px solid transparent', borderImage: 'linear-gradient(90deg, #94ffe5, #06b6d4) 1' }}>
         {sidebarContent}
       </aside>
 
