@@ -341,7 +341,7 @@ export function App() {
       setResult(spinResult)
 
       if (config.game.type === 'wheel') {
-        const segments = buildWheelSegments(config.game.prizes, bizTheme.tryAgainText, bizTheme.tryAgainEmoji)
+        const segments = buildWheelSegments(config.game.prizes, t.player.nextTime, bizTheme.tryAgainEmoji)
         const idx = findTargetIndex(segments, spinResult.outcome, spinResult.prize?.name)
         setTargetIndex(idx)
       } else {
@@ -386,7 +386,7 @@ export function App() {
 
       if (config.game.type === 'wheel') {
         // Find the correct display segment index (wheel has interleaved "Try Again" segments)
-        const segments = buildWheelSegments(config.game.prizes, bizTheme.tryAgainText, bizTheme.tryAgainEmoji)
+        const segments = buildWheelSegments(config.game.prizes, t.player.nextTime, bizTheme.tryAgainEmoji)
         const idx = findTargetIndex(
           segments,
           spinResult.outcome,
@@ -596,11 +596,11 @@ export function App() {
 
           {/* Game title */}
           <h1 class="immersive-game-title" style={{ fontSize: theme.titleSize, fontWeight: theme.fontWeight }}>
-            {config.game.name || bizTheme.defaultTitle}
+            {config.game.name || t.player.defaultGameTitle}
           </h1>
 
           {/* Subtitle */}
-          <p class="immersive-subtitle">{config.game.description || config.merchantDescription || bizTheme.defaultSubtitle}</p>
+          <p class="immersive-subtitle">{config.game.description || config.merchantDescription || t.player.defaultGameSubtitle}</p>
 
           {/* THE WHEEL — the hero of the page */}
           <Wheel
@@ -733,11 +733,11 @@ export function App() {
 
           {/* Game title */}
           <h1 class="immersive-game-title" style={{ fontSize: theme.titleSize, fontWeight: theme.fontWeight }}>
-            {config.game.name || bizTheme.defaultTitle}
+            {config.game.name || t.player.defaultGameTitle}
           </h1>
 
           {/* Subtitle */}
-          <p class="immersive-subtitle">{config.game.description || config.merchantDescription || bizTheme.defaultSubtitle}</p>
+          <p class="immersive-subtitle">{config.game.description || config.merchantDescription || t.player.defaultGameSubtitle}</p>
 
           {config.game.type === 'slots' && (
             <Slots
