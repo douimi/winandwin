@@ -142,10 +142,10 @@ export function Wheel({ prizes, branding, onSpinComplete, spinning, onSpin, targ
   const [rotation, setRotation] = useState(0)
   const isAnimating = useRef(false)
 
-  // Build display segments with themed "Try Again" text
+  // Build display segments with translated "Try Again" text
   const segments = buildWheelSegments(
     prizes,
-    businessTheme?.tryAgainText,
+    t.player.nextTime,
     businessTheme?.tryAgainEmoji,
   )
   const segmentAngle = 360 / segments.length
@@ -349,7 +349,7 @@ export function Wheel({ prizes, branding, onSpinComplete, spinning, onSpin, targ
         disabled={spinning}
         type="button"
       >
-        {spinning ? t.player.spinning : (businessTheme?.spinButtonText || t.player.spin)}
+        {spinning ? t.player.spinning : t.player.spin}
       </button>
     </div>
   )

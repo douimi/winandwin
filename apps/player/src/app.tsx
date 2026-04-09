@@ -600,7 +600,7 @@ export function App() {
           </h1>
 
           {/* Subtitle */}
-          <p class="immersive-subtitle">{config.game.description || config.merchantDescription || t.player.defaultGameSubtitle}</p>
+          <p class="immersive-subtitle">{config.merchantDescription || config.game.description || t.player.defaultGameSubtitle}</p>
 
           {/* THE WHEEL — the hero of the page */}
           <Wheel
@@ -737,7 +737,7 @@ export function App() {
           </h1>
 
           {/* Subtitle */}
-          <p class="immersive-subtitle">{config.game.description || config.merchantDescription || t.player.defaultGameSubtitle}</p>
+          <p class="immersive-subtitle">{config.merchantDescription || config.game.description || t.player.defaultGameSubtitle}</p>
 
           {config.game.type === 'slots' && (
             <Slots
