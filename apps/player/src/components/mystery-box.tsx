@@ -7,6 +7,7 @@ interface MysteryBoxProps {
   onComplete: (result: { outcome: 'win' | 'lose'; selectedIndex: number }) => void
   targetIndex: number | null
   isWin: boolean
+  merchantLogo?: string
 }
 
 export function MysteryBox({
@@ -15,6 +16,7 @@ export function MysteryBox({
   onComplete,
   targetIndex,
   isWin,
+  merchantLogo,
 }: MysteryBoxProps) {
   const t = useT()
   const [selectedBox, setSelectedBox] = useState<number | null>(null)
@@ -98,8 +100,22 @@ export function MysteryBox({
   const gridClass = `mystery-grid cols-${cols}`
 
   return (
-    <div class="mystery-container">
-      <p class="mystery-instruction">
+    <div class="mystery-container" style={{ position: 'relative' }}>
+      {/* Brand watermark */}
+      {merchantLogo && (
+        <div style={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          opacity: 0.08,
+          pointerEvents: 'none',
+          zIndex: 0,
+        }}>
+          <img src={merchantLogo} alt="" style={{ width: 120, height: 120, borderRadius: '50%', objectFit: 'cover' }} />
+        </div>
+      )}
+      <p class="mystery-instruction" style={{ position: 'relative', zIndex: 1 }}>
         {selectedBox === null ? t.player.tapToReveal : revealed ? (isWin ? t.player.congratulations : t.player.almostMessage) : t.player.opening}
       </p>
 

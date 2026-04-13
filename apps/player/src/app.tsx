@@ -615,6 +615,7 @@ export function App() {
             wheelCenter={theme.wheelCenter}
             wheelText={theme.wheelText}
             businessTheme={bizTheme}
+            merchantLogo={config.merchantLogo}
           />
 
           {/* Powered by */}
@@ -747,6 +748,7 @@ export function App() {
               onSpin={handleGamePlayClick}
               onSpinComplete={handleSpinComplete}
               targetIndex={targetIndex}
+              merchantLogo={config.merchantLogo}
             />
           )}
 
@@ -770,6 +772,7 @@ export function App() {
               }}
               targetIndex={targetIndex}
               isWin={result?.outcome === 'win'}
+              merchantLogo={config.merchantLogo}
             />
           )}
 

@@ -8,6 +8,7 @@ interface SlotsProps {
   onSpin: () => void
   onSpinComplete: (targetIndex: number) => void
   targetIndex: number | null
+  merchantLogo?: string
 }
 
 const MISS_SYMBOLS = ['\uD83C\uDF52', '\uD83D\uDD14', '\uD83D\uDC8E', '\u2B50', '7\uFE0F\u20E3']
@@ -48,6 +49,7 @@ export function Slots({
   onSpin,
   onSpinComplete,
   targetIndex,
+  merchantLogo,
 }: SlotsProps) {
   const t = useT()
   const hasSpun = useRef(false)
@@ -177,9 +179,17 @@ export function Slots({
         borderColor: branding.primaryColor,
       }}>
         <div class="slots-header">
-          <span class="slots-star">{'\u2B50'}</span>
+          {merchantLogo ? (
+            <img src={merchantLogo} alt="" style={{ height: 32, width: 32, borderRadius: '50%', objectFit: 'cover' }} />
+          ) : (
+            <span class="slots-star">{'\u2B50'}</span>
+          )}
           <span class="slots-title-text">SLOTS</span>
-          <span class="slots-star">{'\u2B50'}</span>
+          {merchantLogo ? (
+            <img src={merchantLogo} alt="" style={{ height: 32, width: 32, borderRadius: '50%', objectFit: 'cover' }} />
+          ) : (
+            <span class="slots-star">{'\u2B50'}</span>
+          )}
         </div>
 
         <div class="slot-window">

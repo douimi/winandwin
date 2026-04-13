@@ -20,6 +20,8 @@ interface WheelProps {
   wheelText?: string
   /** Business theme for themed text */
   businessTheme?: BusinessTheme
+  /** Merchant logo URL for center hub */
+  merchantLogo?: string
 }
 
 export interface WheelSegment {
@@ -137,7 +139,7 @@ function darken(color: string, amount = 0.25): string {
   return color
 }
 
-export function Wheel({ prizes, branding, onSpinComplete, spinning, onSpin, targetIndex, wheelColors, wheelBorder, wheelCenter, wheelText, businessTheme }: WheelProps) {
+export function Wheel({ prizes, branding, onSpinComplete, spinning, onSpin, targetIndex, wheelColors, wheelBorder, wheelCenter, wheelText, businessTheme, merchantLogo }: WheelProps) {
   const t = useT()
   const [rotation, setRotation] = useState(0)
   const isAnimating = useRef(false)
@@ -338,7 +340,26 @@ export function Wheel({ prizes, branding, onSpinComplete, spinning, onSpin, targ
             {/* Center hub */}
             <circle cx={CENTER} cy={CENTER} r={30} fill={wheelCenter || 'url(#hub-grad)'} stroke={wheelCenter ? darken(wheelCenter, 0.2) : '#c0c0c0'} stroke-width="2" filter="url(#hub-shadow)" />
             <circle cx={CENTER} cy={CENTER} r={26} fill="none" stroke="rgba(255,255,255,0.5)" stroke-width="1" />
-            <text x={CENTER} y={CENTER} text-anchor="middle" dominant-baseline="central" fill={wheelText || '#6366f1'} font-size={businessTheme ? '18' : '12'} font-weight="800" letter-spacing={businessTheme ? '0' : '2'}>{businessTheme?.spinButtonIcon || t.player.spin.replace('!', '')}</text>
+            {merchantLogo ? (
+              <>
+                <defs>
+                  <clipPath id="logo-clip">
+                    <circle cx={CENTER} cy={CENTER} r={22} />
+                  </clipPath>
+                </defs>
+                <image
+                  href={merchantLogo}
+                  x={CENTER - 22}
+                  y={CENTER - 22}
+                  width={44}
+                  height={44}
+                  clip-path="url(#logo-clip)"
+                  preserveAspectRatio="xMidYMid slice"
+                />
+              </>
+            ) : (
+              <text x={CENTER} y={CENTER} text-anchor="middle" dominant-baseline="central" fill={wheelText || '#6366f1'} font-size={businessTheme ? '18' : '12'} font-weight="800" letter-spacing={businessTheme ? '0' : '2'}>{businessTheme?.spinButtonIcon || t.player.spin.replace('!', '')}</text>
+            )}
           </svg>
         </div>
       </div>
