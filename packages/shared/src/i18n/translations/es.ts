@@ -26,7 +26,7 @@ export const es: Translations = {
     emailSent: 'Tu premio ha sido enviado a',
     checkInbox: 'Revisa tu bandeja de entrada para tu c\u00f3digo de cup\u00f3n',
     checkSpam: '\u00bfNo lo recibiste? Revisa tu carpeta de spam',
-    poweredBy: 'Desarrollado por Win & Win',
+    poweredBy: 'Desarrollado por winandwin.club',
     alreadyPlayed: '\u00a1Ya jugaste!',
     maxWinsReached: '\u00a1L\u00edmite de premios alcanzado!',
     comeBackIn: 'Juega de nuevo en:',
@@ -123,7 +123,7 @@ export const es: Translations = {
     validFrom: 'V\u00e1lido desde',
     validUntil: 'V\u00e1lido hasta',
     showToStaff: 'Muestra este email o el c\u00f3digo de cup\u00f3n al personal para canjear tu premio',
-    poweredBy: 'Desarrollado por Win & Win \u2014 Fidelizaci\u00f3n gamificada para negocios locales',
+    poweredBy: 'Desarrollado por winandwin.club \u2014 Fidelizaci\u00f3n gamificada para negocios locales',
   },
   dashboard: {
     overview: 'Resumen',

@@ -26,7 +26,7 @@ export const fr: Translations = {
     emailSent: 'Votre prix a \u00e9t\u00e9 envoy\u00e9 \u00e0',
     checkInbox: 'V\u00e9rifiez votre bo\u00eete de r\u00e9ception pour votre code coupon',
     checkSpam: 'Pas re\u00e7u? V\u00e9rifiez votre dossier spam',
-    poweredBy: 'Propuls\u00e9 par Win & Win',
+    poweredBy: 'Propuls\u00e9 par winandwin.club',
     alreadyPlayed: 'D\u00e9j\u00e0 jou\u00e9!',
     maxWinsReached: 'Limite de gains atteinte!',
     comeBackIn: 'Rejouez dans:',
@@ -123,7 +123,7 @@ export const fr: Translations = {
     validFrom: 'Valide du',
     validUntil: 'Valide jusqu\'au',
     showToStaff: 'Montrez cet email ou le code coupon au personnel pour r\u00e9cup\u00e9rer votre prix',
-    poweredBy: 'Propuls\u00e9 par Win & Win \u2014 Fid\u00e9lisation gamifi\u00e9e pour les commerces',
+    poweredBy: 'Propuls\u00e9 par winandwin.club \u2014 Fid\u00e9lisation gamifi\u00e9e pour les commerces',
   },
   dashboard: {
     overview: 'Tableau de bord',

@@ -25,7 +25,7 @@ export const en = {
     emailSent: 'Your prize has been sent to',
     checkInbox: 'Check your inbox for your coupon code',
     checkSpam: "Didn't receive it? Check your spam folder",
-    poweredBy: 'Powered by Win & Win',
+    poweredBy: 'Powered by winandwin.club',
     alreadyPlayed: 'Already Played!',
     maxWinsReached: 'Maximum Wins Reached!',
     comeBackIn: 'Play again in:',
@@ -129,7 +129,7 @@ export const en = {
     validFrom: 'Valid from',
     validUntil: 'Valid until',
     showToStaff: 'Show this email or the coupon code to staff to redeem your prize',
-    poweredBy: 'Powered by Win & Win — Gamified loyalty for local businesses',
+    poweredBy: 'Powered by winandwin.club — Gamified loyalty for local businesses',
   },
   // Dashboard
   dashboard: {
