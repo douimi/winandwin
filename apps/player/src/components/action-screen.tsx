@@ -47,10 +47,9 @@ function SingleActionScreen({ config, singleAction, onComplete, preCompleted }: 
   const [verifyDone, setVerifyDone] = useState(false)
   const [redirecting, setRedirecting] = useState(false)
   const [redirectUrl, setRedirectUrl] = useState('')
-  const [redirectCountdown, setRedirectCountdown] = useState(3)
   const receiptRef = useRef<HTMLInputElement>(null)
 
-  // Handle redirect with countdown
+  // Show redirect guidance overlay — user must tap to proceed
   function startRedirect(url: string) {
     localStorage.setItem('winandwin_pending_action', JSON.stringify({
       type: singleAction.type,
@@ -59,16 +58,6 @@ function SingleActionScreen({ config, singleAction, onComplete, preCompleted }: 
     }))
     setRedirectUrl(url)
     setRedirecting(true)
-    setRedirectCountdown(3)
-    let count = 3
-    const interval = setInterval(() => {
-      count--
-      setRedirectCountdown(count)
-      if (count <= 0) {
-        clearInterval(interval)
-        window.location.href = url
-      }
-    }, 1000)
   }
 
   // Auto-complete visit_stamp immediately
@@ -239,22 +228,29 @@ function SingleActionScreen({ config, singleAction, onComplete, preCompleted }: 
 
   return (
     <div class="screen action-screen">
-      {/* Redirect overlay — shown before navigating to external CTA */}
+      {/* Redirect guidance overlay — user must tap to proceed */}
       {redirecting && (
         <div class="redirect-overlay">
           <div class="redirect-card">
-            <div class="redirect-icon">{'\u{1F680}'}</div>
-            <h3 class="redirect-title">{t.player.redirectingTitle || 'Redirecting you...'}</h3>
-            <p class="redirect-message">{t.player.redirectMessage || 'Complete the action, then come back here to continue your game!'}</p>
-            <div class="redirect-countdown-circle">
-              <span class="redirect-countdown-number">{redirectCountdown}</span>
+            <div class="redirect-steps">
+              <div class="redirect-step">
+                <span class="redirect-step-num">1</span>
+                <span class="redirect-step-text">{t.player.redirectStep1 || 'Complete the action on the next page'}</span>
+              </div>
+              <div class="redirect-step-arrow">{'\u2193'}</div>
+              <div class="redirect-step">
+                <span class="redirect-step-num">2</span>
+                <span class="redirect-step-text">{t.player.redirectStep2 || 'Come back here to claim your reward'}</span>
+              </div>
             </div>
-            <p class="redirect-hint">{t.player.redirectHint || 'Press back or swipe to return after completing the action'}</p>
             <button
-              class="redirect-go-now"
+              class="redirect-go-btn"
               onClick={() => { window.location.href = redirectUrl }}
               type="button"
-            >{t.player.redirectGoNow || 'Go now'}</button>
+            >
+              {t.player.redirectGoNow} {'\u2192'}
+            </button>
+            <p class="redirect-hint">{t.player.redirectHint}</p>
           </div>
         </div>
       )}
