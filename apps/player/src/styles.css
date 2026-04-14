@@ -2596,3 +2596,74 @@ button:active {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-10px); }
 }
+
+/* Redirect Overlay */
+.redirect-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,0.7);
+  backdrop-filter: blur(10px);
+  animation: fadeIn 0.3s ease;
+}
+.redirect-card {
+  text-align: center;
+  padding: 2rem;
+  max-width: 320px;
+  animation: losePopIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.redirect-icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+.redirect-title {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: var(--atm-text, #fff);
+  margin-bottom: 0.5rem;
+}
+.redirect-message {
+  font-size: 1rem;
+  color: var(--atm-accent, #94ffe5);
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+  line-height: 1.4;
+}
+.redirect-countdown-circle {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  border: 3px solid var(--atm-accent, #94ffe5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1rem;
+  animation: playBtnPulse 1s ease-in-out infinite;
+}
+.redirect-countdown-number {
+  font-size: 1.8rem;
+  font-weight: 900;
+  color: var(--atm-text, #fff);
+}
+.redirect-hint {
+  font-size: 0.8rem;
+  color: var(--atm-text-secondary, rgba(255,255,255,0.5));
+  margin-bottom: 1rem;
+}
+.redirect-go-now {
+  background: none;
+  border: 1px solid var(--atm-text-secondary, rgba(255,255,255,0.3));
+  color: var(--atm-text-secondary, rgba(255,255,255,0.6));
+  padding: 8px 20px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.redirect-go-now:active {
+  transform: scale(0.97);
+  background: rgba(255,255,255,0.1);
+}

@@ -45,7 +45,31 @@ function SingleActionScreen({ config, singleAction, onComplete, preCompleted }: 
   const [emailExpanded, setEmailExpanded] = useState(false)
   const [verifying, setVerifying] = useState(false)
   const [verifyDone, setVerifyDone] = useState(false)
+  const [redirecting, setRedirecting] = useState(false)
+  const [redirectUrl, setRedirectUrl] = useState('')
+  const [redirectCountdown, setRedirectCountdown] = useState(3)
   const receiptRef = useRef<HTMLInputElement>(null)
+
+  // Handle redirect with countdown
+  function startRedirect(url: string) {
+    localStorage.setItem('winandwin_pending_action', JSON.stringify({
+      type: singleAction.type,
+      slug: window.location.pathname.replace(/^\//, ''),
+      timestamp: Date.now(),
+    }))
+    setRedirectUrl(url)
+    setRedirecting(true)
+    setRedirectCountdown(3)
+    let count = 3
+    const interval = setInterval(() => {
+      count--
+      setRedirectCountdown(count)
+      if (count <= 0) {
+        clearInterval(interval)
+        window.location.href = url
+      }
+    }, 1000)
+  }
 
   // Auto-complete visit_stamp immediately
   useEffect(() => {
@@ -92,12 +116,7 @@ function SingleActionScreen({ config, singleAction, onComplete, preCompleted }: 
       case 'google_review': {
         const url = singleAction.config?.googlePlaceUrl
         if (url) {
-          localStorage.setItem('winandwin_pending_action', JSON.stringify({
-            type: singleAction.type,
-            slug: window.location.pathname.replace(/^\//, ''),
-            timestamp: Date.now(),
-          }))
-          window.location.href = url
+          startRedirect(url)
         } else {
           setClicked(true)
         }
@@ -105,15 +124,9 @@ function SingleActionScreen({ config, singleAction, onComplete, preCompleted }: 
       }
       case 'instagram_follow': {
         let handle = singleAction.config?.instagramHandle || ''
-        // Strip full URL if user entered one (e.g., https://www.instagram.com/username/)
         handle = handle.replace(/^https?:\/\/(www\.)?instagram\.com\/?/i, '').replace(/\/+$/, '')
         if (handle) {
-          localStorage.setItem('winandwin_pending_action', JSON.stringify({
-            type: singleAction.type,
-            slug: window.location.pathname.replace(/^\//, ''),
-            timestamp: Date.now(),
-          }))
-          window.location.href = `https://instagram.com/${handle}`
+          startRedirect(`https://instagram.com/${handle}`)
         } else {
           setClicked(true)
         }
@@ -132,73 +145,28 @@ function SingleActionScreen({ config, singleAction, onComplete, preCompleted }: 
       }
       case 'tripadvisor_review': {
         const url = singleAction.config?.tripadvisorUrl
-        if (url) {
-          localStorage.setItem('winandwin_pending_action', JSON.stringify({
-            type: singleAction.type,
-            slug: window.location.pathname.replace(/^\//, ''),
-            timestamp: Date.now(),
-          }))
-          window.location.href = url
-        } else {
-          setClicked(true)
-        }
+        if (url) { startRedirect(url) } else { setClicked(true) }
         break
       }
       case 'facebook_like': {
         const url = singleAction.config?.facebookUrl
-        if (url) {
-          localStorage.setItem('winandwin_pending_action', JSON.stringify({
-            type: singleAction.type,
-            slug: window.location.pathname.replace(/^\//, ''),
-            timestamp: Date.now(),
-          }))
-          window.location.href = url
-        } else {
-          setClicked(true)
-        }
+        if (url) { startRedirect(url) } else { setClicked(true) }
         break
       }
       case 'tiktok_follow': {
         let tiktokHandle = singleAction.config?.tiktokHandle || ''
         tiktokHandle = tiktokHandle.replace(/^https?:\/\/(www\.)?tiktok\.com\/?@?/i, '').replace(/\/+$/, '')
-        if (tiktokHandle) {
-          localStorage.setItem('winandwin_pending_action', JSON.stringify({
-            type: singleAction.type,
-            slug: window.location.pathname.replace(/^\//, ''),
-            timestamp: Date.now(),
-          }))
-          window.location.href = `https://tiktok.com/@${tiktokHandle}`
-        } else {
-          setClicked(true)
-        }
+        if (tiktokHandle) { startRedirect(`https://tiktok.com/@${tiktokHandle}`) } else { setClicked(true) }
         break
       }
       case 'book_appointment': {
         const url = singleAction.config?.bookingUrl
-        if (url) {
-          localStorage.setItem('winandwin_pending_action', JSON.stringify({
-            type: singleAction.type,
-            slug: window.location.pathname.replace(/^\//, ''),
-            timestamp: Date.now(),
-          }))
-          window.location.href = url
-        } else {
-          setClicked(true)
-        }
+        if (url) { startRedirect(url) } else { setClicked(true) }
         break
       }
       case 'whatsapp_join': {
         const url = singleAction.config?.whatsappUrl
-        if (url) {
-          localStorage.setItem('winandwin_pending_action', JSON.stringify({
-            type: singleAction.type,
-            slug: window.location.pathname.replace(/^\//, ''),
-            timestamp: Date.now(),
-          }))
-          window.location.href = url
-        } else {
-          setClicked(true)
-        }
+        if (url) { startRedirect(url) } else { setClicked(true) }
         break
       }
       case 'refer_friend': {
@@ -271,6 +239,25 @@ function SingleActionScreen({ config, singleAction, onComplete, preCompleted }: 
 
   return (
     <div class="screen action-screen">
+      {/* Redirect overlay — shown before navigating to external CTA */}
+      {redirecting && (
+        <div class="redirect-overlay">
+          <div class="redirect-card">
+            <div class="redirect-icon">{'\u{1F680}'}</div>
+            <h3 class="redirect-title">{t.player.redirectingTitle || 'Redirecting you...'}</h3>
+            <p class="redirect-message">{t.player.redirectMessage || 'Complete the action, then come back here to continue your game!'}</p>
+            <div class="redirect-countdown-circle">
+              <span class="redirect-countdown-number">{redirectCountdown}</span>
+            </div>
+            <p class="redirect-hint">{t.player.redirectHint || 'Press back or swipe to return after completing the action'}</p>
+            <button
+              class="redirect-go-now"
+              onClick={() => { window.location.href = redirectUrl }}
+              type="button"
+            >{t.player.redirectGoNow || 'Go now'}</button>
+          </div>
+        </div>
+      )}
       <div class="action-bg-pattern" />
 
       <div class="action-header">
