@@ -42,6 +42,16 @@ export function ResultScreen({ result, merchantName, playerEmail, businessTheme,
           {result.prize?.description && (
             <p class="result-prize-desc">{result.prize.description}</p>
           )}
+          {result.prize?.redemptionConditions && result.prize.redemptionConditions.length > 0 && (
+            <div class="result-prize-conditions">
+              <p class="result-prize-conditions-title">{t.player.redemptionConditions}</p>
+              <ul class="result-prize-conditions-list">
+                {result.prize.redemptionConditions.map((condition, i) => (
+                  <li key={i}>{condition}</li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
 
         {playerEmail && (

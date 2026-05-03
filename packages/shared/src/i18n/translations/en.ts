@@ -85,6 +85,7 @@ export const en = {
     opening: 'Opening...',
     submit: 'Submit',
     prizeOnItsWay: 'Your prize is on its way!',
+    redemptionConditions: 'Redemption conditions',
     checkEmailAt: 'Check your email at',
     forCouponCode: 'for your coupon code.',
     soClose: 'So Close!',

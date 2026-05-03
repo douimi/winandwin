@@ -218,6 +218,7 @@ couponsRouter.get('/lookup/:code', async (c) => {
         status,
         prizeName: couponData.prizeName,
         prizeDescription: couponData.prizeDescription,
+        redemptionConditions: (couponData.redemptionConditions as string[] | null) ?? [],
         merchantName,
         validFrom: couponData.validFrom.toISOString(),
         validUntil: couponData.validUntil.toISOString(),

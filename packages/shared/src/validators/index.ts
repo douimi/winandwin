@@ -56,6 +56,10 @@ export const prizeSchema = z.object({
   maxPerDay: z.number().int().min(1).optional(),
   couponValidityDays: z.number().int().min(1).max(365).default(7),
   couponActivationDelayHours: z.number().int().min(0).max(72).default(24),
+  redemptionConditions: z
+    .array(z.string().trim().min(1).max(200))
+    .max(3)
+    .default([]),
 })
 
 export const gameScheduleSchema = z.object({

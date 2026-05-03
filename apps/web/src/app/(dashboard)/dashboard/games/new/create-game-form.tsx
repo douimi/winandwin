@@ -18,8 +18,43 @@ interface Prize {
   emoji: string
   winRate: number
   couponValidityDays: number
+  couponActivationDelayHours: number
   maxTotal: number | null
   maxPerDay: number | null
+  conditionsEnabled: boolean
+  redemptionConditions: [string, string, string]
+}
+
+const EXPIRATION_PRESETS: { label: string; days: number }[] = [
+  { label: '1 week', days: 7 },
+  { label: '2 weeks', days: 14 },
+  { label: '1 month', days: 30 },
+  { label: '2 months', days: 60 },
+  { label: '3 months', days: 90 },
+  { label: '6 months', days: 180 },
+  { label: '1 year', days: 365 },
+]
+
+const ACTIVATION_PRESETS: { label: string; hours: number }[] = [
+  { label: 'Immediately', hours: 0 },
+  { label: '1 hour later', hours: 1 },
+  { label: 'The next day', hours: 24 },
+  { label: '2 days later', hours: 48 },
+  { label: '3 days later', hours: 72 },
+]
+
+function makeEmptyPrize(): Prize {
+  return {
+    name: '',
+    emoji: '🎁',
+    winRate: 50,
+    couponValidityDays: 30,
+    couponActivationDelayHours: 24,
+    maxTotal: null,
+    maxPerDay: null,
+    conditionsEnabled: false,
+    redemptionConditions: ['', '', ''],
+  }
 }
 
 export function CreateGameForm() {
@@ -30,23 +65,32 @@ export function CreateGameForm() {
   const [gameName, setGameName] = useState('')
   const [gameDescription, setGameDescription] = useState('')
   const [globalWinRate, setGlobalWinRate] = useState(30)
-  const [prizes, setPrizes] = useState<Prize[]>([
-    { name: '', emoji: '🎁', winRate: 50, couponValidityDays: 7, maxTotal: null, maxPerDay: null },
-  ])
+  const [prizes, setPrizes] = useState<Prize[]>([makeEmptyPrize()])
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   function addPrize() {
-    setPrizes((prev) => [...prev, { name: '', emoji: '🎁', winRate: 50, couponValidityDays: 7, maxTotal: null, maxPerDay: null }])
+    setPrizes((prev) => [...prev, makeEmptyPrize()])
   }
 
   function removePrize(index: number) {
     setPrizes((prev) => prev.filter((_, i) => i !== index))
   }
 
-  function updatePrize(index: number, field: keyof Prize, value: string | number) {
+  function updatePrize<K extends keyof Prize>(index: number, field: K, value: Prize[K]) {
     setPrizes((prev) =>
       prev.map((p, i) => (i === index ? { ...p, [field]: value } : p)),
+    )
+  }
+
+  function updateCondition(prizeIndex: number, conditionIndex: 0 | 1 | 2, value: string) {
+    setPrizes((prev) =>
+      prev.map((p, i) => {
+        if (i !== prizeIndex) return p
+        const next: [string, string, string] = [...p.redemptionConditions] as [string, string, string]
+        next[conditionIndex] = value
+        return { ...p, redemptionConditions: next }
+      }),
     )
   }
 
@@ -55,6 +99,15 @@ export function CreateGameForm() {
     setSubmitting(true)
     setError(null)
 
+    // Validate: if conditions are enabled, the first condition is required
+    for (const [i, p] of prizes.entries()) {
+      if (p.conditionsEnabled && !p.redemptionConditions[0].trim()) {
+        setError(`Prize #${i + 1}: enter at least one redemption condition or turn the toggle off.`)
+        setSubmitting(false)
+        return
+      }
+    }
+
     try {
       await createGame({
         merchantId,
@@ -62,14 +115,21 @@ export function CreateGameForm() {
         name: gameName,
         description: gameDescription || undefined,
         config: {
-          prizes: prizes.map((p) => ({
-            name: p.name,
-            emoji: p.emoji,
-            winRate: p.winRate,
-            couponValidityDays: p.couponValidityDays,
-            ...(p.maxTotal !== null ? { maxTotal: p.maxTotal } : {}),
-            ...(p.maxPerDay !== null ? { maxPerDay: p.maxPerDay } : {}),
-          })),
+          prizes: prizes.map((p) => {
+            const conditions = p.conditionsEnabled
+              ? p.redemptionConditions.map((c) => c.trim()).filter((c) => c.length > 0)
+              : []
+            return {
+              name: p.name,
+              emoji: p.emoji,
+              winRate: p.winRate,
+              couponValidityDays: p.couponValidityDays,
+              couponActivationDelayHours: p.couponActivationDelayHours,
+              redemptionConditions: conditions,
+              ...(p.maxTotal !== null ? { maxTotal: p.maxTotal } : {}),
+              ...(p.maxPerDay !== null ? { maxPerDay: p.maxPerDay } : {}),
+            }
+          }),
           globalWinRate,
         },
       })
@@ -195,30 +255,109 @@ export function CreateGameForm() {
                     />
                   </div>
                 </div>
-                <div className="flex gap-3">
-                  <div className="flex-1">
-                    <Label>Win Weight: {prize.winRate}</Label>
-                    <input
-                      type="range"
-                      min={1}
-                      max={100}
-                      value={prize.winRate}
-                      onChange={(e) => updatePrize(index, 'winRate', Number((e.target as HTMLInputElement).value))}
-                      className="w-full"
-                    />
-                  </div>
-                  <div className="w-32">
-                    <Label>Valid (days)</Label>
-                    <Input
-                      type="number"
-                      min={1}
-                      max={365}
-                      value={prize.couponValidityDays}
-                      onChange={(e) =>
-                        updatePrize(index, 'couponValidityDays', Number((e.target as HTMLInputElement).value))
-                      }
-                    />
-                  </div>
+                <div>
+                  <Label>Win Weight: {prize.winRate}</Label>
+                  <input
+                    type="range"
+                    min={1}
+                    max={100}
+                    value={prize.winRate}
+                    onChange={(e) => updatePrize(index, 'winRate', Number((e.target as HTMLInputElement).value))}
+                    className="w-full"
+                  />
+                </div>
+
+                {/* Prize expiration delay */}
+                <div className="space-y-1">
+                  <Label htmlFor={`expiration-${index}`}>Prize expiration delay</Label>
+                  <select
+                    id={`expiration-${index}`}
+                    value={prize.couponValidityDays}
+                    onChange={(e) =>
+                      updatePrize(index, 'couponValidityDays', Number((e.target as HTMLSelectElement).value))
+                    }
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  >
+                    {EXPIRATION_PRESETS.map((opt) => (
+                      <option key={opt.days} value={opt.days}>
+                        {opt.label}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="text-[11px] text-muted-foreground">
+                    We will remind your customers as the prize expiration approaches
+                  </p>
+                </div>
+
+                {/* Prize voucher redeemable from */}
+                <div className="space-y-1">
+                  <Label htmlFor={`activation-${index}`}>Prize voucher redeemable from</Label>
+                  <select
+                    id={`activation-${index}`}
+                    value={prize.couponActivationDelayHours}
+                    onChange={(e) =>
+                      updatePrize(index, 'couponActivationDelayHours', Number((e.target as HTMLSelectElement).value))
+                    }
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                  >
+                    {ACTIVATION_PRESETS.map((opt) => (
+                      <option key={opt.hours} value={opt.hours}>
+                        {opt.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Prize redeemable under conditions */}
+                <div className="space-y-2 rounded-md border border-dashed p-3">
+                  <label className="flex items-center justify-between gap-3">
+                    <span className="text-sm font-medium">Prize redeemable under conditions</span>
+                    <button
+                      type="button"
+                      role="switch"
+                      aria-checked={prize.conditionsEnabled}
+                      onClick={() => updatePrize(index, 'conditionsEnabled', !prize.conditionsEnabled)}
+                      className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ${
+                        prize.conditionsEnabled ? 'bg-primary' : 'bg-muted'
+                      }`}
+                    >
+                      <span
+                        className={`inline-block h-5 w-5 transform rounded-full bg-white shadow transition-transform ${
+                          prize.conditionsEnabled ? 'translate-x-5' : 'translate-x-1'
+                        }`}
+                      />
+                    </button>
+                  </label>
+
+                  {prize.conditionsEnabled && (
+                    <div className="space-y-2">
+                      <p className="text-xs font-medium text-muted-foreground">Redemption conditions</p>
+                      <Input
+                        placeholder="e.g., Sous réserve de consommation"
+                        value={prize.redemptionConditions[0]}
+                        onChange={(e) =>
+                          updateCondition(index, 0, (e.target as HTMLInputElement).value)
+                        }
+                        maxLength={200}
+                      />
+                      <Input
+                        placeholder="Redemption condition 2 (optional)"
+                        value={prize.redemptionConditions[1]}
+                        onChange={(e) =>
+                          updateCondition(index, 1, (e.target as HTMLInputElement).value)
+                        }
+                        maxLength={200}
+                      />
+                      <Input
+                        placeholder="Redemption condition 3 (optional)"
+                        value={prize.redemptionConditions[2]}
+                        onChange={(e) =>
+                          updateCondition(index, 2, (e.target as HTMLInputElement).value)
+                        }
+                        maxLength={200}
+                      />
+                    </div>
+                  )}
                 </div>
                 <div className="flex gap-3">
                   <div className="flex-1">

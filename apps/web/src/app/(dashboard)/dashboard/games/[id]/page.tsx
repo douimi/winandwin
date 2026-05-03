@@ -275,6 +275,16 @@ export default function GameDetailPage() {
                       </span>
                     )}
                   </div>
+                  {prize.redemptionConditions && prize.redemptionConditions.length > 0 && (
+                    <div className="mt-2 rounded-md bg-muted/40 p-2">
+                      <p className="text-[11px] font-semibold text-muted-foreground">Redemption conditions</p>
+                      <ul className="mt-1 list-disc space-y-0.5 pl-4 text-xs text-muted-foreground">
+                        {prize.redemptionConditions.map((c, i) => (
+                          <li key={i}>{c}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
                 </div>
               ))
             )}

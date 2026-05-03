@@ -181,6 +181,7 @@ gamesRouter.post('/', async (c) => {
         maxPerDay: p.maxPerDay,
         couponValidityDays: p.couponValidityDays,
         couponActivationDelayHours: p.couponActivationDelayHours,
+        redemptionConditions: p.redemptionConditions ?? [],
       })),
     ).returning()
 

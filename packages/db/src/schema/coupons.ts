@@ -1,5 +1,5 @@
 import { relations } from 'drizzle-orm'
-import { pgEnum, pgTable, text, timestamp, varchar } from 'drizzle-orm/pg-core'
+import { jsonb, pgEnum, pgTable, text, timestamp, varchar } from 'drizzle-orm/pg-core'
 import { merchants } from './merchants'
 
 export const couponStatusEnum = pgEnum('coupon_status', [
@@ -23,6 +23,7 @@ export const coupons = pgTable('coupons', {
   status: couponStatusEnum('status').notNull().default('active'),
   prizeName: varchar('prize_name', { length: 100 }).notNull(),
   prizeDescription: varchar('prize_description', { length: 500 }),
+  redemptionConditions: jsonb('redemption_conditions').$type<string[]>().notNull().default([]),
   validFrom: timestamp('valid_from', { withTimezone: true }).notNull(),
   validUntil: timestamp('valid_until', { withTimezone: true }).notNull(),
   redeemedAt: timestamp('redeemed_at', { withTimezone: true }),

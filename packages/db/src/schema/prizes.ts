@@ -1,5 +1,5 @@
 import { relations } from 'drizzle-orm'
-import { integer, pgTable, real, text, timestamp, varchar } from 'drizzle-orm/pg-core'
+import { integer, jsonb, pgTable, real, text, timestamp, varchar } from 'drizzle-orm/pg-core'
 import { games } from './games'
 
 export const prizes = pgTable('prizes', {
@@ -18,6 +18,7 @@ export const prizes = pgTable('prizes', {
   totalWon: integer('total_won').notNull().default(0),
   couponValidityDays: integer('coupon_validity_days').notNull().default(7),
   couponActivationDelayHours: integer('coupon_activation_delay_hours').notNull().default(24),
+  redemptionConditions: jsonb('redemption_conditions').$type<string[]>().notNull().default([]),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 })
 

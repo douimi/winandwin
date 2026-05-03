@@ -10,6 +10,7 @@ interface CouponInfo {
   status: string
   prizeName: string
   prizeDescription: string | null
+  redemptionConditions?: string[]
   merchantName: string
   validFrom: string
   validUntil: string
@@ -217,6 +218,16 @@ export default function ValidateCouponPage() {
           <p style={styles.smallText}>
             Valid: {formatDate(coupon.validFrom)} - {formatDate(coupon.validUntil)}
           </p>
+          {coupon.redemptionConditions && coupon.redemptionConditions.length > 0 && (
+            <div style={styles.conditionsBox}>
+              <p style={styles.conditionsTitle}>Redemption conditions</p>
+              <ul style={styles.conditionsList}>
+                {coupon.redemptionConditions.map((condition, i) => (
+                  <li key={i} style={styles.conditionItem}>{condition}</li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
 
         <div style={styles.divider} />
@@ -393,6 +404,36 @@ const styles: Record<string, React.CSSProperties> = {
     color: '#94a3b8',
     margin: 0,
     marginTop: '0.5rem',
+  },
+  conditionsBox: {
+    width: '100%',
+    marginTop: '0.5rem',
+    padding: '0.6rem 0.8rem',
+    background: '#f8fafc',
+    borderRadius: '8px',
+    border: '1px dashed #cbd5e1',
+    textAlign: 'left' as const,
+  },
+  conditionsTitle: {
+    fontSize: '0.7rem',
+    fontWeight: 700,
+    letterSpacing: '0.04em',
+    textTransform: 'uppercase' as const,
+    color: '#64748b',
+    margin: 0,
+    marginBottom: '0.35rem',
+  },
+  conditionsList: {
+    margin: 0,
+    paddingLeft: '1.1rem',
+    display: 'flex',
+    flexDirection: 'column' as const,
+    gap: '0.2rem',
+  },
+  conditionItem: {
+    fontSize: '0.8rem',
+    color: '#475569',
+    lineHeight: 1.4,
   },
   loadingSpinner: {
     width: '40px',

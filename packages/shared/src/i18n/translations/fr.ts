@@ -83,6 +83,7 @@ export const fr: Translations = {
     opening: 'Ouverture...',
     submit: 'Envoyer',
     prizeOnItsWay: 'Votre prix est en route !',
+    redemptionConditions: 'Conditions de retrait',
     checkEmailAt: 'V\u00e9rifiez votre email \u00e0',
     forCouponCode: 'pour votre code coupon.',
     soClose: 'Presque !',

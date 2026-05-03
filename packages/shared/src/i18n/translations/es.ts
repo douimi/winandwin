@@ -83,6 +83,7 @@ export const es: Translations = {
     opening: 'Abriendo...',
     submit: 'Enviar',
     prizeOnItsWay: '\u00a1Tu premio est\u00e1 en camino!',
+    redemptionConditions: 'Condiciones de canje',
     checkEmailAt: 'Revisa tu email en',
     forCouponCode: 'para tu c\u00f3digo de cup\u00f3n.',
     soClose: '\u00a1Casi!',

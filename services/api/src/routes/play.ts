@@ -177,9 +177,12 @@ playRouter.get('/:slug/state', async (c) => {
       )
     }
 
-    // Find player by fingerprintId OR hardwareId (cross-browser detection)
-    const hardwareId = c.req.query('hardwareId')
-    let playerResult = await db
+    // Identify player by fingerprintId only.
+    // hardwareId is recorded for fraud analytics but NOT used to match players:
+    // it is built from coarse signals (screen, GPU, CPU, RAM, timezone, platform)
+    // that are identical across all phones of the same model in the same region,
+    // so matching on it falsely flagged brand-new phones as "already played".
+    const playerResult = await db
       .select()
       .from(players)
       .where(
@@ -189,20 +192,6 @@ playRouter.get('/:slug/state', async (c) => {
         ),
       )
       .limit(1)
-
-    // Cross-browser detection: if no match by fingerprint, try hardwareId
-    if (playerResult.length === 0 && hardwareId) {
-      playerResult = await db
-        .select()
-        .from(players)
-        .where(
-          and(
-            eq(players.merchantId, merchantData.id),
-            eq(players.hardwareId, hardwareId),
-          ),
-        )
-        .limit(1)
-    }
 
     // Get enabled CTAs for this merchant (for replay logic)
     const enabledCtasForState = await db
@@ -489,8 +478,10 @@ playRouter.post('/:slug/spin', async (c) => {
       )
     }
 
-    // Step c: Find or create player — check fingerprint first, then hardwareId for cross-browser
-    let player = await db
+    // Step c: Find or create player by fingerprintId.
+    // hardwareId is stored for fraud analytics but not used as a match key —
+    // it collides across all phones of the same model + region.
+    const player = await db
       .select()
       .from(players)
       .where(
@@ -500,20 +491,6 @@ playRouter.post('/:slug/spin', async (c) => {
         ),
       )
       .limit(1)
-
-    // Cross-browser detection: same hardware on different browser
-    if (player.length === 0 && body.hardwareId) {
-      player = await db
-        .select()
-        .from(players)
-        .where(
-          and(
-            eq(players.merchantId, merchantData.id),
-            eq(players.hardwareId, body.hardwareId),
-          ),
-        )
-        .limit(1)
-    }
 
     let playerId: string
 
@@ -662,6 +639,7 @@ playRouter.post('/:slug/spin', async (c) => {
       todayWon: todayWonMap.get(p.id) ?? 0,
       couponValidityDays: p.couponValidityDays,
       couponActivationDelayHours: p.couponActivationDelayHours,
+      redemptionConditions: (p.redemptionConditions as string[] | null) ?? [],
     }))
 
     // Run game engine
@@ -684,6 +662,7 @@ playRouter.post('/:slug/spin', async (c) => {
         code: couponCode,
         prizeName: result.prize.name,
         prizeDescription: result.prize.description,
+        redemptionConditions: result.prize.redemptionConditions,
         validFrom,
         validUntil,
       }).returning()
@@ -728,11 +707,13 @@ playRouter.post('/:slug/spin', async (c) => {
             name: result.prize.name,
             description: result.prize.description,
             emoji: result.prize.emoji,
+            redemptionConditions: result.prize.redemptionConditions,
           },
           coupon: {
             code: couponResult[0]!.code,
             validFrom: validFrom.toISOString(),
             validUntil: validUntil.toISOString(),
+            redemptionConditions: result.prize.redemptionConditions,
           },
         },
       })
@@ -814,8 +795,8 @@ playRouter.post('/:slug/register', async (c) => {
 
     const merchantData = merchantResult[0]!
 
-    // Find player by fingerprintId or hardwareId
-    let playerResult = await db
+    // Find player by fingerprintId only (hardwareId is too generic to match on)
+    const playerResult = await db
       .select()
       .from(players)
       .where(
@@ -825,19 +806,6 @@ playRouter.post('/:slug/register', async (c) => {
         ),
       )
       .limit(1)
-
-    if (playerResult.length === 0 && body.hardwareId) {
-      playerResult = await db
-        .select()
-        .from(players)
-        .where(
-          and(
-            eq(players.merchantId, merchantData.id),
-            eq(players.hardwareId, body.hardwareId),
-          ),
-        )
-        .limit(1)
-    }
 
     if (playerResult.length === 0) {
       return c.json(
@@ -926,6 +894,7 @@ playRouter.get('/coupon/:code', async (c) => {
         status: couponData.status,
         prizeName: couponData.prizeName,
         prizeDescription: couponData.prizeDescription,
+        redemptionConditions: (couponData.redemptionConditions as string[] | null) ?? [],
         validFrom: couponData.validFrom.toISOString(),
         validUntil: couponData.validUntil.toISOString(),
         redeemedAt: couponData.redeemedAt?.toISOString() ?? null,

@@ -20,6 +20,7 @@ export interface PrizeConfig {
   todayWon: number
   couponValidityDays: number
   couponActivationDelayHours: number
+  redemptionConditions: string[]
 }
 
 export interface GameResult {
@@ -31,6 +32,7 @@ export interface GameResult {
     emoji?: string
     couponValidityDays: number
     couponActivationDelayHours: number
+    redemptionConditions: string[]
   }
 }
 
@@ -77,6 +79,7 @@ export function determineGameOutcome(
       emoji: selectedPrize.emoji,
       couponValidityDays: selectedPrize.couponValidityDays,
       couponActivationDelayHours: selectedPrize.couponActivationDelayHours,
+      redemptionConditions: selectedPrize.redemptionConditions,
     },
   }
 }

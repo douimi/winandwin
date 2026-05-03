@@ -288,6 +288,9 @@ export interface CreateGamePayload {
       winRate: number
       couponValidityDays: number
       couponActivationDelayHours?: number
+      maxTotal?: number
+      maxPerDay?: number
+      redemptionConditions?: string[]
     }[]
     globalWinRate: number
     scheduling?: Record<string, unknown>
@@ -327,6 +330,7 @@ export interface GameDetail {
     totalWon: number
     couponValidityDays: number
     couponActivationDelayHours: number
+    redemptionConditions?: string[]
   }[]
   createdAt: string
 }

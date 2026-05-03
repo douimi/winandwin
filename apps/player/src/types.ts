@@ -34,11 +34,13 @@ export interface SpinResult {
     name: string
     description?: string
     emoji?: string
+    redemptionConditions?: string[]
   }
   coupon?: {
     code: string
     validFrom: string
     validUntil: string
+    redemptionConditions?: string[]
   }
   message?: string
 }
