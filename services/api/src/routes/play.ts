@@ -314,7 +314,7 @@ playRouter.get('/:slug/state', async (c) => {
 
     // Determine last play result
     let lastPlayResult: 'win' | 'lose' | null = null
-    let lastCoupon: { code: string; validFrom: string; validUntil: string } | null = null
+    let lastCoupon: { code: string; validFrom: string; validUntil: string; redemptionConditions: string[] } | null = null
 
     if (recentPlays.length > 0) {
       const sorted = recentPlays.sort(
@@ -342,6 +342,7 @@ playRouter.get('/:slug/state', async (c) => {
             code: couponData.code,
             validFrom: couponData.validFrom.toISOString(),
             validUntil: couponData.validUntil.toISOString(),
+            redemptionConditions: (couponData.redemptionConditions as string[] | null) ?? [],
           }
         }
       }
@@ -846,6 +847,7 @@ playRouter.post('/:slug/register', async (c) => {
           couponCode: couponData.code,
           validFrom: couponData.validFrom.toISOString(),
           validUntil: couponData.validUntil.toISOString(),
+          redemptionConditions: (couponData.redemptionConditions as string[] | null) ?? [],
         }, apiKey)
         emailSent = true
       } catch (err) {

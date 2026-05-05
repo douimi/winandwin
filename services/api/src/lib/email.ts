@@ -7,6 +7,7 @@ interface CouponEmailData {
   couponCode: string
   validFrom: string
   validUntil: string
+  redemptionConditions?: string[]
 }
 
 export async function sendCouponEmail(data: CouponEmailData, resendApiKey: string): Promise<void> {
@@ -90,6 +91,7 @@ function buildCouponEmailHtml(data: CouponEmailData): string {
                 <td style="padding:8px 0;font-size:14px;font-weight:600;color:#1a1a2e;text-align:right;border-top:1px solid #f0f0f0;">${validUntil}</td>
               </tr>
             </table>
+            ${buildConditionsHtml(data.redemptionConditions)}
             <!-- QR Code -->
             <div style="text-align:center;margin-bottom:24px;">
               <img
@@ -124,6 +126,19 @@ function buildCouponEmailHtml(data: CouponEmailData): string {
   </table>
 </body>
 </html>`
+}
+
+function buildConditionsHtml(conditions?: string[]): string {
+  if (!conditions || conditions.length === 0) return ''
+  const items = conditions
+    .map((c) => `<li style="margin:0 0 6px;font-size:14px;color:#374151;line-height:1.5;">${escapeHtml(c)}</li>`)
+    .join('')
+  return `
+            <!-- Redemption Conditions -->
+            <div style="background:#fef9e7;border-left:4px solid #f59e0b;border-radius:8px;padding:14px 16px;margin-bottom:24px;">
+              <p style="margin:0 0 8px;font-size:12px;font-weight:700;color:#92400e;text-transform:uppercase;letter-spacing:0.6px;">Redemption conditions</p>
+              <ul style="margin:0;padding-left:18px;list-style:disc;">${items}</ul>
+            </div>`
 }
 
 function escapeHtml(str: string): string {

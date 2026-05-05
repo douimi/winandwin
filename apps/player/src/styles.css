@@ -1225,6 +1225,41 @@ body {
   color: #8b7355;
 }
 
+.coupon-conditions {
+  margin-top: 0.75rem;
+  padding: 0.7rem 0.85rem;
+  background: #fef9e7;
+  border-left: 3px solid #d4a73a;
+  border-radius: 6px;
+  text-align: left;
+}
+
+.coupon-conditions-title {
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #92400e;
+  margin: 0 0 0.35rem;
+}
+
+.coupon-conditions-list {
+  list-style: disc;
+  margin: 0;
+  padding-left: 1rem;
+  color: #6b5224;
+}
+
+.coupon-conditions-list li {
+  font-size: 0.78rem;
+  line-height: 1.4;
+  margin-bottom: 0.2rem;
+}
+
+.coupon-conditions-list li:last-child {
+  margin-bottom: 0;
+}
+
 .coupon-instruction {
   font-size: 0.78rem;
   color: #a0926e;

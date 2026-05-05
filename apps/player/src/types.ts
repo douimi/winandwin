@@ -57,6 +57,7 @@ export interface PlayerState {
     code: string
     validFrom: string
     validUntil: string
+    redemptionConditions?: string[]
   } | null
   nextPlayAt?: string
   maxWinsReached?: boolean

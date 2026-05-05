@@ -79,6 +79,18 @@ export function AlreadyPlayedScreen({ playerState, merchantName, businessTheme }
               <p class="coupon-validity">
                 {t.player.validFrom} {formatDate(coupon.validFrom, locale)} {t.player.validUntil} {formatDate(coupon.validUntil, locale)}
               </p>
+
+              {coupon.redemptionConditions && coupon.redemptionConditions.length > 0 && (
+                <div class="coupon-conditions">
+                  <p class="coupon-conditions-title">{t.player.redemptionConditions}</p>
+                  <ul class="coupon-conditions-list">
+                    {coupon.redemptionConditions.map((c, i) => (
+                      <li key={i}>{c}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
               <p class="coupon-instruction">
                 {'\u{1F4F1}'} {t.player.showToStaff}
               </p>
