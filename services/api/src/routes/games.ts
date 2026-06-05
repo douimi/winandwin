@@ -1,7 +1,7 @@
 import { Hono } from 'hono'
 import { eq, and, sql } from 'drizzle-orm'
 import { games, prizes, merchants } from '@winandwin/db/schema'
-import { createGameSchema } from '@winandwin/shared/validators'
+import { createGameSchema, addPrizeSchema } from '@winandwin/shared/validators'
 import { getTierLimits } from '../lib/tier-limits'
 import type { AppEnv } from '../types'
 
@@ -244,6 +244,100 @@ gamesRouter.patch('/:id', async (c) => {
     console.error('Error updating game:', err)
     return c.json(
       { success: false, error: { code: 'INTERNAL_ERROR', message: 'Failed to update game' } },
+      500,
+    )
+  }
+})
+
+// POST /:id/prizes — Add a prize to an existing game
+gamesRouter.post('/:id/prizes', async (c) => {
+  try {
+    const db = c.get('db')
+    const gameId = c.req.param('id')
+    const body = await c.req.json()
+
+    const parsed = addPrizeSchema.safeParse(body)
+    if (!parsed.success) {
+      return c.json(
+        {
+          success: false,
+          error: {
+            code: 'VALIDATION_ERROR',
+            message: 'Invalid input',
+            details: parsed.error.flatten(),
+          },
+        },
+        400,
+      )
+    }
+
+    const game = await db.select().from(games).where(eq(games.id, gameId)).limit(1)
+    if (game.length === 0) {
+      return c.json(
+        { success: false, error: { code: 'NOT_FOUND', message: 'Game not found' } },
+        404,
+      )
+    }
+
+    const isTestMode = c.req.query('testmode') === 'unlimited'
+
+    // Enforce tier maxPrizes limit
+    if (!isTestMode) {
+      const merchantResult = await db
+        .select()
+        .from(merchants)
+        .where(eq(merchants.id, game[0]!.merchantId))
+        .limit(1)
+
+      if (merchantResult.length > 0) {
+        const tierLimits = await getTierLimits(db)
+        const tier = merchantResult[0]!.subscriptionTier as keyof typeof tierLimits
+        const limits = tierLimits[tier] as Record<string, unknown> | undefined
+        const maxPrizes = (limits?.maxPrizes as number) ?? 999
+
+        const countResult = await db
+          .select({ count: sql<number>`count(*)::int` })
+          .from(prizes)
+          .where(eq(prizes.gameId, gameId))
+
+        const currentCount = countResult[0]?.count ?? 0
+        if (currentCount >= maxPrizes) {
+          return c.json(
+            {
+              success: false,
+              error: {
+                code: 'TIER_LIMIT',
+                message: `Your plan allows ${maxPrizes} prize${maxPrizes !== 1 ? 's' : ''} per game.`,
+              },
+            },
+            403,
+          )
+        }
+      }
+    }
+
+    const p = parsed.data
+    const inserted = await db
+      .insert(prizes)
+      .values({
+        gameId,
+        name: p.name,
+        description: p.description,
+        emoji: p.emoji,
+        winRate: p.winRate,
+        maxTotal: p.maxTotal,
+        maxPerDay: p.maxPerDay,
+        couponValidityDays: p.couponValidityDays,
+        couponActivationDelayHours: p.couponActivationDelayHours,
+        redemptionConditions: p.redemptionConditions ?? [],
+      })
+      .returning()
+
+    return c.json({ success: true, data: inserted[0] }, 201)
+  } catch (err) {
+    console.error('Error adding prize:', err)
+    return c.json(
+      { success: false, error: { code: 'INTERNAL_ERROR', message: 'Failed to add prize' } },
       500,
     )
   }

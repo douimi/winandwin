@@ -12,6 +12,7 @@ import { healthRouter } from './routes/health'
 import { merchantsRouter } from './routes/merchants'
 import { playRouter } from './routes/play'
 import { playersRouter } from './routes/players'
+import { prizesRouter } from './routes/prizes'
 import { statsRouter } from './routes/stats'
 import { adminRouter } from './routes/admin'
 import { adminAuthMiddleware } from './middleware/admin'
@@ -62,6 +63,7 @@ app.use('/api/*', dbMiddleware)
 app.use('/api/v1/play/*', playerRateLimit)
 app.use('/api/v1/merchants/*', merchantRateLimit)
 app.use('/api/v1/games/*', merchantRateLimit)
+app.use('/api/v1/prizes/*', merchantRateLimit)
 app.use('/api/v1/coupons/*', merchantRateLimit)
 app.use('/api/v1/ctas/*', merchantRateLimit)
 app.use('/api/v1/players/*', merchantRateLimit)
@@ -72,6 +74,7 @@ app.use('/api/v1/admin/*', adminRateLimit)
 app.route('/health', healthRouter)
 app.route('/api/v1/merchants', merchantsRouter)
 app.route('/api/v1/games', gamesRouter)
+app.route('/api/v1/prizes', prizesRouter)
 app.route('/api/v1/play', playRouter)
 app.route('/api/v1/coupons', couponsRouter)
 app.route('/api/v1/ctas', ctasRouter)

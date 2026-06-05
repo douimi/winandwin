@@ -62,6 +62,24 @@ export const prizeSchema = z.object({
     .default([]),
 })
 
+// Used for adding a prize to an existing game — same shape as the create-time prize,
+// just without defaults applied (the API echoes them in).
+export const addPrizeSchema = prizeSchema
+
+// Used for editing a prize on an existing game — every field optional, but null is
+// explicitly allowed for the nullable columns (maxTotal/maxPerDay) so the UI can clear a limit.
+export const updatePrizeSchema = z.object({
+  name: z.string().min(1).max(100).optional(),
+  description: z.string().max(500).nullable().optional(),
+  emoji: z.string().max(10).nullable().optional(),
+  winRate: z.number().min(0.1).max(100).optional(),
+  maxTotal: z.number().int().min(1).nullable().optional(),
+  maxPerDay: z.number().int().min(1).nullable().optional(),
+  couponValidityDays: z.number().int().min(1).max(365).optional(),
+  couponActivationDelayHours: z.number().int().min(0).max(72).optional(),
+  redemptionConditions: z.array(z.string().trim().min(1).max(200)).max(3).optional(),
+})
+
 export const gameScheduleSchema = z.object({
   startDate: z.string().datetime().optional(),
   endDate: z.string().datetime().optional(),
@@ -164,3 +182,5 @@ export type StartGamePlayInput = z.infer<typeof startGamePlaySchema>
 export type SignUpInput = z.infer<typeof signUpSchema>
 export type SignInInput = z.infer<typeof signInSchema>
 export type PaginationInput = z.infer<typeof paginationSchema>
+export type AddPrizeInput = z.infer<typeof addPrizeSchema>
+export type UpdatePrizeInput = z.infer<typeof updatePrizeSchema>

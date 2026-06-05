@@ -379,6 +379,95 @@ export async function deleteGame(
 }
 
 // ---------------------------------------------------------------------------
+// Prizes (per-prize management on an existing game)
+// ---------------------------------------------------------------------------
+
+export interface PrizeDetail {
+  id: string
+  gameId?: string
+  name: string
+  description?: string | null
+  emoji?: string | null
+  winRate: number
+  maxTotal?: number | null
+  maxPerDay?: number | null
+  totalWon: number
+  couponValidityDays: number
+  couponActivationDelayHours: number
+  redemptionConditions?: string[]
+}
+
+export interface AddPrizePayload {
+  name: string
+  description?: string
+  emoji?: string
+  winRate: number
+  couponValidityDays: number
+  couponActivationDelayHours: number
+  maxTotal?: number
+  maxPerDay?: number
+  redemptionConditions?: string[]
+}
+
+export interface UpdatePrizePayload {
+  name?: string
+  description?: string | null
+  emoji?: string | null
+  winRate?: number
+  couponValidityDays?: number
+  couponActivationDelayHours?: number
+  maxTotal?: number | null
+  maxPerDay?: number | null
+  redemptionConditions?: string[]
+}
+
+export async function addPrize(
+  gameId: string,
+  payload: AddPrizePayload,
+  token?: string,
+): Promise<PrizeDetail> {
+  return request<PrizeDetail>(
+    `/api/v1/games/${encodeURIComponent(gameId)}/prizes`,
+    { method: 'POST', body: JSON.stringify(payload) },
+    token,
+  )
+}
+
+export async function updatePrize(
+  prizeId: string,
+  payload: UpdatePrizePayload,
+  token?: string,
+): Promise<PrizeDetail> {
+  return request<PrizeDetail>(
+    `/api/v1/prizes/${encodeURIComponent(prizeId)}`,
+    { method: 'PATCH', body: JSON.stringify(payload) },
+    token,
+  )
+}
+
+export async function deletePrize(
+  prizeId: string,
+  token?: string,
+): Promise<void> {
+  return request<void>(
+    `/api/v1/prizes/${encodeURIComponent(prizeId)}`,
+    { method: 'DELETE' },
+    token,
+  )
+}
+
+export async function resetPrize(
+  prizeId: string,
+  token?: string,
+): Promise<PrizeDetail> {
+  return request<PrizeDetail>(
+    `/api/v1/prizes/${encodeURIComponent(prizeId)}/reset`,
+    { method: 'POST' },
+    token,
+  )
+}
+
+// ---------------------------------------------------------------------------
 // Coupons
 // ---------------------------------------------------------------------------
 
