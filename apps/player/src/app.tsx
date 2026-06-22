@@ -362,10 +362,21 @@ export function App() {
     setPlayerEmail(email)
 
     try {
-      // Send name/email to API and trigger coupon email
-      await withTimeout(
+      // /register mints the coupon (no longer created at /spin time, so every
+      // coupon row has a real player). Merge the prize + coupon snapshot
+      // back into result state so the result screen has full info even for
+      // returning unregistered winners who land here without a fresh /spin.
+      const regResult = await withTimeout(
         updatePlayerInfo(slug, fingerprintId, name, email, hardwareId ?? undefined),
       )
+      if (regResult && (regResult.prize || regResult.coupon)) {
+        const currentResult = resultRef.current
+        setResult({
+          outcome: 'win',
+          prize: regResult.prize ?? currentResult?.prize,
+          coupon: regResult.coupon ?? currentResult?.coupon,
+        })
+      }
     } catch (err) {
       // Don't block the flow -- still show the result
     }

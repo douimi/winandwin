@@ -48,7 +48,28 @@ export async function fetchPlayerState(slug: string, fingerprintId: string, hard
   return json.data
 }
 
-export async function updatePlayerInfo(slug: string, fingerprintId: string, name: string, email: string, hardwareId?: string) {
+export interface RegisterResponse {
+  emailSent: boolean
+  prize: {
+    name: string
+    description?: string
+    redemptionConditions?: string[]
+  } | null
+  coupon: {
+    code: string
+    validFrom: string
+    validUntil: string
+    redemptionConditions?: string[]
+  } | null
+}
+
+export async function updatePlayerInfo(
+  slug: string,
+  fingerprintId: string,
+  name: string,
+  email: string,
+  hardwareId?: string,
+): Promise<RegisterResponse> {
   const res = await fetch(`${API_BASE}/api/v1/play/${slug}/register`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -56,5 +77,5 @@ export async function updatePlayerInfo(slug: string, fingerprintId: string, name
   })
   const json = await res.json()
   if (!json.success) throw new GameApiError(json.error?.code || 'UNKNOWN', json.error?.message || 'Failed to register')
-  return json.data
+  return json.data as RegisterResponse
 }

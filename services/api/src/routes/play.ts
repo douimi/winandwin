@@ -1,5 +1,5 @@
 import { Hono } from 'hono'
-import { eq, and, sql, gte } from 'drizzle-orm'
+import { eq, and, sql, gte, or, isNull } from 'drizzle-orm'
 import { merchants, games, prizes, players, gamePlays, coupons, ctas } from '@winandwin/db/schema'
 import {
   calculateCouponDates,
@@ -648,76 +648,78 @@ playRouter.post('/:slug/spin', async (c) => {
 
     // Step f & g: Handle result
     if (result.outcome === 'win' && result.prize) {
-      const couponCode = generateCouponCode()
-      const { validFrom, validUntil } = calculateCouponDates(
-        result.prize.couponActivationDelayHours,
-        result.prize.couponValidityDays,
-      )
-
-      // Create coupon, increment totalWon, create game play, update player stats
-      const couponInsert = db.insert(coupons).values({
-        merchantId: merchantData.id,
-        gameId: activeGame.id,
-        prizeId: result.prize.id,
-        playerId,
-        code: couponCode,
-        prizeName: result.prize.name,
-        prizeDescription: result.prize.description,
-        redemptionConditions: result.prize.redemptionConditions,
-        validFrom,
-        validUntil,
-      }).returning()
-
-      const prizeUpdate = db
+      // ── Race-safe maxTotal enforcement ──────────────────────────────────
+      // The game engine already checked totalWon < maxTotal in memory, but
+      // two concurrent spins can both pass the in-memory check, both award,
+      // and produce totalWon > maxTotal. We re-check inside an atomic
+      // conditional UPDATE: only increment if the prize still has capacity.
+      // If 0 rows updated, another spin took the last unit — fall through
+      // to the lose branch for this play.
+      const incremented = await db
         .update(prizes)
         .set({ totalWon: sql`${prizes.totalWon} + 1` })
-        .where(eq(prizes.id, result.prize.id))
+        .where(
+          and(
+            eq(prizes.id, result.prize.id),
+            or(
+              isNull(prizes.maxTotal),
+              sql`${prizes.totalWon} < ${prizes.maxTotal}`,
+            ),
+          ),
+        )
+        .returning({ id: prizes.id })
 
-      const gamePlayInsert = db.insert(gamePlays).values({
-        gameId: activeGame.id,
-        merchantId: merchantData.id,
-        playerId,
-        result: 'win',
-        prizeId: result.prize.id,
-        completedActions: body.completedActions,
-      })
-
-      // Points: +1 for play, +2 per completed action, +5 for win
-      const actionPoints = (body.completedActions?.length ?? 0) * 2
-      const winPoints = 1 + actionPoints + 5
-
-      const playerUpdate = db
-        .update(players)
-        .set({
-          totalPlays: sql`${players.totalPlays} + 1`,
-          totalWins: sql`${players.totalWins} + 1`,
-          points: sql`${players.points} + ${winPoints}`,
-          lastSeenAt: new Date(),
+      if (incremented.length === 0) {
+        console.warn(
+          `[race] prize ${result.prize.id} (${result.prize.name}) hit maxTotal mid-spin; downgrading this play to lose`,
+        )
+        // Fall through — record this as a lose play below.
+      } else {
+        // Win confirmed. Record the gamePlay + update player stats.
+        // We DO NOT create the coupon here — it's created at /register so
+        // every coupon row carries a real player name + email. The win is
+        // still durably recorded in gamePlays so the limit accounting stays
+        // correct even if the player never finishes registration.
+        const gamePlayInsert = db.insert(gamePlays).values({
+          gameId: activeGame.id,
+          merchantId: merchantData.id,
+          playerId,
+          result: 'win',
+          prizeId: result.prize.id,
+          completedActions: body.completedActions,
         })
-        .where(eq(players.id, playerId))
 
-      const [couponResult] = await db.batch([couponInsert, prizeUpdate, gamePlayInsert, playerUpdate])
+        // Points: +1 for play, +2 per completed action, +5 for win
+        const actionPoints = (body.completedActions?.length ?? 0) * 2
+        const winPoints = 1 + actionPoints + 5
 
-      // Email is now sent via the separate /register endpoint after the player fills in their details
+        const playerUpdate = db
+          .update(players)
+          .set({
+            totalPlays: sql`${players.totalPlays} + 1`,
+            totalWins: sql`${players.totalWins} + 1`,
+            points: sql`${players.points} + ${winPoints}`,
+            lastSeenAt: new Date(),
+          })
+          .where(eq(players.id, playerId))
 
-      return c.json({
-        success: true,
-        data: {
-          outcome: 'win',
-          prize: {
-            name: result.prize.name,
-            description: result.prize.description,
-            emoji: result.prize.emoji,
-            redemptionConditions: result.prize.redemptionConditions,
+        await db.batch([gamePlayInsert, playerUpdate])
+
+        // No coupon in the spin response. The UI shows the prize banner +
+        // routes to the register screen; /register returns the coupon code.
+        return c.json({
+          success: true,
+          data: {
+            outcome: 'win',
+            prize: {
+              name: result.prize.name,
+              description: result.prize.description,
+              emoji: result.prize.emoji,
+              redemptionConditions: result.prize.redemptionConditions,
+            },
           },
-          coupon: {
-            code: couponResult[0]!.code,
-            validFrom: validFrom.toISOString(),
-            validUntil: validUntil.toISOString(),
-            redemptionConditions: result.prize.redemptionConditions,
-          },
-        },
-      })
+        })
+      }
     }
 
     // Lose outcome — record play and update player stats
@@ -817,47 +819,132 @@ playRouter.post('/:slug/register', async (c) => {
 
     const playerData = playerResult[0]!
 
-    // Update player name and email
+    // Update player name + email up front so even if coupon creation hits a
+    // problem below, the player record is correctly identified.
     await db
       .update(players)
       .set({ name: body.name, email: body.email, lastSeenAt: new Date() })
       .where(eq(players.id, playerData.id))
 
-    // Find the most recent coupon for this player
-    const recentCoupon = await db
+    // ── Coupon (created lazily, only when the player actually registers) ──
+    // 1. Find the player's most recent winning play.
+    // 2. If a coupon already exists newer than that play, reuse it (idempotent
+    //    on re-submits / repeated registrations).
+    // 3. Otherwise look up the prize and mint a fresh coupon.
+    const recentWin = await db
+      .select()
+      .from(gamePlays)
+      .where(
+        and(
+          eq(gamePlays.playerId, playerData.id),
+          eq(gamePlays.result, 'win'),
+        ),
+      )
+      .orderBy(sql`${gamePlays.playedAt} DESC`)
+      .limit(1)
+
+    const existingCoupon = await db
       .select()
       .from(coupons)
       .where(eq(coupons.playerId, playerData.id))
       .orderBy(sql`${coupons.createdAt} DESC`)
       .limit(1)
 
+    let couponRow: typeof existingCoupon[number] | null = null
+
+    if (recentWin.length > 0) {
+      const winPlay = recentWin[0]!
+      // A coupon already linked to this win? Reuse it.
+      if (
+        existingCoupon.length > 0 &&
+        existingCoupon[0]!.createdAt.getTime() >= winPlay.playedAt.getTime()
+      ) {
+        couponRow = existingCoupon[0]!
+      } else if (winPlay.prizeId) {
+        // No coupon yet for this win — mint one now.
+        const prizeRow = await db
+          .select()
+          .from(prizes)
+          .where(eq(prizes.id, winPlay.prizeId))
+          .limit(1)
+
+        if (prizeRow.length > 0) {
+          const prize = prizeRow[0]!
+          const couponCode = generateCouponCode()
+          const { validFrom, validUntil } = calculateCouponDates(
+            prize.couponActivationDelayHours,
+            prize.couponValidityDays,
+          )
+
+          const inserted = await db
+            .insert(coupons)
+            .values({
+              merchantId: merchantData.id,
+              gameId: winPlay.gameId,
+              prizeId: prize.id,
+              playerId: playerData.id,
+              code: couponCode,
+              prizeName: prize.name,
+              prizeDescription: prize.description,
+              redemptionConditions: (prize.redemptionConditions as string[] | null) ?? [],
+              validFrom,
+              validUntil,
+            })
+            .returning()
+
+          couponRow = inserted[0] ?? null
+        }
+      }
+    }
+
     let emailSent = false
 
-    if (recentCoupon.length > 0) {
-      const couponData = recentCoupon[0]!
+    if (couponRow) {
       const apiKey = c.env.RESEND_API_KEY ?? ''
-
       try {
-        await sendCouponEmail({
-          to: body.email,
-          playerName: body.name,
-          merchantName: merchantData.name,
-          prizeName: couponData.prizeName,
-          prizeEmoji: undefined,
-          couponCode: couponData.code,
-          validFrom: couponData.validFrom.toISOString(),
-          validUntil: couponData.validUntil.toISOString(),
-          redemptionConditions: (couponData.redemptionConditions as string[] | null) ?? [],
-        }, apiKey)
+        await sendCouponEmail(
+          {
+            to: body.email,
+            playerName: body.name,
+            merchantName: merchantData.name,
+            prizeName: couponRow.prizeName,
+            prizeEmoji: undefined,
+            couponCode: couponRow.code,
+            validFrom: couponRow.validFrom.toISOString(),
+            validUntil: couponRow.validUntil.toISOString(),
+            redemptionConditions: (couponRow.redemptionConditions as string[] | null) ?? [],
+          },
+          apiKey,
+        )
         emailSent = true
-      } catch (err) {
+      } catch {
+        /* email is best-effort — the coupon is still in the DB */
       }
-    } else {
     }
 
     return c.json({
       success: true,
-      data: { emailSent },
+      data: {
+        emailSent,
+        // Coupon + prize snapshot so the UI can render the win screen even
+        // for the "I closed the tab and came back" case where /spin's prize
+        // info is no longer in memory.
+        prize: couponRow
+          ? {
+              name: couponRow.prizeName,
+              description: couponRow.prizeDescription ?? undefined,
+              redemptionConditions: (couponRow.redemptionConditions as string[] | null) ?? [],
+            }
+          : null,
+        coupon: couponRow
+          ? {
+              code: couponRow.code,
+              validFrom: couponRow.validFrom.toISOString(),
+              validUntil: couponRow.validUntil.toISOString(),
+              redemptionConditions: (couponRow.redemptionConditions as string[] | null) ?? [],
+            }
+          : null,
+      },
     })
   } catch (err) {
     console.error('Error registering player:', err)
