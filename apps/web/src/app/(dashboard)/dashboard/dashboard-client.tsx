@@ -29,18 +29,26 @@ export function SetupProgressBar({ hasGames, hasActiveGame, hasPlays }: { hasGam
   if (completedCount === 4) return null
 
   return (
-    <div className="mb-6 rounded-xl p-4" style={{ border: '2px solid transparent', borderImage: 'linear-gradient(90deg, #6366f1, #a855f7, #ec4899) 1' }}>
-      <p className="text-sm font-medium mb-2">Getting Started — {completedCount}/4 complete</p>
-      <div className="h-2 rounded-full bg-gray-100 overflow-hidden">
+    <div className="mb-6 rounded-xl border border-primary/20 bg-card p-4 shadow-sm">
+      <p className="mb-2 text-sm font-medium">
+        Getting Started — <span className="tabular-nums text-primary">{completedCount}/4</span> complete
+      </p>
+      <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
         <div
-          className="h-full rounded-full transition-all duration-1000"
-          style={{ width: `${(completedCount / 4) * 100}%`, background: 'linear-gradient(90deg, #6366f1, #a855f7)' }}
+          className="h-full rounded-full bg-primary transition-[width] duration-700 ease-out"
+          style={{ width: `${(completedCount / 4) * 100}%` }}
         />
       </div>
-      <div className="flex gap-4 mt-3 text-xs">
+      <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs">
         {steps.map((step) => (
-          <span key={step.label} className={step.done ? 'text-green-600' : 'text-muted-foreground'}>
-            {step.done ? '\u2713' : '\u25CB'} {step.label}
+          <span
+            key={step.label}
+            className={`inline-flex items-center gap-1.5 ${
+              step.done ? 'font-medium text-emerald-600' : 'text-muted-foreground'
+            }`}
+          >
+            <span aria-hidden>{step.done ? '✓' : '○'}</span>
+            {step.label}
           </span>
         ))}
       </div>

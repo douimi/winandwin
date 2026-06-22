@@ -1,6 +1,16 @@
 'use client'
 
 import { Button, Card, CardContent, CardHeader, CardTitle } from '@winandwin/ui'
+import {
+  ArrowDownRight,
+  ArrowUpRight,
+  CheckCircle2,
+  Gauge,
+  TrendingDown,
+  Ticket,
+  Users,
+  type LucideIcon,
+} from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { fetchAnalytics, type AnalyticsData } from '@/lib/api'
 import { useMerchantId, useMerchantTier } from '@/lib/merchant-context'
@@ -22,13 +32,6 @@ function AnimatedNumber({ value, duration = 1500 }: { value: number; duration?: 
   return <>{display.toLocaleString()}</>
 }
 
-const KPI_GRADIENTS = [
-  'linear-gradient(135deg, #6366f1, #a855f7)',
-  'linear-gradient(135deg, #ec4899, #f43f5e)',
-  'linear-gradient(135deg, #10b981, #14b8a6)',
-  'linear-gradient(135deg, #f59e0b, #f97316)',
-]
-
 type Period = 'today' | 'week' | 'month' | 'all'
 
 const PERIOD_LABELS: Record<Period, string> = {
@@ -39,6 +42,14 @@ const PERIOD_LABELS: Record<Period, string> = {
 }
 
 const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+
+interface KpiDef {
+  title: string
+  value: number
+  change: string
+  Icon: LucideIcon
+  iconClass: string
+}
 
 export default function AnalyticsPage() {
   const merchantId = useMerchantId()
@@ -81,12 +92,12 @@ export default function AnalyticsPage() {
     return (
       <div className="space-y-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <h1 className="text-2xl font-black tracking-tight">Analytics</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">Analytics</h1>
         </div>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {Array.from({ length: 4 }).map((_, i) => (
             <Card key={i}>
-              <CardContent className="py-8">
+              <CardContent className="py-6">
                 <div className="h-4 w-24 animate-pulse rounded bg-muted" />
                 <div className="mt-3 h-8 w-20 animate-pulse rounded bg-muted" />
                 <div className="mt-2 h-3 w-16 animate-pulse rounded bg-muted" />
@@ -106,16 +117,11 @@ export default function AnalyticsPage() {
   if (error) {
     return (
       <div className="space-y-6">
-        <h1 className="text-2xl font-black tracking-tight">Analytics</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">Analytics</h1>
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
             <p className="text-sm text-destructive">{error}</p>
-            <Button
-              variant="outline"
-              size="sm"
-              className="mt-4"
-              onClick={() => setPeriod((p) => p)}
-            >
+            <Button variant="outline" size="sm" className="mt-4" onClick={() => setPeriod((p) => p)}>
               Try again
             </Button>
           </CardContent>
@@ -133,51 +139,53 @@ export default function AnalyticsPage() {
   ) {
     return (
       <div className="space-y-6">
-        <h1 className="text-2xl font-black tracking-tight">Analytics</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">Analytics</h1>
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-16">
-            <p className="text-4xl">{'\uD83D\uDCC9'}</p>
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-muted text-muted-foreground">
+              <TrendingDown className="h-6 w-6" />
+            </div>
             <p className="mt-3 text-lg font-medium">No analytics data yet</p>
             <p className="mt-1 max-w-sm text-center text-sm text-muted-foreground">
-              Start collecting data by activating a game. Once customers start playing, you will see
-              your conversion funnel, top actions, and prize popularity here.
+              Start collecting data by activating a game. Once customers start playing, you will see your conversion funnel, top actions, and prize popularity here.
             </p>
-            <a
-              href="/dashboard/games"
-              className="mt-4 inline-flex items-center rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
-            >
-              Go to Games
-            </a>
+            <Button asChild className="mt-4">
+              <a href="/dashboard/games">Go to Games</a>
+            </Button>
           </CardContent>
         </Card>
       </div>
     )
   }
 
-  const kpiCards = [
+  const kpiCards: KpiDef[] = [
     {
       title: 'Total Players',
       value: data.kpis.totalPlayers,
       change: data.kpis.totalPlayersChange,
-      icon: '\uD83D\uDC65',
+      Icon: Users,
+      iconClass: 'bg-sky-50 text-sky-700',
     },
     {
       title: 'Games Played',
       value: data.kpis.gamesPlayed,
       change: data.kpis.gamesPlayedChange,
-      icon: '\uD83C\uDFB2',
+      Icon: Gauge,
+      iconClass: 'bg-violet-50 text-violet-700',
     },
     {
       title: 'Actions Completed',
       value: data.kpis.actionsCompleted,
       change: data.kpis.actionsCompletedChange,
-      icon: '\u2705',
+      Icon: CheckCircle2,
+      iconClass: 'bg-emerald-50 text-emerald-700',
     },
     {
       title: 'Coupons Redeemed',
       value: data.kpis.couponsRedeemed,
       change: data.kpis.couponsRedeemedChange,
-      icon: '\uD83C\uDF9F\uFE0F',
+      Icon: Ticket,
+      iconClass: 'bg-amber-50 text-amber-700',
     },
   ]
 
@@ -205,25 +213,27 @@ export default function AnalyticsPage() {
     <div className="space-y-6">
       {/* Header with period selector */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <h1 className="text-2xl font-black tracking-tight">Analytics</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">Analytics</h1>
         {hasFeature(tier, 'analytics.periodSelector') ? (
-          <div className="flex gap-1 rounded-lg border bg-muted/50 p-1">
+          <div className="inline-flex items-center gap-0.5 rounded-lg border border-border bg-muted/50 p-0.5">
             {(Object.keys(PERIOD_LABELS) as Period[]).map((p) => (
-              <Button
+              <button
                 key={p}
-                variant={period === p ? 'default' : 'ghost'}
-                size="sm"
-                className={`h-8 px-3 text-xs sm:text-sm ${period === p ? 'shadow-md' : 'text-muted-foreground hover:bg-gray-100'}`}
-                style={period === p ? { background: '#94ffe5', color: '#0a0a1a' } : undefined}
+                type="button"
                 onClick={() => setPeriod(p)}
+                className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors sm:text-sm ${
+                  period === p
+                    ? 'bg-card text-foreground shadow-sm'
+                    : 'text-muted-foreground hover:text-foreground'
+                }`}
               >
                 {PERIOD_LABELS[p]}
-              </Button>
+              </button>
             ))}
           </div>
         ) : (
           <div className="relative">
-            <div className="pointer-events-none opacity-40 blur-[1px] flex gap-1 rounded-lg border bg-muted/50 p-1">
+            <div className="pointer-events-none flex gap-1 rounded-lg border bg-muted/50 p-1 opacity-40 blur-[1px]">
               {(Object.keys(PERIOD_LABELS) as Period[]).map((p) => (
                 <Button key={p} variant="ghost" size="sm" className="h-8 px-3 text-xs sm:text-sm">
                   {PERIOD_LABELS[p]}
@@ -240,60 +250,45 @@ export default function AnalyticsPage() {
         )}
       </div>
 
-      {/* Section 1: KPI Cards */}
-      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-        {kpiCards.map((kpi, idx) => {
+      {/* KPI Cards */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {kpiCards.map((kpi) => {
+          const Icon = kpi.Icon
           const isPositive = kpi.change.startsWith('+')
           const isNegative = kpi.change.startsWith('-')
           const isNeutral = !isPositive && !isNegative
 
           return (
-            <Card key={kpi.title} className="transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5">
-              <CardContent className="flex items-center gap-4 pt-5 pb-4">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl" style={{ background: KPI_GRADIENTS[idx] }}>
-                  <span className="text-lg">{kpi.icon}</span>
+            <Card key={kpi.title} className="transition-shadow hover:shadow-md">
+              <CardContent className="flex items-start gap-4 py-5">
+                <div
+                  className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${kpi.iconClass}`}
+                >
+                  <Icon className="h-5 w-5" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium text-muted-foreground truncate">{kpi.title}</p>
-                <div className="truncate text-xl sm:text-2xl lg:text-3xl font-bold">
-                  <AnimatedNumber value={kpi.value} />
-                </div>
-                <div className="mt-1 flex items-center gap-1">
-                  {isPositive && (
-                    <svg
-                      className="h-3 w-3 text-green-600 shrink-0"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      strokeWidth={3}
+                  <p className="truncate text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                    {kpi.title}
+                  </p>
+                  <div className="mt-1 truncate text-3xl font-bold tabular-nums tracking-tight text-foreground">
+                    <AnimatedNumber value={kpi.value} />
+                  </div>
+                  <div className="mt-1 flex items-center gap-1">
+                    {isPositive && <ArrowUpRight className="h-3 w-3 shrink-0 text-emerald-600" />}
+                    {isNegative && <ArrowDownRight className="h-3 w-3 shrink-0 text-destructive" />}
+                    <span
+                      className={`truncate text-xs font-medium ${
+                        isPositive
+                          ? 'text-emerald-600'
+                          : isNegative
+                            ? 'text-destructive'
+                            : 'text-muted-foreground'
+                      }`}
                     >
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 15l7-7 7 7" />
-                    </svg>
-                  )}
-                  {isNegative && (
-                    <svg
-                      className="h-3 w-3 text-red-600 shrink-0"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      strokeWidth={3}
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                    </svg>
-                  )}
-                  <span
-                    className={`truncate text-xs font-medium ${
-                      isPositive
-                        ? 'text-green-600'
-                        : isNegative
-                          ? 'text-red-600'
-                          : 'text-muted-foreground'
-                    }`}
-                  >
-                    {kpi.change}
-                    {isNeutral ? '' : ' vs last period'}
-                  </span>
-                </div>
+                      {kpi.change}
+                      {isNeutral ? '' : ' vs last period'}
+                    </span>
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -301,10 +296,10 @@ export default function AnalyticsPage() {
         })}
       </div>
 
-      {/* Section 2: Conversion Funnel */}
-      <Card className="transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5">
+      {/* Conversion Funnel */}
+      <Card className="transition-shadow hover:shadow-md">
         <CardHeader>
-          <CardTitle className="font-black tracking-tight">Conversion Funnel</CardTitle>
+          <CardTitle>Conversion Funnel</CardTitle>
         </CardHeader>
         <CardContent>
           <ProFeatureLock locked={!hasFeature(tier, 'analytics.funnel')} label="Advanced Analytics">
@@ -316,9 +311,10 @@ export default function AnalyticsPage() {
               <div className="space-y-4">
                 {data.funnel.map((step, i) => {
                   const barWidth = Math.min((step.value / funnelMax) * 100, 100)
-                  // Decreasing opacity for each funnel step
-                  const opacities = ['bg-indigo-600', 'bg-indigo-500', 'bg-indigo-400', 'bg-indigo-300']
-                  const barColor = opacities[i] ?? 'bg-indigo-300'
+                  // Saturate-down per step using primary opacity so all bars
+                  // stay on-brand instead of indigo→indigo-300.
+                  const opacities = ['bg-primary', 'bg-primary/80', 'bg-primary/60', 'bg-primary/40']
+                  const barColor = opacities[i] ?? 'bg-primary/30'
 
                   return (
                     <div key={step.label} className="flex items-center gap-3">
@@ -326,10 +322,10 @@ export default function AnalyticsPage() {
                         {step.label}
                       </span>
                       <div className="relative flex-1">
-                        <div className="h-8 w-full rounded bg-muted/50">
+                        <div className="h-8 w-full overflow-hidden rounded-md bg-muted/50">
                           <div
-                            className={`h-8 rounded ${barColor}`}
-                            style={{ width: `${barWidth}%`, minWidth: step.value > 0 ? '4px' : '0', transition: 'width 1s ease-out' }}
+                            className={`h-8 rounded-md transition-[width] duration-700 ease-out ${barColor}`}
+                            style={{ width: `${barWidth}%`, minWidth: step.value > 0 ? '4px' : '0' }}
                           />
                         </div>
                       </div>
@@ -346,19 +342,16 @@ export default function AnalyticsPage() {
         </CardContent>
       </Card>
 
-      {/* Section 3: Top Actions & Prize Popularity */}
+      {/* Top Actions & Prize Popularity */}
       <div className="grid gap-4 lg:grid-cols-2">
-        {/* Top Actions by Completion */}
-        <Card className="transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5">
+        <Card className="transition-shadow hover:shadow-md">
           <CardHeader>
-            <CardTitle className="font-black tracking-tight">Top Actions by Completion</CardTitle>
+            <CardTitle>Top Actions by Completion</CardTitle>
           </CardHeader>
           <CardContent>
             <ProFeatureLock locked={!hasFeature(tier, 'analytics.topActions')} label="Top Actions Breakdown">
               {topActionsSlice.length === 0 ? (
-                <p className="py-4 text-center text-sm text-muted-foreground">
-                  No action data yet.
-                </p>
+                <p className="py-4 text-center text-sm text-muted-foreground">No action data yet.</p>
               ) : (
                 <div className="space-y-3">
                   {topActionsSlice.map((action) => {
@@ -374,14 +367,10 @@ export default function AnalyticsPage() {
                             {action.count.toLocaleString()}
                           </span>
                         </div>
-                        <div className="h-2 w-full rounded-full bg-muted">
+                        <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
                           <div
-                            className="h-2 rounded-full bg-indigo-500/70"
-                            style={{
-                              width: `${barWidth}%`,
-                              minWidth: action.count > 0 ? '4px' : '0',
-                              transition: 'width 1s ease-out',
-                            }}
+                            className="h-2 rounded-full bg-primary/70 transition-[width] duration-700 ease-out"
+                            style={{ width: `${barWidth}%`, minWidth: action.count > 0 ? '4px' : '0' }}
                           />
                         </div>
                       </div>
@@ -393,17 +382,14 @@ export default function AnalyticsPage() {
           </CardContent>
         </Card>
 
-        {/* Prize Popularity */}
-        <Card className="transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5">
+        <Card className="transition-shadow hover:shadow-md">
           <CardHeader>
-            <CardTitle className="font-black tracking-tight">Prize Popularity</CardTitle>
+            <CardTitle>Prize Popularity</CardTitle>
           </CardHeader>
           <CardContent>
             <ProFeatureLock locked={!hasFeature(tier, 'analytics.prizePopularity')} label="Prize Popularity">
               {data.prizePopularity.length === 0 ? (
-                <p className="py-4 text-center text-sm text-muted-foreground">
-                  No prize data yet.
-                </p>
+                <p className="py-4 text-center text-sm text-muted-foreground">No prize data yet.</p>
               ) : (
                 <div className="space-y-3">
                   {[...data.prizePopularity]
@@ -421,14 +407,10 @@ export default function AnalyticsPage() {
                               {prize.count.toLocaleString()}
                             </span>
                           </div>
-                          <div className="h-2 w-full rounded-full bg-muted">
+                          <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
                             <div
-                              className="h-2 rounded-full bg-indigo-500/70"
-                              style={{
-                                width: `${barWidth}%`,
-                                minWidth: prize.count > 0 ? '4px' : '0',
-                                transition: 'width 1s ease-out',
-                              }}
+                              className="h-2 rounded-full bg-primary/70 transition-[width] duration-700 ease-out"
+                              style={{ width: `${barWidth}%`, minWidth: prize.count > 0 ? '4px' : '0' }}
                             />
                           </div>
                         </div>
@@ -441,10 +423,10 @@ export default function AnalyticsPage() {
         </Card>
       </div>
 
-      {/* Section 4: Activity This Week */}
-      <Card className="transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5">
+      {/* Activity This Week */}
+      <Card className="transition-shadow hover:shadow-md">
         <CardHeader>
-          <CardTitle className="font-black tracking-tight">Activity This Week</CardTitle>
+          <CardTitle>Activity This Week</CardTitle>
         </CardHeader>
         <CardContent>
           <ProFeatureLock locked={!hasFeature(tier, 'analytics.weeklyChart')} label="Weekly Activity Chart">
@@ -455,13 +437,13 @@ export default function AnalyticsPage() {
 
                 return (
                   <div key={day} className="flex flex-1 flex-col items-center gap-1">
-                    <span className="text-xs tabular-nums font-medium text-muted-foreground">
+                    <span className="text-xs font-medium tabular-nums text-muted-foreground">
                       {value > 0 ? value.toLocaleString() : ''}
                     </span>
                     <div className="relative w-full" style={{ height: 120 }}>
                       <div
-                        className="absolute bottom-0 w-full rounded-t"
-                        style={{ height: `${heightPct}%`, minHeight: 4, transition: 'height 1s ease-out', background: 'linear-gradient(180deg, #94ffe5, #6366f1)' }}
+                        className="absolute bottom-0 w-full rounded-t-md bg-primary/80 transition-[height] duration-700 ease-out hover:bg-primary"
+                        style={{ height: `${heightPct}%`, minHeight: 4 }}
                       />
                     </div>
                     <span className="text-xs font-medium text-muted-foreground">{day}</span>

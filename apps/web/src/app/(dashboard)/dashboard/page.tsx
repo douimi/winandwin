@@ -1,5 +1,21 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@winandwin/ui'
-import { fetchStatsOverview, fetchGames, fetchUsageStats, fetchMerchant, type StatsOverview, type GameWithStats, type UsageStats } from '@/lib/api'
+import {
+  AlertTriangle,
+  CheckCircle2,
+  Gauge,
+  Sparkles,
+  Ticket,
+  Users,
+} from 'lucide-react'
+import {
+  fetchStatsOverview,
+  fetchGames,
+  fetchUsageStats,
+  fetchMerchant,
+  type StatsOverview,
+  type GameWithStats,
+  type UsageStats,
+} from '@/lib/api'
 import { requireSessionWithMerchant } from '@/lib/session'
 import { AnimatedNumber, SetupProgressBar } from './dashboard-client'
 
@@ -36,75 +52,66 @@ export default async function DashboardPage() {
 
   const hasNoGames = games.length === 0
   const hasActiveGame = games.some((g) => g.status === 'active')
+  const hasPlays = gamesPlayed > 0
 
+  // KPI cards — icon in a soft sky/slate tinted square + big tabular number + label.
+  // Each gets a different accent for instant scanning, all drawn from the new
+  // semantic palette so the dashboard stays calm.
   const kpis = [
     {
       title: 'Active Players Today',
       value: activePlayersToday,
-      icon: '\uD83D\uDC65',
-      gradient: 'linear-gradient(135deg, #6366f1, #a855f7)',
-      borderColor: '#94ffe5',
+      Icon: Users,
+      iconClass: 'bg-sky-50 text-sky-700',
     },
     {
       title: 'Games Played',
       value: gamesPlayed,
-      icon: '\uD83C\uDFB2',
-      gradient: 'linear-gradient(135deg, #ec4899, #f43f5e)',
-      borderColor: '#a855f7',
+      Icon: Gauge,
+      iconClass: 'bg-violet-50 text-violet-700',
     },
     {
       title: 'Actions Completed',
       value: actionsCompleted,
-      icon: '\u2705',
-      gradient: 'linear-gradient(135deg, #10b981, #14b8a6)',
-      borderColor: '#f59e0b',
+      Icon: CheckCircle2,
+      iconClass: 'bg-emerald-50 text-emerald-700',
     },
     {
       title: 'Coupons Redeemed',
       value: couponsRedeemed,
-      icon: '\uD83C\uDF9F\uFE0F',
-      gradient: 'linear-gradient(135deg, #f59e0b, #f97316)',
-      borderColor: '#ec4899',
+      Icon: Ticket,
+      iconClass: 'bg-amber-50 text-amber-700',
     },
   ]
 
-  const hasPlays = gamesPlayed > 0
-
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-3">
-        <h1 style={{ fontSize: 'clamp(1.5rem, 3vw, 2rem)', fontWeight: 900 }}>Overview</h1>
-        <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${
-          merchantTier === 'enterprise'
-            ? 'bg-purple-100 text-purple-800'
-            : merchantTier === 'pro'
-              ? 'bg-indigo-100 text-indigo-800'
-              : merchantTier === 'starter'
-                ? 'bg-blue-100 text-blue-800'
-                : 'bg-gray-100 text-gray-700'
-        }`}>
-          {merchantTier.charAt(0).toUpperCase() + merchantTier.slice(1)} Plan
-        </span>
+      <div className="flex flex-wrap items-center gap-3">
+        <h1 className="text-2xl font-semibold tracking-tight">Overview</h1>
         {apiOffline && (
-          <span className="rounded-full bg-yellow-100 px-2.5 py-0.5 text-xs font-medium text-yellow-800">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-medium text-amber-800">
+            <AlertTriangle className="h-3 w-3" />
             API offline
           </span>
         )}
       </div>
 
       {merchantTier === 'free' && (
-        <Card className="border-indigo-300 bg-gradient-to-r from-indigo-50 to-purple-50 transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5">
-          <CardContent className="flex items-center gap-3 py-4">
-            <span className="text-2xl">{'\uD83D\uDE80'}</span>
-            <div className="flex-1">
-              <p className="font-medium text-indigo-900">Upgrade your plan to unlock more plays and features</p>
-              <p className="text-sm text-indigo-700">
-                You are on the {merchantTier.charAt(0).toUpperCase() + merchantTier.slice(1)} tier ({usage?.monthlyLimit ?? 'limited'} plays/month). Upgrade to get more plays, advanced analytics, and more.
+        <Card className="border-primary/30 bg-primary/[0.03]">
+          <CardContent className="flex flex-col gap-3 py-4 sm:flex-row sm:items-center">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+              <Sparkles className="h-5 w-5" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="font-medium text-foreground">Unlock more plays and features</p>
+              <p className="text-sm text-muted-foreground">
+                You&apos;re on the Free tier
+                {usage?.monthlyLimit ? ` (${usage.monthlyLimit} plays/month)` : ''}. Upgrade for higher limits and advanced analytics.
               </p>
             </div>
             <a
               href="/dashboard/upgrade"
-              className="shrink-0 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 transition-colors"
+              className="shrink-0 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-sm transition-all hover:bg-primary/90 hover:shadow-md"
             >
               Upgrade
             </a>
@@ -115,51 +122,63 @@ export default async function DashboardPage() {
       <SetupProgressBar hasGames={!hasNoGames} hasActiveGame={hasActiveGame} hasPlays={hasPlays} />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {kpis.map((kpi) => (
-          <Card key={kpi.title} className="transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5" style={{ borderLeft: `4px solid ${kpi.borderColor}` }}>
-            <CardContent className="flex items-center gap-4 py-5">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl" style={{ background: kpi.gradient }}>
-                <span className="text-lg">{kpi.icon}</span>
-              </div>
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">{kpi.title}</p>
-                <div style={{ fontSize: 'clamp(1.5rem, 3vw, 2.5rem)', fontWeight: 900, letterSpacing: '-0.02em' }}><AnimatedNumber value={kpi.value} /></div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+        {kpis.map((kpi) => {
+          const Icon = kpi.Icon
+          return (
+            <Card key={kpi.title} className="transition-shadow hover:shadow-md">
+              <CardContent className="flex items-start gap-4 py-5">
+                <div
+                  className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${kpi.iconClass}`}
+                >
+                  <Icon className="h-5 w-5" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                    {kpi.title}
+                  </p>
+                  <div className="mt-1 truncate text-3xl font-bold tabular-nums tracking-tight text-foreground">
+                    <AnimatedNumber value={kpi.value} />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )
+        })}
       </div>
 
-      {/* Usage bar */}
+      {/* Monthly usage */}
       {usage && (
-        <Card className={
-          usage.percentUsed > 90
-            ? 'border-red-300 bg-red-50'
-            : usage.percentUsed > 70
-              ? 'border-yellow-300 bg-yellow-50'
-              : ''
-        }>
+        <Card
+          className={
+            usage.percentUsed > 90
+              ? 'border-destructive/30 bg-destructive/[0.03]'
+              : usage.percentUsed > 70
+                ? 'border-amber-300/60 bg-amber-50/40'
+                : ''
+          }
+        >
           <CardContent className="py-4">
-            <div className="flex items-center justify-between mb-2">
+            <div className="mb-2 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <span className="text-sm font-medium">Monthly Usage</span>
-                <span className="inline-flex items-center rounded-md bg-muted px-2 py-0.5 text-xs font-medium capitalize">
+                <span className="inline-flex items-center rounded-md bg-muted px-2 py-0.5 text-xs font-medium capitalize text-muted-foreground">
                   {usage.tier}
                 </span>
               </div>
-              <span className="text-sm text-muted-foreground">
-                {usage.playsThisMonth.toLocaleString()} / {usage.monthlyLimit ? usage.monthlyLimit.toLocaleString() : 'Unlimited'} plays
+              <span className="text-sm tabular-nums text-muted-foreground">
+                {usage.playsThisMonth.toLocaleString()} /{' '}
+                {usage.monthlyLimit ? usage.monthlyLimit.toLocaleString() : 'Unlimited'} plays
               </span>
             </div>
             {usage.monthlyLimit && (
-              <div className="h-2.5 w-full rounded-full bg-muted">
+              <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
                 <div
-                  className={`h-2.5 rounded-full transition-all ${
+                  className={`h-full rounded-full transition-[width] duration-700 ease-out ${
                     usage.percentUsed > 90
-                      ? 'bg-red-500'
+                      ? 'bg-destructive'
                       : usage.percentUsed > 70
-                        ? 'bg-yellow-500'
-                        : 'bg-green-500'
+                        ? 'bg-amber-500'
+                        : 'bg-emerald-500'
                   }`}
                   style={{ width: `${Math.min(usage.percentUsed, 100)}%` }}
                 />
@@ -170,7 +189,7 @@ export default async function DashboardPage() {
                 {usage.percentUsed >= 100
                   ? 'You have reached your monthly limit. '
                   : `You have used ${usage.percentUsed}% of your monthly limit. `}
-                <a href="/dashboard/settings" className="font-medium text-primary underline">
+                <a href="/dashboard/upgrade" className="font-medium text-primary hover:underline">
                   Upgrade your plan
                 </a>
               </p>
@@ -179,13 +198,14 @@ export default async function DashboardPage() {
         </Card>
       )}
 
-      {/* Quick Start guide — only shown when no games exist */}
+      {/* Quick Start — only when there are no games */}
       {hasNoGames && (
-        <Card className="border-primary/30 bg-primary/5 transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5">
+        <Card className="border-primary/20">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              {'\uD83D\uDE80'} Quick Start Guide
-            </CardTitle>
+            <div className="flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-primary" />
+              <CardTitle>Quick Start Guide</CardTitle>
+            </div>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
@@ -220,16 +240,18 @@ export default async function DashboardPage() {
         </Card>
       )}
 
-      {/* If they have games but none active, nudge them */}
+      {/* Has games but none active */}
       {!hasNoGames && !hasActiveGame && (
-        <Card className="border-yellow-300 bg-yellow-50 transition-all duration-200 hover:shadow-lg hover:-translate-y-0.5">
+        <Card className="border-amber-300/60 bg-amber-50/40">
           <CardContent className="flex items-center gap-3 py-4">
-            <span className="text-2xl">{'\u26A0\uFE0F'}</span>
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-amber-100 text-amber-800">
+              <AlertTriangle className="h-5 w-5" />
+            </div>
             <div>
-              <p className="font-medium text-yellow-900">No active game</p>
-              <p className="text-sm text-yellow-800">
+              <p className="font-medium text-foreground">No active game</p>
+              <p className="text-sm text-muted-foreground">
                 You have {games.length} game{games.length > 1 ? 's' : ''} but none are active.{' '}
-                <a href="/dashboard/games" className="underline font-medium">
+                <a href="/dashboard/games" className="font-medium text-primary hover:underline">
                   Activate a game
                 </a>{' '}
                 to start engaging customers.
@@ -258,18 +280,19 @@ function QuickStartStep({
   return (
     <div className="flex items-start gap-4">
       <div
-        className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-bold ${
-          done
-            ? 'bg-green-500 text-white'
-            : 'bg-primary/10 text-primary'
+        className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-semibold ${
+          done ? 'bg-emerald-500 text-white' : 'bg-primary/10 text-primary'
         }`}
       >
-        {done ? '\u2713' : step}
+        {done ? <CheckCircle2 className="h-4 w-4" /> : step}
       </div>
       <div className="min-w-0 flex-1">
-        <p className={`font-medium ${done ? 'line-through text-muted-foreground' : ''}`}>
+        <p className={`font-medium ${done ? 'text-muted-foreground line-through' : ''}`}>
           {href && !done ? (
-            <a href={href} className="underline decoration-primary/30 hover:decoration-primary">
+            <a
+              href={href}
+              className="underline decoration-primary/40 underline-offset-2 hover:decoration-primary"
+            >
               {title}
             </a>
           ) : (

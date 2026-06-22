@@ -1,6 +1,7 @@
 'use client'
 
 import { Card, CardContent, CardHeader, CardTitle } from '@winandwin/ui'
+import { Award, Download, Lock, Medal, Trophy, Users } from 'lucide-react'
 import { useEffect, useState, useCallback, useMemo } from 'react'
 import { fetchPlayers, type PlayerData } from '@/lib/api'
 import { useMerchantId, useMerchantTier } from '@/lib/merchant-context'
@@ -84,10 +85,37 @@ export default function PlayersPage() {
   }
 
   function getRankBadge(rank: number) {
-    if (rank === 1) return <span className="text-lg" title="1st place">{'\uD83E\uDD47'}</span>
-    if (rank === 2) return <span className="text-lg" title="2nd place">{'\uD83E\uDD48'}</span>
-    if (rank === 3) return <span className="text-lg" title="3rd place">{'\uD83E\uDD49'}</span>
-    return <span className="text-sm text-muted-foreground font-medium">#{rank}</span>
+    if (rank === 1) {
+      return (
+        <span
+          title="1st place"
+          className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-amber-50 text-amber-600 ring-1 ring-amber-200"
+        >
+          <Trophy className="h-3.5 w-3.5" />
+        </span>
+      )
+    }
+    if (rank === 2) {
+      return (
+        <span
+          title="2nd place"
+          className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-slate-100 text-slate-500 ring-1 ring-slate-200"
+        >
+          <Medal className="h-3.5 w-3.5" />
+        </span>
+      )
+    }
+    if (rank === 3) {
+      return (
+        <span
+          title="3rd place"
+          className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-orange-50 text-orange-700 ring-1 ring-orange-200"
+        >
+          <Award className="h-3.5 w-3.5" />
+        </span>
+      )
+    }
+    return <span className="text-sm font-medium tabular-nums text-muted-foreground">#{rank}</span>
   }
 
   // Quick stats
@@ -127,17 +155,21 @@ export default function PlayersPage() {
                   a.click()
                   URL.revokeObjectURL(url)
                 }}
-                className="inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm font-medium text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-sm font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
               >
-                {'📥'} Export CSV
+                <Download className="h-3.5 w-3.5" />
+                Export CSV
               </button>
             ) : (
               <a
                 href="/dashboard/upgrade"
-                className="inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-sm font-medium text-muted-foreground hover:bg-accent transition-colors"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent"
               >
-                {'🔒'} Export CSV
-                <span className="text-xs text-primary">Pro</span>
+                <Lock className="h-3.5 w-3.5" />
+                Export CSV
+                <span className="ml-0.5 rounded-full bg-primary/10 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-primary">
+                  Pro
+                </span>
               </a>
             )
           )}
@@ -204,7 +236,10 @@ export default function PlayersPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>{'\uD83C\uDFC6'} Player Rankings</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <Trophy className="h-4 w-4 text-primary" />
+            Player Rankings
+          </CardTitle>
         </CardHeader>
         <CardContent>
           {loading ? (
@@ -221,8 +256,10 @@ export default function PlayersPage() {
             </div>
           ) : sorted.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12">
-              <p className="text-4xl">{'\uD83D\uDC65'}</p>
-              <p className="mt-2 text-lg font-medium">No players yet</p>
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-muted text-muted-foreground">
+                <Users className="h-6 w-6" />
+              </div>
+              <p className="mt-3 text-lg font-medium">No players yet</p>
               <p className="text-sm text-muted-foreground">
                 {search ? 'No players match your search' : 'Players will appear here when they play your game'}
               </p>

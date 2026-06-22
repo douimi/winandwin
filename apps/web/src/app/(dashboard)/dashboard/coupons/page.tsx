@@ -1,6 +1,7 @@
 'use client'
 
 import { Button, Card, CardContent, CardHeader, CardTitle } from '@winandwin/ui'
+import { Ticket } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   fetchCoupons,
@@ -258,8 +259,10 @@ export default function CouponsPage() {
             </div>
           ) : coupons.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12">
-              <p className="text-4xl">🎟️</p>
-              <p className="mt-2 text-lg font-medium">No coupons match</p>
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-muted text-muted-foreground">
+                <Ticket className="h-6 w-6" />
+              </div>
+              <p className="mt-3 text-lg font-medium">No coupons match</p>
               <p className="text-sm text-muted-foreground">
                 {debouncedSearch || statusFilter ? 'Try adjusting the filters.' : 'Coupons will appear here when players win prizes.'}
               </p>
