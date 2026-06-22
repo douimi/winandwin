@@ -1,5 +1,6 @@
 'use client'
 
+import { AlertTriangle, Store } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { Card, CardContent } from '@winandwin/ui'
@@ -76,13 +77,14 @@ export default function AdminMerchantsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-black text-gray-900">Merchants</h1>
-          <p className="mt-1 text-sm text-gray-500">
+          <h1 className="text-2xl font-semibold tracking-tight">Merchants</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
             {loading ? 'Loading...' : `${merchants.length} merchant${merchants.length !== 1 ? 's' : ''} found`}
           </p>
         </div>
         {error && (
-          <span className="rounded-full border border-yellow-300 bg-yellow-50 px-2.5 py-0.5 text-xs font-medium text-yellow-700">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-medium text-amber-800">
+            <AlertTriangle className="h-3 w-3" />
             API offline
           </span>
         )}
@@ -90,19 +92,19 @@ export default function AdminMerchantsPage() {
 
       <MerchantSearch defaultValue={search} />
 
-      <Card className="border border-gray-200 bg-white shadow-sm rounded-xl overflow-hidden">
+      <Card className="overflow-hidden">
         <CardContent className="p-0">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-gray-200 text-left bg-gray-50">
-                  <th className="px-4 py-3.5 font-black text-xs uppercase tracking-wider text-gray-600">Name</th>
-                  <th className="px-4 py-3.5 font-black text-xs uppercase tracking-wider text-gray-600">Category</th>
-                  <th className="px-4 py-3.5 font-black text-xs uppercase tracking-wider text-gray-600">Tier</th>
-                  <th className="px-4 py-3.5 font-black text-xs uppercase tracking-wider text-gray-600">Status</th>
-                  <th className="px-4 py-3.5 font-black text-xs uppercase tracking-wider text-gray-600">Monthly Plays</th>
-                  <th className="px-4 py-3.5 font-black text-xs uppercase tracking-wider text-gray-600">Usage</th>
-                  <th className="px-4 py-3.5 font-black text-xs uppercase tracking-wider text-gray-600">Joined</th>
+                <tr className="border-b border-border bg-muted/40 text-left">
+                  <th className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Name</th>
+                  <th className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Category</th>
+                  <th className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Tier</th>
+                  <th className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Status</th>
+                  <th className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Monthly Plays</th>
+                  <th className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Usage</th>
+                  <th className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Joined</th>
                 </tr>
               </thead>
               <tbody>
@@ -111,9 +113,11 @@ export default function AdminMerchantsPage() {
                 ) : merchants.length === 0 ? (
                   <tr>
                     <td colSpan={7} className="px-4 py-12 text-center">
-                      <div className="flex flex-col items-center gap-2">
-                        <span className="text-3xl">{'\uD83C\uDFEA'}</span>
-                        <p className="text-sm text-gray-500">
+                      <div className="flex flex-col items-center gap-3">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-muted text-muted-foreground">
+                          <Store className="h-6 w-6" />
+                        </div>
+                        <p className="text-sm text-muted-foreground">
                           {error ? 'Unable to load merchants.' : 'No merchants found.'}
                         </p>
                       </div>
@@ -140,18 +144,18 @@ export default function AdminMerchantsPage() {
                     return (
                       <tr
                         key={m.id}
-                        className={`border-b border-gray-100 hover:bg-indigo-50/50 transition-colors cursor-pointer ${idx % 2 === 1 ? 'bg-gray-50/50' : 'bg-white'}`}
+                        className="cursor-pointer border-b border-border/60 transition-colors last:border-0 hover:bg-muted/40"
                         onClick={() => window.location.assign(`/admin/merchants/${m.id}`)}
                       >
                         <td className="px-4 py-3.5">
                           <a
                             href={`/admin/merchants/${m.id}`}
-                            className="font-medium text-gray-900 hover:text-indigo-600 transition-colors"
+                            className="font-medium text-foreground transition-colors hover:text-primary"
                             onClick={(e) => e.stopPropagation()}
                           >
                             {m.name}
                           </a>
-                          <p className="text-xs text-gray-400 mt-0.5">{m.email}</p>
+                          <p className="mt-0.5 text-xs text-muted-foreground">{m.email}</p>
                         </td>
                         <td className="px-4 py-3.5">
                           <span className="inline-flex items-center rounded-full border border-gray-200 bg-white px-2.5 py-0.5 text-xs font-medium text-gray-600 capitalize">
@@ -174,8 +178,8 @@ export default function AdminMerchantsPage() {
                               type="button"
                               onClick={(e) => handleToggleDisabled(e, m)}
                               disabled={togglingId === m.id}
-                              className={`relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 ${
-                                m.disabled ? 'bg-gray-300' : 'bg-indigo-600'
+                              className={`relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 ${
+                                m.disabled ? 'bg-gray-300' : 'bg-primary'
                               } ${togglingId === m.id ? 'opacity-50' : ''}`}
                               aria-label={m.disabled ? 'Enable merchant' : 'Disable merchant'}
                             >
@@ -198,17 +202,16 @@ export default function AdminMerchantsPage() {
                             </span>
                           </div>
                           {m.monthlyLimit && (
-                            <div className="mt-1.5 h-1.5 w-full max-w-[100px] rounded-full bg-gray-100">
+                            <div className="mt-1.5 h-1.5 w-full max-w-[100px] overflow-hidden rounded-full bg-muted">
                               <div
-                                className="h-1.5 rounded-full transition-all"
-                                style={{
-                                  width: `${Math.min(usagePercent, 100)}%`,
-                                  background: usagePercent > 90
-                                    ? 'linear-gradient(90deg, #ef4444, #f97316)'
+                                className={`h-full rounded-full transition-[width] duration-500 ease-out ${
+                                  usagePercent > 90
+                                    ? 'bg-destructive'
                                     : usagePercent > 70
-                                      ? 'linear-gradient(90deg, #f59e0b, #f97316)'
-                                      : 'linear-gradient(90deg, #6366f1, #a855f7)',
-                                }}
+                                      ? 'bg-amber-500'
+                                      : 'bg-primary'
+                                }`}
+                                style={{ width: `${Math.min(usagePercent, 100)}%` }}
                               />
                             </div>
                           )}

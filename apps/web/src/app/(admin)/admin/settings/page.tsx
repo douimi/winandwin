@@ -24,11 +24,11 @@ const TIER_DEFAULTS: Record<string, TierConfig> = {
   enterprise: { monthlyPlays: 999999 },
 }
 
-const tierAccentColors: Record<string, { topBorder: string; icon: string; badge: string }> = {
-  free: { topBorder: 'border-t-gray-400', icon: '\uD83C\uDD93', badge: 'border-gray-300 text-gray-600 bg-white' },
-  starter: { topBorder: 'border-t-blue-500', icon: '\uD83D\uDE80', badge: 'border-blue-300 text-blue-700 bg-white' },
-  pro: { topBorder: 'border-t-indigo-500', icon: '\u2B50', badge: 'border-indigo-300 text-indigo-700 bg-white' },
-  enterprise: { topBorder: 'border-t-amber-500', icon: '\uD83D\uDC8E', badge: 'border-amber-300 text-amber-700 bg-white' },
+const tierAccentColors: Record<string, { topBorder: string; badge: string }> = {
+  free: { topBorder: 'border-t-slate-400', badge: 'border-slate-200 text-slate-600 bg-card' },
+  starter: { topBorder: 'border-t-sky-500', badge: 'border-sky-200 text-sky-700 bg-card' },
+  pro: { topBorder: 'border-t-primary', badge: 'border-primary/30 text-primary bg-card' },
+  enterprise: { topBorder: 'border-t-amber-500', badge: 'border-amber-200 text-amber-700 bg-card' },
 }
 
 export default function AdminSettingsPage() {
@@ -234,11 +234,11 @@ export default function AdminSettingsPage() {
           <div>
             <h2 className="text-lg font-bold text-gray-900">Tier Limits</h2>
             <p className="text-sm text-gray-500">
-              Source: <span className="font-medium text-indigo-600">{dataSource}</span>
+              Source: <span className="font-medium text-primary">{dataSource}</span>
             </p>
           </div>
           {hasTierChanges && (
-            <Button onClick={handleSaveTierLimits} disabled={saving} className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold shadow-sm">
+            <Button onClick={handleSaveTierLimits} disabled={saving} className="font-semibold">
               {saving ? 'Saving...' : 'Save Tier Limits'}
             </Button>
           )}
@@ -251,30 +251,27 @@ export default function AdminSettingsPage() {
             const isEdited = `${name}.monthlyPlays` in editedTierValues
 
             return (
-              <Card key={name} className={`border border-gray-200 bg-white shadow-sm rounded-xl overflow-hidden border-t-2 ${accent.topBorder}`}>
+              <Card key={name} className={`overflow-hidden border-t-2 ${accent.topBorder}`}>
                 <CardHeader className="pb-4">
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <span className="text-2xl">{accent.icon}</span>
-                      <CardTitle className="text-gray-900 capitalize text-lg">{name}</CardTitle>
-                    </div>
-                    <span className={`inline-flex items-center rounded-full border px-3 py-1 text-xs font-bold capitalize ${accent.badge}`}>
+                    <CardTitle className="text-lg capitalize">{name}</CardTitle>
+                    <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold capitalize ${accent.badge}`}>
                       {name}
                     </span>
                   </div>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
-                    <div className="flex items-center justify-between rounded-lg bg-gray-50 px-4 py-3">
-                      <span className="text-sm font-medium text-gray-600">Monthly Plays Limit</span>
+                    <div className="flex items-center justify-between rounded-lg bg-muted/40 px-4 py-3">
+                      <span className="text-sm font-medium text-muted-foreground">Monthly Plays Limit</span>
                       <input
                         type="number"
                         value={monthlyPlays}
                         onChange={(e) => handleMonthlyPlaysChange(name, e.target.value)}
                         className={`w-28 rounded-lg border px-3 py-1.5 text-right text-sm font-semibold transition-colors ${
                           isEdited
-                            ? 'border-indigo-400 bg-indigo-50 text-indigo-700 shadow-sm'
-                            : 'border-gray-200 bg-white text-gray-900'
+                            ? 'border-primary bg-primary/5 text-primary shadow-xs'
+                            : 'border-border bg-card text-foreground'
                         }`}
                         min={0}
                       />
@@ -295,7 +292,7 @@ export default function AdminSettingsPage() {
             <p className="text-sm text-gray-500">Global configuration for the platform</p>
           </div>
           {editedPlatform && (
-            <Button onClick={handleSavePlatformSettings} disabled={saving} className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold shadow-sm">
+            <Button onClick={handleSavePlatformSettings} disabled={saving} className="font-semibold">
               {saving ? 'Saving...' : 'Save Platform Settings'}
             </Button>
           )}
@@ -316,7 +313,7 @@ export default function AdminSettingsPage() {
                     setDefaultAtmosphere(e.target.value)
                     setEditedPlatform(true)
                   }}
-                  className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500/30"
+                  className="w-full rounded-lg border border-input bg-card px-3 py-2 text-sm text-foreground shadow-xs transition-colors focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/40"
                 >
                   <option value="joyful">Joyful</option>
                   <option value="elegant">Elegant</option>
@@ -345,7 +342,7 @@ export default function AdminSettingsPage() {
                     setEditedPlatform(true)
                   }}
                   placeholder="Win & Win"
-                  className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500/30"
+                  className="w-full rounded-lg border border-input bg-card px-3 py-2 text-sm text-foreground shadow-xs transition-colors placeholder:text-muted-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/40"
                 />
               </div>
 
@@ -363,7 +360,7 @@ export default function AdminSettingsPage() {
                     setEditedPlatform(true)
                   }}
                   placeholder="support@winandwin.com"
-                  className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500/30"
+                  className="w-full rounded-lg border border-input bg-card px-3 py-2 text-sm text-foreground shadow-xs transition-colors placeholder:text-muted-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/40"
                 />
               </div>
             </div>
@@ -379,7 +376,7 @@ export default function AdminSettingsPage() {
             <div>
               <p className="text-sm font-medium text-gray-700">Database-backed configuration</p>
               <p className="mt-1 text-sm text-gray-500">
-                All settings are stored in the <code className="rounded bg-white border border-gray-200 px-1.5 py-0.5 text-xs text-indigo-600">platform_settings</code> table.
+                All settings are stored in the <code className="rounded bg-white border border-gray-200 px-1.5 py-0.5 text-xs text-primary">platform_settings</code> table.
                 Changes take effect within 30 seconds. Default values are only used if no database values exist.
               </p>
             </div>
