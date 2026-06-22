@@ -1,19 +1,38 @@
 import { Hono } from 'hono'
-import { eq, and, count, desc } from 'drizzle-orm'
-import { coupons, merchants } from '@winandwin/db/schema'
+import { eq, and, count, asc, desc, ilike, or, type SQL } from 'drizzle-orm'
+import { coupons, merchants, players } from '@winandwin/db/schema'
 import { paginationSchema } from '@winandwin/shared/validators'
 import { z } from 'zod'
 import type { AppEnv } from '../types'
 
 export const couponsRouter = new Hono<AppEnv>()
 
-// GET / — List coupons for a merchant with pagination
+// Whitelist of sortable columns — never trust the client to name a column.
+const SORTABLE_COLUMNS = {
+  code: coupons.code,
+  prizeName: coupons.prizeName,
+  status: coupons.status,
+  validFrom: coupons.validFrom,
+  validUntil: coupons.validUntil,
+  redeemedAt: coupons.redeemedAt,
+  createdAt: coupons.createdAt,
+  playerName: players.name,
+  playerEmail: players.email,
+} as const
+
+type SortKey = keyof typeof SORTABLE_COLUMNS
+
+// GET / — List coupons for a merchant with pagination + sort + search
 couponsRouter.get('/', async (c) => {
   try {
     const db = c.get('db')
     const query = c.req.query()
     const { page, pageSize } = paginationSchema.parse(query)
     const merchantId = c.req.query('merchantId')
+    const search = c.req.query('search')?.trim() || ''
+    const statusFilter = c.req.query('status')?.trim() || ''
+    const sortParam = c.req.query('sort') || 'createdAt'
+    const dirParam = c.req.query('dir') || 'desc'
 
     if (!merchantId) {
       return c.json(
@@ -22,33 +41,92 @@ couponsRouter.get('/', async (c) => {
       )
     }
 
+    const sortKey = (Object.keys(SORTABLE_COLUMNS) as SortKey[]).includes(sortParam as SortKey)
+      ? (sortParam as SortKey)
+      : 'createdAt'
+    const sortDir = dirParam === 'asc' ? asc : desc
+    const orderExpr = sortDir(SORTABLE_COLUMNS[sortKey])
+
     const offset = (page - 1) * pageSize
+
+    const whereParts: SQL[] = [eq(coupons.merchantId, merchantId)]
+
+    if (statusFilter && ['active', 'redeemed', 'expired', 'revoked'].includes(statusFilter)) {
+      whereParts.push(eq(coupons.status, statusFilter as 'active' | 'redeemed' | 'expired' | 'revoked'))
+    }
+
+    if (search) {
+      const pattern = `%${search}%`
+      whereParts.push(
+        or(
+          ilike(coupons.code, pattern),
+          ilike(coupons.prizeName, pattern),
+          ilike(players.name, pattern),
+          ilike(players.email, pattern),
+        )!,
+      )
+    }
+
+    const whereExpr = whereParts.length === 1 ? whereParts[0]! : and(...whereParts)!
 
     const [couponList, totalResult] = await Promise.all([
       db
-        .select()
+        .select({
+          id: coupons.id,
+          code: coupons.code,
+          status: coupons.status,
+          prizeName: coupons.prizeName,
+          prizeDescription: coupons.prizeDescription,
+          redemptionConditions: coupons.redemptionConditions,
+          validFrom: coupons.validFrom,
+          validUntil: coupons.validUntil,
+          redeemedAt: coupons.redeemedAt,
+          createdAt: coupons.createdAt,
+          playerId: coupons.playerId,
+          playerName: players.name,
+          playerEmail: players.email,
+        })
         .from(coupons)
-        .where(eq(coupons.merchantId, merchantId))
-        .orderBy(desc(coupons.createdAt))
+        .leftJoin(players, eq(coupons.playerId, players.id))
+        .where(whereExpr)
+        .orderBy(orderExpr)
         .limit(pageSize)
         .offset(offset),
       db
         .select({ total: count() })
         .from(coupons)
-        .where(eq(coupons.merchantId, merchantId)),
+        .leftJoin(players, eq(coupons.playerId, players.id))
+        .where(whereExpr),
     ])
 
     const total = totalResult[0]?.total ?? 0
 
+    const data = couponList.map((row) => ({
+      id: row.id,
+      code: row.code,
+      status: row.status,
+      prizeName: row.prizeName,
+      prizeDescription: row.prizeDescription,
+      redemptionConditions: (row.redemptionConditions as string[] | null) ?? [],
+      validFrom: row.validFrom.toISOString(),
+      validUntil: row.validUntil.toISOString(),
+      redeemedAt: row.redeemedAt?.toISOString() ?? null,
+      createdAt: row.createdAt.toISOString(),
+      playerId: row.playerId,
+      playerName: row.playerName,
+      playerEmail: row.playerEmail,
+    }))
+
     return c.json({
       success: true,
-      data: couponList,
+      data,
       pagination: {
         page,
         pageSize,
         total,
         totalPages: Math.ceil(total / pageSize),
       },
+      sort: { field: sortKey, dir: dirParam === 'asc' ? 'asc' : 'desc' },
     })
   } catch (err) {
     console.error('Error listing coupons:', err)

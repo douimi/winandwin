@@ -1,14 +1,16 @@
 'use client'
 
 import { Button, Card, CardContent, CardHeader, CardTitle } from '@winandwin/ui'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   fetchCoupons,
   fetchCouponStats,
   redeemCoupon,
   revokeCoupon,
+  type CouponListPage,
+  type CouponSortField,
   type CouponStats,
-  type CouponWithDetails,
+  type CouponStatusFilter,
 } from '@/lib/api'
 import { useMerchantId } from '@/lib/merchant-context'
 
@@ -19,42 +21,111 @@ const STATUS_BADGE: Record<string, string> = {
   revoked: 'bg-red-100 text-red-800',
 }
 
+const PAGE_SIZE_OPTIONS = [10, 20, 50, 100]
+
+type ColumnDef = {
+  field: CouponSortField
+  label: string
+  className?: string
+}
+
+const COLUMNS: ColumnDef[] = [
+  { field: 'code', label: 'Code' },
+  { field: 'prizeName', label: 'Prize' },
+  { field: 'status', label: 'Status' },
+  { field: 'playerName', label: 'Player' },
+  { field: 'validFrom', label: 'Valid From', className: 'hidden md:table-cell' },
+  { field: 'validUntil', label: 'Valid Until' },
+  { field: 'redeemedAt', label: 'Redeemed', className: 'hidden lg:table-cell' },
+  { field: 'createdAt', label: 'Issued', className: 'hidden lg:table-cell' },
+]
+
+function formatDate(iso: string | null) {
+  if (!iso) return '—'
+  return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+}
+
 export default function CouponsPage() {
   const merchantId = useMerchantId()
-  const [coupons, setCoupons] = useState<CouponWithDetails[]>([])
+
+  const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState(20)
+  const [sortField, setSortField] = useState<CouponSortField>('createdAt')
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc')
+  const [search, setSearch] = useState('')
+  const [debouncedSearch, setDebouncedSearch] = useState('')
+  const [statusFilter, setStatusFilter] = useState<CouponStatusFilter | ''>('')
+
+  const [pageData, setPageData] = useState<CouponListPage | null>(null)
   const [stats, setStats] = useState<CouponStats | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [actionLoading, setActionLoading] = useState<string | null>(null)
 
-  async function loadData() {
-    if (!merchantId) {
-      setLoading(false)
-      return
-    }
+  // Debounce search input
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search)
+      setPage(1)
+    }, 300)
+    return () => clearTimeout(timer)
+  }, [search])
+
+  // Reset to page 1 when filters/sort/page size change
+  useEffect(() => { setPage(1) }, [statusFilter, sortField, sortDir, pageSize])
+
+  const loadCoupons = useCallback(async () => {
+    if (!merchantId) { setLoading(false); return }
     try {
-      const [couponData, statsData] = await Promise.all([
-        fetchCoupons(merchantId),
-        fetchCouponStats(merchantId),
-      ])
-      setCoupons(couponData)
-      setStats(statsData)
+      setLoading(true)
+      const result = await fetchCoupons({
+        merchantId,
+        page,
+        pageSize,
+        sort: sortField,
+        dir: sortDir,
+        search: debouncedSearch || undefined,
+        status: statusFilter || undefined,
+      })
+      setPageData(result)
+      setError(null)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load coupons')
     } finally {
       setLoading(false)
     }
+  }, [merchantId, page, pageSize, sortField, sortDir, debouncedSearch, statusFilter])
+
+  const loadStats = useCallback(async () => {
+    if (!merchantId) return
+    try {
+      const s = await fetchCouponStats(merchantId)
+      setStats(s)
+    } catch { /* non-blocking */ }
+  }, [merchantId])
+
+  useEffect(() => { loadCoupons() }, [loadCoupons])
+  useEffect(() => { loadStats() }, [loadStats])
+
+  function toggleSort(field: CouponSortField) {
+    if (sortField === field) {
+      setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'))
+    } else {
+      setSortField(field)
+      setSortDir('desc')
+    }
   }
 
-  useEffect(() => {
-    loadData()
-  }, [merchantId])
+  function SortIcon({ field }: { field: CouponSortField }) {
+    if (sortField !== field) return <span className="ml-1 text-gray-300 text-xs">{'↕'}</span>
+    return <span className="ml-1 text-primary text-xs">{sortDir === 'asc' ? '↑' : '↓'}</span>
+  }
 
   async function handleRedeem(couponId: string) {
     setActionLoading(couponId)
     try {
       await redeemCoupon(couponId)
-      await loadData()
+      await Promise.all([loadCoupons(), loadStats()])
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to redeem coupon')
     } finally {
@@ -66,7 +137,7 @@ export default function CouponsPage() {
     setActionLoading(couponId)
     try {
       await revokeCoupon(couponId)
-      await loadData()
+      await Promise.all([loadCoupons(), loadStats()])
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to revoke coupon')
     } finally {
@@ -74,69 +145,123 @@ export default function CouponsPage() {
     }
   }
 
-  if (loading) {
-    return (
-      <div className="space-y-6">
-        <h1 className="text-2xl font-bold">Coupons</h1>
-        <Card>
-          <CardContent className="flex items-center justify-center py-12">
-            <p className="text-sm text-muted-foreground">Loading coupons...</p>
-          </CardContent>
-        </Card>
-      </div>
-    )
-  }
+  const coupons = pageData?.data ?? []
+  const pagination = pageData?.pagination ?? { page: 1, pageSize: 20, total: 0, totalPages: 0 }
+  const totalPages = pagination.totalPages
+  const showingFrom = pagination.total === 0 ? 0 : (pagination.page - 1) * pagination.pageSize + 1
+  const showingTo = Math.min(pagination.page * pagination.pageSize, pagination.total)
+
+  // Build a compact page-number list (1, …, current-1, current, current+1, …, last)
+  const pageNumbers = useMemo(() => {
+    const pages: (number | 'ellipsis')[] = []
+    if (totalPages <= 7) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i)
+      return pages
+    }
+    pages.push(1)
+    if (page > 4) pages.push('ellipsis')
+    const start = Math.max(2, page - 1)
+    const end = Math.min(totalPages - 1, page + 1)
+    for (let i = start; i <= end; i++) pages.push(i)
+    if (page < totalPages - 3) pages.push('ellipsis')
+    pages.push(totalPages)
+    return pages
+  }, [page, totalPages])
 
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold">Coupons</h1>
 
-      {error && (
-        <p className="text-sm text-destructive">{error}</p>
-      )}
+      {error && <p className="text-sm text-destructive">{error}</p>}
 
+      {/* Stats */}
       <div className="grid gap-4 sm:grid-cols-3">
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground">Active</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">{stats?.active ?? 0}</div>
+            <div className="text-3xl font-bold">{stats?.active ?? '—'}</div>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Redeemed This Week
-            </CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Redeemed This Week</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">{stats?.redeemedThisWeek ?? 0}</div>
+            <div className="text-3xl font-bold">{stats?.redeemedThisWeek ?? '—'}</div>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Redemption Rate
-            </CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Redemption Rate</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">{stats?.redemptionRate ?? 0}%</div>
+            <div className="text-3xl font-bold">{stats?.redemptionRate != null ? `${stats.redemptionRate}%` : '—'}</div>
           </CardContent>
         </Card>
       </div>
 
+      {/* Filters */}
       <Card>
         <CardHeader>
-          <CardTitle>Recent Coupons</CardTitle>
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <CardTitle>All Coupons</CardTitle>
+            <div className="text-xs text-muted-foreground">
+              {loading ? 'Loading…' : `${pagination.total} total`}
+            </div>
+          </div>
         </CardHeader>
-        <CardContent>
-          {coupons.length === 0 ? (
+        <CardContent className="space-y-4">
+          <div className="flex flex-wrap items-center gap-3">
+            <input
+              type="text"
+              placeholder="Search code, prize, player…"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="flex h-9 w-full max-w-sm rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+            />
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value as CouponStatusFilter | '')}
+              className="h-9 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+            >
+              <option value="">All statuses</option>
+              <option value="active">Active</option>
+              <option value="redeemed">Redeemed</option>
+              <option value="expired">Expired</option>
+              <option value="revoked">Revoked</option>
+            </select>
+            <div className="flex items-center gap-2 ml-auto">
+              <label htmlFor="pageSize" className="text-xs text-muted-foreground">Rows per page</label>
+              <select
+                id="pageSize"
+                value={pageSize}
+                onChange={(e) => setPageSize(Number(e.target.value))}
+                className="h-9 rounded-md border border-input bg-background px-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              >
+                {PAGE_SIZE_OPTIONS.map((n) => (
+                  <option key={n} value={n}>{n}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {loading && coupons.length === 0 ? (
+            <div className="space-y-3 py-4">
+              {[1, 2, 3, 4, 5].map((i) => (
+                <div key={i} className="flex gap-3 animate-pulse">
+                  <div className="h-4 w-24 rounded bg-gray-200" />
+                  <div className="h-4 flex-1 rounded bg-gray-100" />
+                </div>
+              ))}
+            </div>
+          ) : coupons.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12">
               <p className="text-4xl">🎟️</p>
-              <p className="mt-2 text-lg font-medium">No coupons yet</p>
+              <p className="mt-2 text-lg font-medium">No coupons match</p>
               <p className="text-sm text-muted-foreground">
-                Coupons will appear here when players win prizes
+                {debouncedSearch || statusFilter ? 'Try adjusting the filters.' : 'Coupons will appear here when players win prizes.'}
               </p>
             </div>
           ) : (
@@ -144,29 +269,52 @@ export default function CouponsPage() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b text-left text-muted-foreground">
-                    <th className="pb-3 font-medium">Code</th>
-                    <th className="pb-3 font-medium">Prize</th>
-                    <th className="pb-3 font-medium">Status</th>
-                    <th className="pb-3 font-medium">Valid Until</th>
-                    <th className="pb-3 font-medium">Player</th>
+                    {COLUMNS.map((col) => (
+                      <th
+                        key={col.field}
+                        onClick={() => toggleSort(col.field)}
+                        className={`pb-3 font-medium select-none cursor-pointer hover:text-foreground transition-colors ${col.className ?? ''}`}
+                      >
+                        {col.label}
+                        <SortIcon field={col.field} />
+                      </th>
+                    ))}
                     <th className="pb-3 font-medium">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
                   {coupons.map((coupon) => (
-                    <tr key={coupon.id} className="border-b last:border-0">
+                    <tr key={coupon.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors">
                       <td className="py-3 font-mono font-semibold">{coupon.code}</td>
                       <td className="py-3">{coupon.prizeName}</td>
                       <td className="py-3">
-                        <span
-                          className={`rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_BADGE[coupon.status] || ''}`}
-                        >
+                        <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_BADGE[coupon.status] || ''}`}>
                           {coupon.status}
                         </span>
                       </td>
-                      <td className="py-3">{coupon.validUntil}</td>
-                      <td className="py-3 text-muted-foreground">
-                        {coupon.playerEmail || 'Anonymous'}
+                      <td className="py-3">
+                        {coupon.playerName || coupon.playerEmail ? (
+                          <div className="leading-tight">
+                            <div className="font-medium">{coupon.playerName ?? '—'}</div>
+                            {coupon.playerEmail && (
+                              <div className="text-xs text-muted-foreground truncate max-w-[200px]">
+                                {coupon.playerEmail}
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="text-muted-foreground italic">Anonymous</span>
+                        )}
+                      </td>
+                      <td className="py-3 text-muted-foreground hidden md:table-cell">
+                        {formatDate(coupon.validFrom)}
+                      </td>
+                      <td className="py-3 text-muted-foreground">{formatDate(coupon.validUntil)}</td>
+                      <td className="py-3 text-muted-foreground hidden lg:table-cell">
+                        {formatDate(coupon.redeemedAt)}
+                      </td>
+                      <td className="py-3 text-muted-foreground hidden lg:table-cell">
+                        {formatDate(coupon.createdAt)}
                       </td>
                       <td className="py-3">
                         {coupon.status === 'active' && (
@@ -194,6 +342,56 @@ export default function CouponsPage() {
                   ))}
                 </tbody>
               </table>
+            </div>
+          )}
+
+          {/* Pagination footer */}
+          {coupons.length > 0 && (
+            <div className="flex items-center justify-between gap-3 flex-wrap pt-2">
+              <p className="text-xs text-muted-foreground">
+                Showing <span className="font-medium text-foreground">{showingFrom}</span>–<span className="font-medium text-foreground">{showingTo}</span> of{' '}
+                <span className="font-medium text-foreground">{pagination.total}</span>
+              </p>
+
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  disabled={page <= 1 || loading}
+                  className="inline-flex h-8 items-center rounded-md border border-input px-3 text-xs font-medium disabled:opacity-40 hover:bg-accent transition-colors"
+                >
+                  ← Prev
+                </button>
+
+                {pageNumbers.map((pn, i) =>
+                  pn === 'ellipsis' ? (
+                    <span key={`e-${i}`} className="px-2 text-xs text-muted-foreground">…</span>
+                  ) : (
+                    <button
+                      key={pn}
+                      type="button"
+                      onClick={() => setPage(pn)}
+                      disabled={loading}
+                      className={`inline-flex h-8 min-w-8 items-center justify-center rounded-md px-2.5 text-xs font-medium transition-colors ${
+                        pn === page
+                          ? 'bg-primary text-primary-foreground'
+                          : 'border border-input hover:bg-accent'
+                      }`}
+                    >
+                      {pn}
+                    </button>
+                  ),
+                )}
+
+                <button
+                  type="button"
+                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={page >= totalPages || loading}
+                  className="inline-flex h-8 items-center rounded-md border border-input px-3 text-xs font-medium disabled:opacity-40 hover:bg-accent transition-colors"
+                >
+                  Next →
+                </button>
+              </div>
             </div>
           )}
         </CardContent>

@@ -474,21 +474,107 @@ export async function resetPrize(
 export interface CouponWithDetails {
   id: string
   code: string
-  prizeName: string
   status: string
+  prizeName: string
+  prizeDescription: string | null
+  redemptionConditions: string[]
+  validFrom: string
   validUntil: string
+  redeemedAt: string | null
+  createdAt: string
+  playerId: string | null
+  playerName: string | null
   playerEmail: string | null
 }
 
+export type CouponSortField =
+  | 'code'
+  | 'prizeName'
+  | 'status'
+  | 'validFrom'
+  | 'validUntil'
+  | 'redeemedAt'
+  | 'createdAt'
+  | 'playerName'
+  | 'playerEmail'
+
+export type CouponStatusFilter = 'active' | 'redeemed' | 'expired' | 'revoked'
+
+export interface CouponListPage {
+  data: CouponWithDetails[]
+  pagination: { page: number; pageSize: number; total: number; totalPages: number }
+  sort: { field: CouponSortField; dir: 'asc' | 'desc' }
+}
+
+export interface FetchCouponsParams {
+  merchantId: string
+  page?: number
+  pageSize?: number
+  sort?: CouponSortField
+  dir?: 'asc' | 'desc'
+  search?: string
+  status?: CouponStatusFilter
+}
+
+// Custom fetch that returns the full envelope (data + pagination + sort).
+// The shared `request()` helper only returns `json.data`, so we mirror its
+// error handling here but keep the metadata.
 export async function fetchCoupons(
-  merchantId: string,
+  params: FetchCouponsParams,
   token?: string,
-): Promise<CouponWithDetails[]> {
-  return request<CouponWithDetails[]>(
-    `/api/v1/coupons?merchantId=${encodeURIComponent(merchantId)}`,
-    {},
-    token,
-  )
+): Promise<CouponListPage> {
+  const search = new URLSearchParams({ merchantId: params.merchantId })
+  if (params.page) search.set('page', String(params.page))
+  if (params.pageSize) search.set('pageSize', String(params.pageSize))
+  if (params.sort) search.set('sort', params.sort)
+  if (params.dir) search.set('dir', params.dir)
+  if (params.search) search.set('search', params.search)
+  if (params.status) search.set('status', params.status)
+
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+  if (token) headers['Authorization'] = `Bearer ${token}`
+
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), 15_000)
+
+  let res: Response
+  try {
+    res = await fetch(`${API_BASE}/api/v1/coupons?${search.toString()}`, {
+      headers,
+      signal: controller.signal,
+    })
+  } catch (err) {
+    clearTimeout(timeoutId)
+    if (err instanceof DOMException && err.name === 'AbortError') {
+      throw new ApiError('TIMEOUT', 'Request timed out', 0)
+    }
+    throw new ApiError('NETWORK_ERROR', 'Unable to reach the API server', 0)
+  } finally {
+    clearTimeout(timeoutId)
+  }
+
+  const json = (await res.json()) as {
+    success: boolean
+    data?: CouponWithDetails[]
+    pagination?: CouponListPage['pagination']
+    sort?: CouponListPage['sort']
+    error?: { code?: string; message?: string; details?: Record<string, unknown> }
+  }
+
+  if (!res.ok || !json.success) {
+    throw new ApiError(
+      json.error?.code ?? 'UNKNOWN',
+      json.error?.message ?? `Request failed with status ${res.status}`,
+      res.status,
+      json.error?.details,
+    )
+  }
+
+  return {
+    data: json.data ?? [],
+    pagination: json.pagination ?? { page: 1, pageSize: 20, total: 0, totalPages: 0 },
+    sort: json.sort ?? { field: 'createdAt', dir: 'desc' },
+  }
 }
 
 export async function redeemCoupon(
