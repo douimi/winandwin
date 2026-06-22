@@ -1,6 +1,7 @@
 'use client'
 
 import { Card, CardContent, CardHeader, CardTitle, Button, Input, Label } from '@winandwin/ui'
+import { Check, CheckCircle2 } from 'lucide-react'
 import { useState, useEffect, useCallback } from 'react'
 import { fetchMerchant } from '@/lib/api'
 import { useMerchantId } from '@/lib/merchant-context'
@@ -149,11 +150,13 @@ export default function UpgradePage() {
 
       {/* Success state */}
       {submitted && (
-        <Card className="border-green-300 bg-green-50">
+        <Card className="border-emerald-300 bg-emerald-50/60">
           <CardContent className="py-6 text-center">
-            <p className="text-4xl mb-3">{'\u2705'}</p>
-            <h2 className="text-lg font-semibold text-green-900">Request submitted!</h2>
-            <p className="text-sm text-green-800 mt-1">
+            <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
+              <CheckCircle2 className="h-6 w-6" />
+            </div>
+            <h2 className="text-lg font-semibold text-emerald-900">Request submitted!</h2>
+            <p className="mt-1 text-sm text-emerald-800">
               We&apos;ll contact you within 24 hours to set up your new plan!
             </p>
             <Button
@@ -181,11 +184,11 @@ export default function UpgradePage() {
                 <Card
                   key={plan.tier}
                   className={`relative flex flex-col ${
-                    plan.popular ? 'border-indigo-400 shadow-lg shadow-indigo-100' : ''
+                    plan.popular ? 'border-primary/40 shadow-md ring-1 ring-primary/10' : ''
                   } ${isCurrent ? 'opacity-60' : ''}`}
                 >
                   {plan.popular && (
-                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-indigo-600 px-3 py-0.5 text-xs font-medium text-white">
+                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-primary px-3 py-0.5 text-xs font-semibold uppercase tracking-wide text-primary-foreground shadow-sm">
                       Most Popular
                     </div>
                   )}
@@ -193,22 +196,24 @@ export default function UpgradePage() {
                     <CardTitle className="text-lg">{plan.name}</CardTitle>
                     <div className="mt-2">
                       {plan.price === 'Custom' ? (
-                        <span className="text-3xl font-bold">Custom</span>
+                        <span className="text-3xl font-bold tracking-tight">Custom</span>
                       ) : (
                         <>
-                          <span className="text-3xl font-bold">{'\u20AC'}{plan.price}</span>
+                          <span className="text-3xl font-bold tracking-tight tabular-nums">
+                            {'\u20AC'}{plan.price}
+                          </span>
                           <span className="text-muted-foreground">/month</span>
                         </>
                       )}
                     </div>
-                    <p className="text-sm text-muted-foreground mt-2">{plan.description}</p>
+                    <p className="mt-2 text-sm text-muted-foreground">{plan.description}</p>
                   </CardHeader>
-                  <CardContent className="flex-1 flex flex-col">
-                    <ul className="space-y-2 flex-1">
+                  <CardContent className="flex flex-1 flex-col">
+                    <ul className="flex-1 space-y-2">
                       {plan.features.map((feature) => (
                         <li key={feature} className="flex items-start gap-2 text-sm">
-                          <span className="text-green-600 mt-0.5">{'\u2713'}</span>
-                          {feature}
+                          <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
+                          <span>{feature}</span>
                         </li>
                       ))}
                     </ul>
@@ -235,13 +240,13 @@ export default function UpgradePage() {
 
           {/* Upgrade request form */}
           {selectedPlan && (
-            <Card className="border-indigo-300">
+            <Card className="border-primary/30 bg-primary/[0.02]">
               <CardHeader>
                 <CardTitle>Request Upgrade to {tierLabel(selectedPlan)}</CardTitle>
               </CardHeader>
               <CardContent>
                 {error && (
-                  <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 mb-4">
+                  <div className="mb-4 rounded-lg border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">
                     {error}
                   </div>
                 )}

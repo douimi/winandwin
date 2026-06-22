@@ -412,7 +412,7 @@ export default function SettingsPage() {
                     try { await updateMerchant(merchantId, { showLogo: val }); showSuccess('Updated') } catch {}
                   }
                 }}
-                className="h-5 w-5 rounded accent-indigo-600"
+                className="h-5 w-5 rounded accent-[var(--color-primary)]"
               />
             </label>
             <label className="flex items-center justify-between rounded-lg border p-3 cursor-pointer hover:bg-gray-50 transition-colors">
@@ -430,7 +430,7 @@ export default function SettingsPage() {
                     try { await updateMerchant(merchantId, { showName: val }); showSuccess('Updated') } catch {}
                   }
                 }}
-                className="h-5 w-5 rounded accent-indigo-600"
+                className="h-5 w-5 rounded accent-[var(--color-primary)]"
               />
             </label>
           </div>
@@ -520,8 +520,8 @@ export default function SettingsPage() {
                 disabled={savingAtmosphere}
                 className={`flex flex-col items-start gap-2 rounded-xl border-2 p-3 text-left transition-all ${
                   atmosphere === atm.key
-                    ? 'border-indigo-500 bg-indigo-50 ring-2 ring-indigo-200'
-                    : 'border-gray-200 hover:border-gray-300 bg-white'
+                    ? 'border-primary bg-primary/5 ring-2 ring-primary/20'
+                    : 'border-border bg-card hover:border-foreground/20'
                 }`}
               >
                 <div className="flex items-center gap-2">
@@ -538,13 +538,13 @@ export default function SettingsPage() {
                 </div>
                 <span className="text-sm font-medium">{atm.label}</span>
                 {atmosphere === atm.key && (
-                  <span className="text-xs text-indigo-600 font-medium">Active</span>
+                  <span className="text-xs font-medium text-primary">Active</span>
                 )}
               </button>
             ))}
           </div>
           {atmosphere === 'custom' && (
-            <div className="mt-4 rounded-xl border border-indigo-200 bg-indigo-50/50 p-4">
+            <div className="mt-4 rounded-xl border border-primary/20 bg-primary/5 p-4">
               <p className="text-sm font-medium mb-3">Choose your 3 custom colors:</p>
               <div className="grid gap-3 sm:grid-cols-3">
                 {[
