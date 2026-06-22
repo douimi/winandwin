@@ -703,22 +703,98 @@ export interface PlayerData {
   id: string
   name: string | null
   email: string | null
+  points: number
   totalPlays: number
   totalWins: number
   lastSeenAt: string
   createdAt: string
 }
 
+export type PlayerSortField =
+  | 'name'
+  | 'email'
+  | 'points'
+  | 'totalPlays'
+  | 'totalWins'
+  | 'lastSeenAt'
+  | 'createdAt'
+
+export interface PlayerListPage {
+  data: PlayerData[]
+  pagination: { page: number; pageSize: number; total: number; totalPages: number }
+  sort: { field: PlayerSortField; dir: 'asc' | 'desc' }
+  stats: { totalPlayers: number; totalPlays: number; totalWins: number }
+}
+
+export interface FetchPlayersParams {
+  merchantId: string
+  page?: number
+  pageSize?: number
+  sort?: PlayerSortField
+  dir?: 'asc' | 'desc'
+  search?: string
+}
+
+// Returns the full envelope (data + pagination + sort + aggregate stats).
+// The shared `request()` helper only forwards `json.data`, so we mirror its
+// error handling here but keep the metadata.
 export async function fetchPlayers(
-  merchantId: string,
-  search?: string,
+  params: FetchPlayersParams,
   token?: string,
-): Promise<PlayerData[]> {
-  let path = `/api/v1/players?merchantId=${encodeURIComponent(merchantId)}`
-  if (search) {
-    path += `&search=${encodeURIComponent(search)}`
+): Promise<PlayerListPage> {
+  const search = new URLSearchParams({ merchantId: params.merchantId })
+  if (params.page) search.set('page', String(params.page))
+  if (params.pageSize) search.set('pageSize', String(params.pageSize))
+  if (params.sort) search.set('sort', params.sort)
+  if (params.dir) search.set('dir', params.dir)
+  if (params.search) search.set('search', params.search)
+
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+  if (token) headers['Authorization'] = `Bearer ${token}`
+
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), 15_000)
+
+  let res: Response
+  try {
+    res = await fetch(`${API_BASE}/api/v1/players?${search.toString()}`, {
+      headers,
+      signal: controller.signal,
+    })
+  } catch (err) {
+    clearTimeout(timeoutId)
+    if (err instanceof DOMException && err.name === 'AbortError') {
+      throw new ApiError('TIMEOUT', 'Request timed out', 0)
+    }
+    throw new ApiError('NETWORK_ERROR', 'Unable to reach the API server', 0)
+  } finally {
+    clearTimeout(timeoutId)
   }
-  return request<PlayerData[]>(path, {}, token)
+
+  const json = (await res.json()) as {
+    success: boolean
+    data?: PlayerData[]
+    pagination?: PlayerListPage['pagination']
+    sort?: PlayerListPage['sort']
+    stats?: PlayerListPage['stats']
+    error?: { code?: string; message?: string; details?: Record<string, unknown> }
+  }
+
+  if (!res.ok || !json.success) {
+    throw new ApiError(
+      json.error?.code ?? 'UNKNOWN',
+      json.error?.message ?? `Request failed with status ${res.status}`,
+      res.status,
+      json.error?.details,
+    )
+  }
+
+  return {
+    data: json.data ?? [],
+    pagination: json.pagination ?? { page: 1, pageSize: 20, total: 0, totalPages: 0 },
+    sort: json.sort ?? { field: 'lastSeenAt', dir: 'desc' },
+    stats: json.stats ?? { totalPlayers: 0, totalPlays: 0, totalWins: 0 },
+  }
 }
 
 export interface PlayerRanking {
