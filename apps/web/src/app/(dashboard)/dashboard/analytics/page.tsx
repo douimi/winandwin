@@ -41,8 +41,6 @@ const PERIOD_LABELS: Record<Period, string> = {
   all: 'All Time',
 }
 
-const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
-
 interface KpiDef {
   title: string
   value: number
@@ -192,13 +190,11 @@ export default function AnalyticsPage() {
   const funnelMax = data.funnel.length > 0 ? Math.max(...data.funnel.map((f) => f.value), 1) : 1
   const hasFunnelData = data.funnel.some((f) => f.value > 0)
 
-  // Simulated weekly activity data (placeholder when API doesn't provide it)
-  const weeklyActivity = DAYS.map((_, i) => {
-    const base = data.kpis.gamesPlayed / 7
-    const jitter = Math.sin(i * 1.5 + 2) * base * 0.6
-    return Math.max(0, Math.round(base + jitter))
-  })
-  const weeklyMax = Math.max(...weeklyActivity, 1)
+  // Real per-day play counts for the last 7 days (server-computed). Falls
+  // back to all zeros if the API didn't include weeklyActivity (older
+  // versions); the chart still renders, just flat.
+  const weeklyActivity = (data.weeklyActivity ?? []).slice(-7)
+  const weeklyMax = Math.max(...weeklyActivity.map((d) => d.count), 1)
 
   const topActionsSlice = data.topActions.slice(0, 5)
   const topActionsMax =
@@ -426,30 +422,33 @@ export default function AnalyticsPage() {
       {/* Activity This Week */}
       <Card className="transition-shadow hover:shadow-md">
         <CardHeader>
-          <CardTitle>Activity This Week</CardTitle>
+          <CardTitle>Activity (Last 7 Days)</CardTitle>
         </CardHeader>
         <CardContent>
           <ProFeatureLock locked={!hasFeature(tier, 'analytics.weeklyChart')} label="Weekly Activity Chart">
             <div className="flex items-end justify-between gap-2 sm:gap-4" style={{ height: 160 }}>
-              {DAYS.map((day, i) => {
-                const value = weeklyActivity[i] ?? 0
-                const heightPct = Math.max((value / weeklyMax) * 100, 4)
-
-                return (
-                  <div key={day} className="flex flex-1 flex-col items-center gap-1">
-                    <span className="text-xs font-medium tabular-nums text-muted-foreground">
-                      {value > 0 ? value.toLocaleString() : ''}
-                    </span>
-                    <div className="relative w-full" style={{ height: 120 }}>
-                      <div
-                        className="absolute bottom-0 w-full rounded-t-md bg-primary/80 transition-[height] duration-700 ease-out hover:bg-primary"
-                        style={{ height: `${heightPct}%`, minHeight: 4 }}
-                      />
+              {weeklyActivity.length === 0 ? (
+                <p className="w-full py-8 text-center text-sm text-muted-foreground">No data</p>
+              ) : (
+                weeklyActivity.map((entry) => {
+                  const value = entry.count
+                  const heightPct = Math.max((value / weeklyMax) * 100, 4)
+                  return (
+                    <div key={entry.date} className="flex flex-1 flex-col items-center gap-1">
+                      <span className="text-xs font-medium tabular-nums text-muted-foreground">
+                        {value > 0 ? value.toLocaleString() : ''}
+                      </span>
+                      <div className="relative w-full" style={{ height: 120 }} title={`${entry.date} — ${value} plays`}>
+                        <div
+                          className="absolute bottom-0 w-full rounded-t-md bg-primary/80 transition-[height] duration-700 ease-out hover:bg-primary"
+                          style={{ height: `${heightPct}%`, minHeight: 4 }}
+                        />
+                      </div>
+                      <span className="text-xs font-medium text-muted-foreground">{entry.day}</span>
                     </div>
-                    <span className="text-xs font-medium text-muted-foreground">{day}</span>
-                  </div>
-                )
-              })}
+                  )
+                })
+              )}
             </div>
           </ProFeatureLock>
         </CardContent>

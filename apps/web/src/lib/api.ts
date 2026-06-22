@@ -130,6 +130,11 @@ export interface AnalyticsData {
     percentage: number
     count: number
   }[]
+  weeklyActivity: {
+    day: string
+    date: string
+    count: number
+  }[]
 }
 
 export interface CouponStats {

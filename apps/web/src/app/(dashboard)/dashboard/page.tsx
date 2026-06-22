@@ -54,9 +54,10 @@ export default async function DashboardPage() {
   const hasActiveGame = games.some((g) => g.status === 'active')
   const hasPlays = gamesPlayed > 0
 
-  // KPI cards — icon in a soft sky/slate tinted square + big tabular number + label.
-  // Each gets a different accent for instant scanning, all drawn from the new
-  // semantic palette so the dashboard stays calm.
+  // KPI cards — icon in a soft tinted square + big tabular number + label.
+  // The first card shows TODAY's active players (zeros are expected on quiet
+  // days); the other three show LIFETIME totals so the dashboard always has
+  // signal even when no plays happened today.
   const kpis = [
     {
       title: 'Active Players Today',
@@ -65,13 +66,13 @@ export default async function DashboardPage() {
       iconClass: 'bg-sky-50 text-sky-700',
     },
     {
-      title: 'Games Played',
+      title: 'Total Games Played',
       value: gamesPlayed,
       Icon: Gauge,
       iconClass: 'bg-violet-50 text-violet-700',
     },
     {
-      title: 'Actions Completed',
+      title: 'Total Actions',
       value: actionsCompleted,
       Icon: CheckCircle2,
       iconClass: 'bg-emerald-50 text-emerald-700',

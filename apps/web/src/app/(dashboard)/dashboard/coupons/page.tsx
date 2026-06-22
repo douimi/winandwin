@@ -1,7 +1,7 @@
 'use client'
 
 import { Button, Card, CardContent, CardHeader, CardTitle } from '@winandwin/ui'
-import { Ticket } from 'lucide-react'
+import { Download, Lock, Ticket } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   fetchCoupons,
@@ -12,8 +12,10 @@ import {
   type CouponSortField,
   type CouponStats,
   type CouponStatusFilter,
+  type CouponWithDetails,
 } from '@/lib/api'
-import { useMerchantId } from '@/lib/merchant-context'
+import { useMerchantId, useMerchantTier } from '@/lib/merchant-context'
+import { hasFeature } from '@/lib/tier-features'
 
 const STATUS_BADGE: Record<string, string> = {
   active: 'bg-green-100 text-green-800',
@@ -48,6 +50,7 @@ function formatDate(iso: string | null) {
 
 export default function CouponsPage() {
   const merchantId = useMerchantId()
+  const tier = useMerchantTier()
 
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(20)
@@ -62,6 +65,7 @@ export default function CouponsPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [actionLoading, setActionLoading] = useState<string | null>(null)
+  const [exportLoading, setExportLoading] = useState(false)
 
   // Debounce search input
   useEffect(() => {
@@ -146,6 +150,65 @@ export default function CouponsPage() {
     }
   }
 
+  // CSV export — pages through the API in 100-row chunks so it doesn't
+  // truncate at the current page size. Respects active search + status
+  // filter so merchants can export filtered slices.
+  async function handleExportCsv() {
+    if (!merchantId) return
+    setExportLoading(true)
+    try {
+      const all: CouponWithDetails[] = []
+      let p = 1
+      while (true) {
+        const res = await fetchCoupons({
+          merchantId,
+          page: p,
+          pageSize: 100,
+          sort: sortField,
+          dir: sortDir,
+          search: debouncedSearch || undefined,
+          status: statusFilter || undefined,
+        })
+        all.push(...res.data)
+        if (p >= res.pagination.totalPages || res.data.length === 0) break
+        p++
+        if (p > 500) break // safety cap (50k rows)
+      }
+
+      const escape = (s: string | null | undefined) => `"${(s ?? '').replace(/"/g, '""')}"`
+      const header =
+        'Code,Prize,Status,Player Name,Player Email,Valid From,Valid Until,Redeemed At,Issued At,Conditions\n'
+      const rows = all
+        .map((c) =>
+          [
+            escape(c.code),
+            escape(c.prizeName),
+            escape(c.status),
+            escape(c.playerName),
+            escape(c.playerEmail),
+            escape(c.validFrom),
+            escape(c.validUntil),
+            escape(c.redeemedAt),
+            escape(c.createdAt),
+            escape((c.redemptionConditions ?? []).join(' | ')),
+          ].join(','),
+        )
+        .join('\n')
+
+      const blob = new Blob([header + rows], { type: 'text/csv' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `coupons-${new Date().toISOString().slice(0, 10)}.csv`
+      a.click()
+      URL.revokeObjectURL(url)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to export coupons')
+    } finally {
+      setExportLoading(false)
+    }
+  }
+
   const coupons = pageData?.data ?? []
   const pagination = pageData?.pagination ?? { page: 1, pageSize: 20, total: 0, totalPages: 0 }
   const totalPages = pagination.totalPages
@@ -171,7 +234,31 @@ export default function CouponsPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold">Coupons</h1>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h1 className="text-2xl font-semibold tracking-tight">Coupons</h1>
+        {hasFeature(tier, 'coupons.export') ? (
+          <button
+            type="button"
+            onClick={handleExportCsv}
+            disabled={exportLoading || pagination.total === 0}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-sm font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground disabled:opacity-50"
+          >
+            <Download className="h-3.5 w-3.5" />
+            {exportLoading ? 'Exporting…' : 'Export CSV'}
+          </button>
+        ) : (
+          <a
+            href="/dashboard/upgrade"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent"
+          >
+            <Lock className="h-3.5 w-3.5" />
+            Export CSV
+            <span className="ml-0.5 rounded-full bg-primary/10 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-primary">
+              Pro
+            </span>
+          </a>
+        )}
+      </div>
 
       {error && <p className="text-sm text-destructive">{error}</p>}
 

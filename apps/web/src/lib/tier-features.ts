@@ -7,6 +7,7 @@ const TIER_FEATURES: Record<string, Tier[]> = {
   'analytics.weeklyChart': ['pro', 'enterprise'],
   'analytics.periodSelector': ['pro', 'enterprise'],
   'players.export': ['pro', 'enterprise'],
+  'coupons.export': ['pro', 'enterprise'],
   'branding.customAtmosphere': ['pro', 'enterprise'],
   'game.description': ['pro', 'enterprise'],
   'game.ctaReplay': ['pro', 'enterprise'],
