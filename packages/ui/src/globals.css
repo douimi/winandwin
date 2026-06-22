@@ -2,51 +2,49 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+ * @winandwin/ui — Phase 0 design tokens (Two-System: Dashboard)
+ * Mirrors apps/web/src/app/globals.css. Keep in sync.
+ * Style: "SaaS Mobile — High-Tech Boutique" (navy + sky-blue).
+ */
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 240 10% 3.9%;
+    /* Surfaces */
+    --background: 210 40% 98%;
+    --foreground: 222 47% 4%;
     --card: 0 0% 100%;
-    --card-foreground: 240 10% 3.9%;
+    --card-foreground: 222 47% 4%;
     --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 3.9%;
-    --primary: 239 84% 67%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 240 4.8% 95.9%;
-    --secondary-foreground: 240 5.9% 10%;
-    --muted: 240 4.8% 95.9%;
-    --muted-foreground: 240 3.8% 46.1%;
-    --accent: 240 4.8% 95.9%;
-    --accent-foreground: 240 5.9% 10%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 240 5.9% 90%;
-    --input: 240 5.9% 90%;
-    --ring: 239 84% 67%;
+    --popover-foreground: 222 47% 4%;
+
+    /* Brand */
+    --primary: 200 95% 32%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 210 40% 96%;
+    --secondary-foreground: 222 47% 11%;
+    --accent: 199 95% 92%;
+    --accent-foreground: 200 91% 22%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 215 16% 47%;
+
+    /* Feedback */
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+    --success: 142 71% 36%;
+    --success-foreground: 0 0% 100%;
+    --warning: 32 95% 44%;
+    --warning-foreground: 0 0% 100%;
+
+    /* Lines + focus */
+    --border: 214 32% 91%;
+    --input: 215 20% 75%;
+    --ring: 200 95% 32%;
+
     --radius: 0.75rem;
   }
 
-  .dark {
-    --background: 240 10% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 240 10% 3.9%;
-    --card-foreground: 0 0% 98%;
-    --popover: 240 10% 3.9%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 239 84% 67%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 240 3.7% 15.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 240 3.7% 15.9%;
-    --muted-foreground: 240 5% 64.9%;
-    --accent: 240 3.7% 15.9%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 240 3.7% 15.9%;
-    --input: 240 3.7% 15.9%;
-    --ring: 239 84% 67%;
-  }
+  /* Dark mode is intentionally left untouched in Phase 0.
+     Phase 6 (or later) will define a paired dark scheme. */
 }
 
 @layer base {
@@ -54,6 +52,12 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground antialiased;
+    font-family: var(--font-jakarta, 'Plus Jakarta Sans'), ui-sans-serif, system-ui, sans-serif;
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11', 'ss01';
+  }
+  h1, h2, h3, h4, h5, h6 {
+    letter-spacing: -0.015em;
+    font-weight: 700;
   }
 }
