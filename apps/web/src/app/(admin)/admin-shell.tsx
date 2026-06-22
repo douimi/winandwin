@@ -1,7 +1,18 @@
 'use client'
 
 import { usePathname } from 'next/navigation'
-import { useState } from 'react'
+import { useState, type ComponentType, type SVGProps } from 'react'
+import {
+  ArrowLeft,
+  Inbox,
+  LayoutDashboard,
+  LogOut,
+  Menu,
+  Settings,
+  Shield,
+  Store,
+  X,
+} from 'lucide-react'
 import { signOut } from '@/lib/auth-client'
 
 interface User {
@@ -16,11 +27,19 @@ interface AdminShellProps {
   children: React.ReactNode
 }
 
-const navItems = [
-  { href: '/admin', label: 'Overview', icon: '\uD83D\uDCCA' },
-  { href: '/admin/merchants', label: 'Merchants', icon: '\uD83C\uDFEA' },
-  { href: '/admin/contacts', label: 'Contacts', icon: '\uD83D\uDCEC' },
-  { href: '/admin/settings', label: 'Settings', icon: '\u2699\uFE0F' },
+type IconComponent = ComponentType<SVGProps<SVGSVGElement>>
+
+interface NavItem {
+  href: string
+  label: string
+  Icon: IconComponent
+}
+
+const navItems: NavItem[] = [
+  { href: '/admin', label: 'Overview', Icon: LayoutDashboard },
+  { href: '/admin/merchants', label: 'Merchants', Icon: Store },
+  { href: '/admin/contacts', label: 'Contacts', Icon: Inbox },
+  { href: '/admin/settings', label: 'Settings', Icon: Settings },
 ]
 
 export function AdminShell({ user, children }: AdminShellProps) {
@@ -32,66 +51,73 @@ export function AdminShell({ user, children }: AdminShellProps) {
     return pathname.startsWith(href)
   }
 
-  const currentPageLabel =
-    navItems.find((item) => isActive(item.href))?.label || 'Admin'
+  const currentPageLabel = navItems.find((item) => isActive(item.href))?.label || 'Admin'
+  const userInitial = user.name?.charAt(0).toUpperCase() || '?'
 
   const sidebarContent = (
-    <>
-      {/* Logo */}
-      <div className="border-b border-gray-200 px-4 py-4">
-        <a href="/admin" className="block">
-          <img src="/logo.png" alt="Win & Win" className="h-16 w-auto" />
+    <div className="flex h-full flex-col">
+      {/* Brand */}
+      <div className="border-b border-border px-5 py-5">
+        <a href="/admin" className="flex items-center gap-2">
+          <img src="/logo.png" alt="Win & Win" className="h-9 w-auto" />
+          <span className="sr-only">winandwin.club Admin</span>
         </a>
-        <span className="mt-2 inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider" style={{ background: '#94ffe5', color: '#0a0a1a' }}>
-          Admin
+        <span className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-foreground px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-background">
+          <Shield className="h-3 w-3" />
+          Super Admin
         </span>
       </div>
 
-      {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto space-y-1 px-3 py-4">
-        <div className="px-3 mb-3">
-          <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Navigation</span>
-        </div>
+      {/* Primary nav */}
+      <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4">
+        <p className="px-3 pb-2 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
+          Navigation
+        </p>
         {navItems.map((item) => {
           const active = isActive(item.href)
+          const Icon = item.Icon
           return (
             <a
               key={item.href}
               href={item.href}
-              className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 ${
-                active
-                  ? 'text-white border-l-[3px] border-transparent'
-                  : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 border-l-[3px] border-transparent'
-              }`}
-              style={active ? { background: 'linear-gradient(135deg, #6366f1, #06b6d4)' } : undefined}
               onClick={() => setSidebarOpen(false)}
+              className={`group flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+                active
+                  ? 'bg-primary text-primary-foreground shadow-sm'
+                  : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
+              }`}
             >
-              <span className="text-base w-6 text-center">{item.icon}</span>
-              <span>{item.label}</span>
+              <Icon
+                className={`h-4 w-4 shrink-0 transition-colors ${
+                  active ? 'text-primary-foreground' : 'text-muted-foreground group-hover:text-accent-foreground'
+                }`}
+              />
+              <span className="truncate">{item.label}</span>
             </a>
           )
         })}
 
-        <div className="my-4 mx-3 border-t border-gray-200" />
-
-        <a
-          href="/dashboard"
-          className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-gray-500 transition-all duration-200 hover:bg-gray-50 hover:text-gray-700 border-l-[3px] border-transparent"
-        >
-          <span className="text-base w-6 text-center">{'\u2190'}</span>
-          <span>Dashboard</span>
-        </a>
+        <div className="mt-6 border-t border-border pt-4">
+          <a
+            href="/dashboard"
+            className="group flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+            onClick={() => setSidebarOpen(false)}
+          >
+            <ArrowLeft className="h-4 w-4 shrink-0 text-muted-foreground group-hover:text-accent-foreground" />
+            Back to Dashboard
+          </a>
+        </div>
       </nav>
 
-      {/* User card — always at bottom */}
-      <div className="mt-auto p-4 border-t border-gray-200">
-        <div className="flex items-center gap-3 rounded-xl bg-gray-50 p-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 text-sm font-bold text-white">
-            {user.name.charAt(0).toUpperCase()}
+      {/* User block */}
+      <div className="mt-auto border-t border-border p-4">
+        <div className="flex items-center gap-3">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-foreground text-sm font-semibold text-background">
+            {userInitial}
           </div>
-          <div className="flex-1 min-w-0">
-            <p className="truncate text-sm font-medium text-gray-900">{user.name}</p>
-            <p className="truncate text-xs text-gray-500">{user.email}</p>
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-medium">{user.name}</p>
+            <p className="truncate text-xs text-muted-foreground">{user.email}</p>
           </div>
         </div>
         <button
@@ -99,57 +125,65 @@ export function AdminShell({ user, children }: AdminShellProps) {
           onClick={() =>
             signOut({ fetchOptions: { onSuccess: () => window.location.assign('/sign-in') } })
           }
-          className="mt-3 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-500 hover:bg-gray-50 hover:text-gray-700 hover:border-gray-300 transition-all duration-200"
+          className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
         >
+          <LogOut className="h-3.5 w-3.5" />
           Sign Out
         </button>
       </div>
-    </>
+    </div>
   )
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="flex min-h-screen bg-background">
       {/* Desktop sidebar */}
-      <aside className="hidden w-[260px] flex-col border-r border-gray-200 bg-white lg:flex sticky top-0 h-screen" style={{ borderTop: '2px solid transparent', borderImage: 'linear-gradient(90deg, #94ffe5, #06b6d4) 1' }}>
+      <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col border-r border-border bg-card lg:flex">
         {sidebarContent}
       </aside>
 
-      {/* Mobile sidebar overlay */}
+      {/* Mobile drawer */}
       {sidebarOpen && (
         <div className="fixed inset-0 z-50 lg:hidden">
           <div
-            className="fixed inset-0 bg-black/30 backdrop-blur-sm"
+            className="fixed inset-0 bg-foreground/40 backdrop-blur-sm"
             onClick={() => setSidebarOpen(false)}
             onKeyDown={() => {}}
             role="presentation"
           />
-          <aside className="fixed inset-y-0 left-0 z-50 flex w-[260px] flex-col bg-white shadow-xl">
-            {sidebarContent}
+          <aside className="fixed inset-y-0 left-0 z-50 flex w-64 flex-col bg-card shadow-2xl">
+            <div className="flex h-14 items-center justify-end border-b border-border px-3">
+              <button
+                type="button"
+                onClick={() => setSidebarOpen(false)}
+                className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                aria-label="Close menu"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <div className="flex-1 overflow-hidden">{sidebarContent}</div>
           </aside>
         </div>
       )}
 
-      <main className="flex-1 min-w-0">
-        <header className="flex h-16 items-center border-b border-gray-200 px-6 gap-3 bg-white">
-          {/* Mobile hamburger */}
+      {/* Main column */}
+      <main className="flex min-w-0 flex-1 flex-col">
+        <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-border bg-background/70 px-4 backdrop-blur-md backdrop-saturate-150 sm:px-6">
           <button
             type="button"
             onClick={() => setSidebarOpen(true)}
-            className="lg:hidden rounded-lg p-2 hover:bg-gray-100 text-gray-500 transition-colors"
+            className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground lg:hidden"
             aria-label="Open menu"
           >
-            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M4 6h16M4 12h16M4 18h16"
-              />
-            </svg>
+            <Menu className="h-5 w-5" />
           </button>
-          <h2 className="text-lg font-semibold text-gray-900">{currentPageLabel}</h2>
+          <div className="min-w-0 flex-1">
+            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Super Admin</p>
+            <h2 className="truncate text-lg font-semibold leading-tight text-foreground">{currentPageLabel}</h2>
+          </div>
         </header>
-        <div className="p-6">{children}</div>
+
+        <div className="flex-1 p-4 sm:p-6 lg:p-8">{children}</div>
       </main>
     </div>
   )
