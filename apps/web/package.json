@@ -17,6 +17,7 @@
     "@winandwin/ui": "workspace:*",
     "better-auth": "^1.2.0",
     "drizzle-orm": "^0.38.4",
+    "lucide-react": "^0.460.0",
     "next": "^15.2.0",
     "qrcode": "^1.5.4",
     "react": "^19.0.0",

@@ -1,7 +1,23 @@
 'use client'
 
 import { usePathname } from 'next/navigation'
-import { useState } from 'react'
+import { useState, type ComponentType, type SVGProps } from 'react'
+import {
+  ArrowUpRight,
+  BarChart3,
+  Gamepad2,
+  LayoutDashboard,
+  Link2,
+  LogOut,
+  Menu,
+  Settings,
+  Shield,
+  Sparkles,
+  Ticket,
+  Users,
+  X,
+} from 'lucide-react'
+import { Button } from '@winandwin/ui'
 import { signOut } from '@/lib/auth-client'
 
 interface User {
@@ -20,17 +36,38 @@ interface DashboardShellProps {
   children: React.ReactNode
 }
 
-const navItems = [
-  { href: '/dashboard', label: 'Dashboard', icon: '\uD83D\uDCCA' },
-  { href: '/dashboard/games', label: 'Games', icon: '\uD83C\uDFAE' },
-  { href: '/dashboard/coupons', label: 'Coupons', icon: '\uD83C\uDF9F\uFE0F' },
-  { href: '/dashboard/players', label: 'Players', icon: '\uD83D\uDC65' },
-  { href: '/dashboard/analytics', label: 'Analytics', icon: '\uD83D\uDCC8' },
-  { href: '/dashboard/ctas', label: 'CTAs', icon: '\uD83D\uDD17' },
-  { href: '/dashboard/settings', label: 'Settings', icon: '\u2699\uFE0F' },
+type IconComponent = ComponentType<SVGProps<SVGSVGElement>>
+
+interface NavItem {
+  href: string
+  label: string
+  Icon: IconComponent
+}
+
+const navItems: NavItem[] = [
+  { href: '/dashboard', label: 'Dashboard', Icon: LayoutDashboard },
+  { href: '/dashboard/games', label: 'Games', Icon: Gamepad2 },
+  { href: '/dashboard/coupons', label: 'Coupons', Icon: Ticket },
+  { href: '/dashboard/players', label: 'Players', Icon: Users },
+  { href: '/dashboard/analytics', label: 'Analytics', Icon: BarChart3 },
+  { href: '/dashboard/ctas', label: 'CTAs', Icon: Link2 },
+  { href: '/dashboard/settings', label: 'Settings', Icon: Settings },
 ]
 
-export function DashboardShell({ user, merchantName, merchantSlug, merchantTier, isAdmin, children }: DashboardShellProps) {
+const TIER_LABEL: Record<string, string> = {
+  free: 'Free',
+  pro: 'Pro',
+  enterprise: 'Enterprise',
+}
+
+export function DashboardShell({
+  user,
+  merchantName,
+  merchantSlug,
+  merchantTier,
+  isAdmin,
+  children,
+}: DashboardShellProps) {
   const pathname = usePathname()
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
@@ -43,102 +80,114 @@ export function DashboardShell({ user, merchantName, merchantSlug, merchantTier,
     return pathname.startsWith(href)
   }
 
-  const currentPageLabel =
-    navItems.find((item) => isActive(item.href))?.label || 'Dashboard'
+  const currentPageLabel = navItems.find((item) => isActive(item.href))?.label || 'Dashboard'
+  const userInitial = user.name?.charAt(0).toUpperCase() || '?'
+  const showUpgradeCta = merchantTier && merchantTier !== 'enterprise'
 
   const sidebarContent = (
-    <div className="flex flex-col h-full">
-      <div className="border-b px-4 py-4">
-        <a href="/dashboard" className="block">
-          <img src="/logo.png" alt="Win & Win" className="h-16 w-auto" />
+    <div className="flex h-full flex-col">
+      {/* Brand */}
+      <div className="border-b border-border px-5 py-5">
+        <a href="/dashboard" className="flex items-center gap-2">
+          <img src="/logo.png" alt="Win & Win" className="h-9 w-auto" />
+          <span className="sr-only">winandwin.club</span>
         </a>
         {merchantName && (
-          <p className="mt-2 text-xs text-muted-foreground truncate">{merchantName}</p>
+          <div className="mt-3 flex items-center justify-between gap-2">
+            <p className="truncate text-xs font-medium text-foreground/80">{merchantName}</p>
+            {merchantTier && (
+              <span className="inline-flex shrink-0 items-center rounded-full bg-accent px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-accent-foreground">
+                {TIER_LABEL[merchantTier] ?? merchantTier}
+              </span>
+            )}
+          </div>
         )}
       </div>
-      <nav className="flex-1 overflow-y-auto space-y-1 p-4">
+
+      {/* Primary nav */}
+      <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4">
         {navItems.map((item) => {
           const active = isActive(item.href)
+          const Icon = item.Icon
           return (
             <a
               key={item.href}
               href={item.href}
-              className={`flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200 ${
-                active
-                  ? 'text-white shadow-md'
-                  : 'text-muted-foreground hover:bg-indigo-50 hover:text-foreground'
-              }`}
-              style={active ? { background: 'linear-gradient(135deg, #6366f1, #06b6d4)' } : undefined}
               onClick={() => setSidebarOpen(false)}
+              className={`group relative flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+                active
+                  ? 'bg-primary text-primary-foreground shadow-sm'
+                  : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
+              }`}
             >
-              <span className="text-xl">{item.icon}</span>
-              {item.label}
+              <Icon
+                className={`h-4 w-4 shrink-0 transition-colors ${
+                  active ? 'text-primary-foreground' : 'text-muted-foreground group-hover:text-accent-foreground'
+                }`}
+              />
+              <span className="truncate">{item.label}</span>
             </a>
           )
         })}
 
-        {playerUrl && (
-          <a
-            href={playerUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-          >
-            <span className="text-base">{'\uD83D\uDD17'}</span>
-            View Player Page
-            <svg
-              className="ml-auto h-3 w-3"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
+        {/* Secondary utility links */}
+        <div className="mt-6 space-y-1 border-t border-border pt-4">
+          {playerUrl && (
+            <a
+              href={playerUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+              onClick={() => setSidebarOpen(false)}
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-              />
-            </svg>
-          </a>
-        )}
+              <ArrowUpRight className="h-4 w-4 shrink-0 text-muted-foreground group-hover:text-accent-foreground" />
+              <span className="truncate">Open Player Page</span>
+            </a>
+          )}
 
-        {merchantTier !== 'enterprise' && (
-          <a
-            href="/dashboard/upgrade"
-            className="mx-3 mt-2 flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium text-white transition-colors"
-            style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}
-            onClick={() => setSidebarOpen(false)}
-          >
-            <span className="text-base">{'\u2B06\uFE0F'}</span>
-            Upgrade Plan
-          </a>
-        )}
+          {showUpgradeCta && (
+            <a
+              href="/dashboard/upgrade"
+              className="mt-2 flex items-center gap-3 rounded-lg bg-foreground px-3 py-2 text-sm font-semibold text-background shadow-sm transition-all hover:bg-foreground/90 hover:shadow-md"
+              onClick={() => setSidebarOpen(false)}
+            >
+              <Sparkles className="h-4 w-4 shrink-0" />
+              <span>Upgrade Plan</span>
+            </a>
+          )}
+        </div>
       </nav>
-      <div className="mt-auto border-t p-4">
+
+      {/* User block */}
+      <div className="mt-auto border-t border-border p-4">
         <div className="flex items-center gap-3">
-          <div className="flex h-8 w-8 items-center justify-center rounded-full text-xs font-medium text-white" style={{ background: 'linear-gradient(135deg, #6366f1, #a855f7)' }}>
-            {user.name.charAt(0).toUpperCase()}
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground">
+            {userInitial}
           </div>
-          <div className="flex-1 min-w-0">
+          <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-medium">{user.name}</p>
             <p className="truncate text-xs text-muted-foreground">{user.email}</p>
           </div>
         </div>
+
         {isAdmin && (
           <a
             href="/admin"
-            className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg bg-indigo-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-indigo-700 transition-colors"
+            className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg border border-foreground/10 bg-foreground/5 px-3 py-1.5 text-xs font-semibold text-foreground transition-colors hover:bg-foreground hover:text-background"
           >
-            🛡️ Super Admin
+            <Shield className="h-3.5 w-3.5" />
+            Super Admin
           </a>
         )}
+
         <button
           type="button"
           onClick={() =>
             signOut({ fetchOptions: { onSuccess: () => window.location.assign('/sign-in') } })
           }
-          className="mt-3 w-full rounded-lg border px-3 py-1.5 text-sm text-muted-foreground hover:bg-accent"
+          className="mt-2 flex w-full items-center justify-center gap-2 rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
         >
+          <LogOut className="h-3.5 w-3.5" />
           Sign Out
         </button>
       </div>
@@ -146,9 +195,9 @@ export function DashboardShell({ user, merchantName, merchantSlug, merchantTier,
   )
 
   return (
-    <div className="flex min-h-screen">
-      {/* Desktop sidebar */}
-      <aside className="hidden w-64 flex-col border-r lg:flex sticky top-0 h-screen" style={{ background: 'linear-gradient(180deg, #f8f7ff 0%, #ffffff 100%)', borderTop: '2px solid transparent', borderImage: 'linear-gradient(90deg, #94ffe5, #06b6d4) 1' }}>
+    <div className="flex min-h-screen bg-background">
+      {/* Desktop sidebar — clean white surface, sky-blue active state */}
+      <aside className="sticky top-0 hidden h-screen w-64 shrink-0 flex-col border-r border-border bg-card lg:flex">
         {sidebarContent}
       </aside>
 
@@ -156,38 +205,60 @@ export function DashboardShell({ user, merchantName, merchantSlug, merchantTier,
       {sidebarOpen && (
         <div className="fixed inset-0 z-50 lg:hidden">
           <div
-            className="fixed inset-0 bg-black/50"
+            className="fixed inset-0 bg-foreground/40 backdrop-blur-sm transition-opacity"
             onClick={() => setSidebarOpen(false)}
             onKeyDown={() => {}}
             role="presentation"
           />
-          <aside className="fixed inset-y-0 left-0 z-50 flex w-64 flex-col bg-card shadow-lg">
-            {sidebarContent}
+          <aside className="fixed inset-y-0 left-0 z-50 flex w-64 flex-col bg-card shadow-2xl">
+            <div className="flex h-14 items-center justify-end border-b border-border px-3">
+              <button
+                type="button"
+                onClick={() => setSidebarOpen(false)}
+                className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                aria-label="Close menu"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <div className="flex-1 overflow-hidden">{sidebarContent}</div>
           </aside>
         </div>
       )}
 
-      <main className="flex-1 min-w-0">
-        <header className="flex h-14 items-center px-6 gap-3" style={{ borderBottom: '2px solid transparent', borderImage: 'linear-gradient(90deg, #6366f1, #a855f7, #ec4899) 1' }}>
-          {/* Mobile hamburger */}
+      {/* Main column */}
+      <main className="flex min-w-0 flex-1 flex-col">
+        {/* Sticky topbar with subtle glass */}
+        <header className="sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-border bg-background/70 px-4 backdrop-blur-md backdrop-saturate-150 sm:px-6">
           <button
             type="button"
             onClick={() => setSidebarOpen(true)}
-            className="lg:hidden rounded-md p-1.5 hover:bg-accent"
+            className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground lg:hidden"
             aria-label="Open menu"
           >
-            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M4 6h16M4 12h16M4 18h16"
-              />
-            </svg>
+            <Menu className="h-5 w-5" />
           </button>
-          <h2 className="text-xl font-black tracking-tight">{currentPageLabel}</h2>
+
+          <div className="min-w-0 flex-1">
+            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              {merchantName ?? 'Workspace'}
+            </p>
+            <h2 className="truncate text-lg font-semibold leading-tight text-foreground">
+              {currentPageLabel}
+            </h2>
+          </div>
+
+          {playerUrl && (
+            <Button asChild variant="outline" size="sm" className="hidden sm:inline-flex">
+              <a href={playerUrl} target="_blank" rel="noopener noreferrer">
+                <ArrowUpRight className="h-4 w-4" />
+                View Player Page
+              </a>
+            </Button>
+          )}
         </header>
-        <div className="p-6">{children}</div>
+
+        <div className="flex-1 p-4 sm:p-6 lg:p-8">{children}</div>
       </main>
     </div>
   )
