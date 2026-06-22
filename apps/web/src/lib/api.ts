@@ -154,12 +154,17 @@ export async function fetchStatsOverview(
   )
 }
 
+export type AnalyticsPeriod = 'today' | 'week' | 'month' | 'all'
+
 export async function fetchAnalytics(
   merchantId: string,
+  period?: AnalyticsPeriod,
   token?: string,
 ): Promise<AnalyticsData> {
+  const params = new URLSearchParams({ merchantId })
+  if (period) params.set('period', period)
   return request<AnalyticsData>(
-    `/api/v1/stats/analytics?merchantId=${encodeURIComponent(merchantId)}`,
+    `/api/v1/stats/analytics?${params.toString()}`,
     {},
     token,
   )

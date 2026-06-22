@@ -86,9 +86,11 @@ statsRouter.get('/overview', async (c) => {
   }
 })
 
-// GET /analytics — KPIs (lifetime values + week-over-week delta), funnel,
-// top actions, prize popularity, and a real per-day plays chart for the
-// last 7 days.
+// GET /analytics — period-aware KPIs (with previous-period delta), funnel,
+// top actions, prize popularity, and a fixed-last-7-days plays chart.
+//
+// ?period= today | week | month | all   (default: month)
+// 'all' returns lifetime totals and skips the change% (returns '').
 statsRouter.get('/analytics', async (c) => {
   try {
     const db = c.get('db')
@@ -101,112 +103,155 @@ statsRouter.get('/analytics', async (c) => {
       )
     }
 
-    // Time windows — current and PRIOR (non-overlapping). The previous
-    // version overlapped (last 14d included the last 7d) which produced
-    // misleading "+X%" labels.
-    const now = new Date()
-    const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
-    const twoWeeksAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000)
+    type Period = 'today' | 'week' | 'month' | 'all'
+    const periodParam = c.req.query('period') as Period | undefined
+    const period: Period = (['today', 'week', 'month', 'all'] as const).includes(
+      periodParam as Period,
+    )
+      ? (periodParam as Period)
+      : 'month'
 
+    // ── Date windows ────────────────────────────────────────────────
+    // For 'today' we use calendar-day boundaries (UTC midnight). For week
+    // and month we use rolling windows so the prior-period comparison is
+    // a clean shift of the same length.
+    const now = new Date()
+    const todayStart = new Date()
+    todayStart.setUTCHours(0, 0, 0, 0)
+    const yesterdayStart = new Date(todayStart.getTime() - 24 * 60 * 60 * 1000)
+
+    let periodStart: Date | null
+    let priorStart: Date | null
+    let priorEnd: Date | null
+    if (period === 'today') {
+      periodStart = todayStart
+      priorStart = yesterdayStart
+      priorEnd = todayStart
+    } else if (period === 'week') {
+      periodStart = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
+      priorStart = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000)
+      priorEnd = periodStart
+    } else if (period === 'month') {
+      periodStart = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
+      priorStart = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000)
+      priorEnd = periodStart
+    } else {
+      // 'all' — no time filter
+      periodStart = null
+      priorStart = null
+      priorEnd = null
+    }
+
+    // Helper builders so the period filter is uniform across queries.
+    const playerScope = periodStart
+      ? and(eq(players.merchantId, merchantId), gte(players.createdAt, periodStart))
+      : eq(players.merchantId, merchantId)
+    const playScope = periodStart
+      ? and(eq(gamePlays.merchantId, merchantId), gte(gamePlays.playedAt, periodStart))
+      : eq(gamePlays.merchantId, merchantId)
+    const winScope = periodStart
+      ? and(
+          eq(gamePlays.merchantId, merchantId),
+          eq(gamePlays.result, 'win'),
+          gte(gamePlays.playedAt, periodStart),
+        )
+      : and(eq(gamePlays.merchantId, merchantId), eq(gamePlays.result, 'win'))
+    const redeemedScope = periodStart
+      ? and(
+          eq(coupons.merchantId, merchantId),
+          eq(coupons.status, 'redeemed'),
+          gte(coupons.redeemedAt, periodStart),
+        )
+      : and(eq(coupons.merchantId, merchantId), eq(coupons.status, 'redeemed'))
+
+    // ── Current period counts ─────────────────────────────────────────
     const [
-      // Lifetime totals — what the KPI big number actually displays
-      lifetimePlayersResult,
-      lifetimePlaysResult,
-      lifetimeActionsResult,
-      lifetimeRedeemedResult,
-      // This week (last 7 days)
-      thisWeekPlayersResult,
-      thisWeekPlaysResult,
-      thisWeekActionsResult,
-      thisWeekRedeemedResult,
-      // Previous 7 days (strictly the prior period, not cumulative)
-      prevWeekPlayersResult,
-      prevWeekPlaysResult,
-      prevWeekActionsResult,
-      prevWeekRedeemedResult,
-      // Funnel — lifetime
+      curPlayersResult,
+      curPlaysResult,
+      curActionsResult,
+      curRedeemedResult,
+      // Funnel (period-scoped — same scopes as above)
       funnelPlayersResult,
       funnelPlaysResult,
       funnelWinsResult,
       funnelRedeemedResult,
     ] = await Promise.all([
-      // Lifetime
-      db.select({ count: sql<number>`count(*)::int` }).from(players)
-        .where(eq(players.merchantId, merchantId)),
-      db.select({ count: sql<number>`count(*)::int` }).from(gamePlays)
-        .where(eq(gamePlays.merchantId, merchantId)),
-      db.select({ count: sql<number>`coalesce(sum(jsonb_array_length(${gamePlays.completedActions})), 0)::int` }).from(gamePlays)
-        .where(eq(gamePlays.merchantId, merchantId)),
-      db.select({ count: sql<number>`count(*)::int` }).from(coupons)
-        .where(and(eq(coupons.merchantId, merchantId), eq(coupons.status, 'redeemed'))),
-
-      // This week (using player creation, plays, etc — non-overlapping windows)
-      db.select({ count: sql<number>`count(*)::int` }).from(players)
-        .where(and(eq(players.merchantId, merchantId), gte(players.createdAt, oneWeekAgo))),
-      db.select({ count: sql<number>`count(*)::int` }).from(gamePlays)
-        .where(and(eq(gamePlays.merchantId, merchantId), gte(gamePlays.playedAt, oneWeekAgo))),
-      db.select({ count: sql<number>`coalesce(sum(jsonb_array_length(${gamePlays.completedActions})), 0)::int` }).from(gamePlays)
-        .where(and(eq(gamePlays.merchantId, merchantId), gte(gamePlays.playedAt, oneWeekAgo))),
-      db.select({ count: sql<number>`count(*)::int` }).from(coupons)
-        .where(and(eq(coupons.merchantId, merchantId), eq(coupons.status, 'redeemed'), gte(coupons.redeemedAt, oneWeekAgo))),
-
-      // Previous week (days 7–14 ago — strictly prior, not cumulative)
-      db.select({ count: sql<number>`count(*)::int` }).from(players)
-        .where(and(eq(players.merchantId, merchantId), gte(players.createdAt, twoWeeksAgo), lt(players.createdAt, oneWeekAgo))),
-      db.select({ count: sql<number>`count(*)::int` }).from(gamePlays)
-        .where(and(eq(gamePlays.merchantId, merchantId), gte(gamePlays.playedAt, twoWeeksAgo), lt(gamePlays.playedAt, oneWeekAgo))),
-      db.select({ count: sql<number>`coalesce(sum(jsonb_array_length(${gamePlays.completedActions})), 0)::int` }).from(gamePlays)
-        .where(and(eq(gamePlays.merchantId, merchantId), gte(gamePlays.playedAt, twoWeeksAgo), lt(gamePlays.playedAt, oneWeekAgo))),
-      db.select({ count: sql<number>`count(*)::int` }).from(coupons)
-        .where(and(eq(coupons.merchantId, merchantId), eq(coupons.status, 'redeemed'), gte(coupons.redeemedAt, twoWeeksAgo), lt(coupons.redeemedAt, oneWeekAgo))),
-
-      // Funnel (lifetime)
-      db.select({ count: sql<number>`count(*)::int` }).from(players)
-        .where(eq(players.merchantId, merchantId)),
-      db.select({ count: sql<number>`count(*)::int` }).from(gamePlays)
-        .where(eq(gamePlays.merchantId, merchantId)),
-      db.select({ count: sql<number>`count(*)::int` }).from(gamePlays)
-        .where(and(eq(gamePlays.merchantId, merchantId), eq(gamePlays.result, 'win'))),
-      db.select({ count: sql<number>`count(*)::int` }).from(coupons)
-        .where(and(eq(coupons.merchantId, merchantId), eq(coupons.status, 'redeemed'))),
+      db.select({ count: sql<number>`count(*)::int` }).from(players).where(playerScope),
+      db.select({ count: sql<number>`count(*)::int` }).from(gamePlays).where(playScope),
+      db.select({
+        count: sql<number>`coalesce(sum(jsonb_array_length(${gamePlays.completedActions})), 0)::int`,
+      }).from(gamePlays).where(playScope),
+      db.select({ count: sql<number>`count(*)::int` }).from(coupons).where(redeemedScope),
+      db.select({ count: sql<number>`count(*)::int` }).from(players).where(playerScope),
+      db.select({ count: sql<number>`count(*)::int` }).from(gamePlays).where(playScope),
+      db.select({ count: sql<number>`count(*)::int` }).from(gamePlays).where(winScope),
+      db.select({ count: sql<number>`count(*)::int` }).from(coupons).where(redeemedScope),
     ])
 
-    const lifetimePlayers = lifetimePlayersResult[0]?.count ?? 0
-    const lifetimePlays = lifetimePlaysResult[0]?.count ?? 0
-    const lifetimeActions = lifetimeActionsResult[0]?.count ?? 0
-    const lifetimeRedeemed = lifetimeRedeemedResult[0]?.count ?? 0
+    // ── Prior period counts (only when comparing makes sense) ────────
+    let prevPlayers = 0,
+      prevPlays = 0,
+      prevActions = 0,
+      prevRedeemed = 0
+    if (priorStart && priorEnd) {
+      const playerPriorScope = and(
+        eq(players.merchantId, merchantId),
+        gte(players.createdAt, priorStart),
+        lt(players.createdAt, priorEnd),
+      )
+      const playPriorScope = and(
+        eq(gamePlays.merchantId, merchantId),
+        gte(gamePlays.playedAt, priorStart),
+        lt(gamePlays.playedAt, priorEnd),
+      )
+      const redeemedPriorScope = and(
+        eq(coupons.merchantId, merchantId),
+        eq(coupons.status, 'redeemed'),
+        gte(coupons.redeemedAt, priorStart),
+        lt(coupons.redeemedAt, priorEnd),
+      )
+      const [r1, r2, r3, r4] = await Promise.all([
+        db.select({ count: sql<number>`count(*)::int` }).from(players).where(playerPriorScope),
+        db.select({ count: sql<number>`count(*)::int` }).from(gamePlays).where(playPriorScope),
+        db.select({
+          count: sql<number>`coalesce(sum(jsonb_array_length(${gamePlays.completedActions})), 0)::int`,
+        }).from(gamePlays).where(playPriorScope),
+        db.select({ count: sql<number>`count(*)::int` }).from(coupons).where(redeemedPriorScope),
+      ])
+      prevPlayers = r1[0]?.count ?? 0
+      prevPlays = r2[0]?.count ?? 0
+      prevActions = r3[0]?.count ?? 0
+      prevRedeemed = r4[0]?.count ?? 0
+    }
 
-    const thisWeekPlayers = thisWeekPlayersResult[0]?.count ?? 0
-    const thisWeekPlays = thisWeekPlaysResult[0]?.count ?? 0
-    const thisWeekActions = thisWeekActionsResult[0]?.count ?? 0
-    const thisWeekRedeemed = thisWeekRedeemedResult[0]?.count ?? 0
+    const curPlayers = curPlayersResult[0]?.count ?? 0
+    const curPlays = curPlaysResult[0]?.count ?? 0
+    const curActions = curActionsResult[0]?.count ?? 0
+    const curRedeemed = curRedeemedResult[0]?.count ?? 0
 
-    const prevWeekPlayers = prevWeekPlayersResult[0]?.count ?? 0
-    const prevWeekPlays = prevWeekPlaysResult[0]?.count ?? 0
-    const prevWeekActions = prevWeekActionsResult[0]?.count ?? 0
-    const prevWeekRedeemed = prevWeekRedeemedResult[0]?.count ?? 0
-
-    // Strict week-over-week change %. Both inputs are non-overlapping
-    // counts (this 7-day window vs the previous 7-day window).
+    // Change %. For 'all', skip the comparison entirely — there's no
+    // "previous all-time", so the UI gets an empty string and renders
+    // no trend arrow.
     function changePercent(current: number, previous: number): string {
+      if (period === 'all') return ''
       if (previous === 0 && current === 0) return '0%'
       if (previous === 0) return '+100%'
       const pct = Math.round(((current - previous) / previous) * 100)
       return pct >= 0 ? `+${pct}%` : `${pct}%`
     }
 
-    // ── Funnel — lifetime, ordered Players → Plays → Wins → Redeemed ──
+    // ── Funnel (period-scoped) — Players → Plays → Wins → Redeemed ──
     const funnelPlayers = funnelPlayersResult[0]?.count ?? 0
     const funnelPlays = funnelPlaysResult[0]?.count ?? 0
     const funnelWins = funnelWinsResult[0]?.count ?? 0
     const funnelRedeemed = funnelRedeemedResult[0]?.count ?? 0
     const funnelMax = Math.max(funnelPlayers, funnelPlays, funnelWins, funnelRedeemed, 1)
 
-    // ── Top actions: SUM of completedActions arrays by type ──
+    // ── Top actions: SUM of completedActions arrays by type (period-scoped) ──
     const actionRows = await db
       .select({ completedActions: gamePlays.completedActions })
       .from(gamePlays)
-      .where(eq(gamePlays.merchantId, merchantId))
+      .where(playScope)
 
     const actionCounts: Record<string, number> = {}
     let totalActionCount = 0
@@ -260,9 +305,8 @@ statsRouter.get('/analytics', async (c) => {
       }))
 
     // ── Prize popularity — count actual WINS from gamePlays, joined to
-    // prizes for the current name. This was previously counted from
-    // coupons, which under-counted because winners who never registered
-    // don't have coupon rows after the recent refactor.
+    // prizes for the current name. Period-scoped via winScope so the
+    // selected period filter applies here too.
     const prizeWinRows = await db
       .select({
         prizeId: gamePlays.prizeId,
@@ -272,12 +316,7 @@ statsRouter.get('/analytics', async (c) => {
       })
       .from(gamePlays)
       .leftJoin(prizes, eq(gamePlays.prizeId, prizes.id))
-      .where(
-        and(
-          eq(gamePlays.merchantId, merchantId),
-          eq(gamePlays.result, 'win'),
-        ),
-      )
+      .where(winScope)
       .groupBy(gamePlays.prizeId, prizes.name, prizes.emoji)
 
     const totalPrizeCount = prizeWinRows.reduce((sum, r) => sum + r.count, 0)
@@ -331,16 +370,17 @@ statsRouter.get('/analytics', async (c) => {
     return c.json({
       success: true,
       data: {
+        period,
         kpis: {
-          // Big numbers shown on the KPI cards (lifetime totals)
-          totalPlayers: lifetimePlayers,
-          totalPlayersChange: changePercent(thisWeekPlayers, prevWeekPlayers),
-          gamesPlayed: lifetimePlays,
-          gamesPlayedChange: changePercent(thisWeekPlays, prevWeekPlays),
-          actionsCompleted: lifetimeActions,
-          actionsCompletedChange: changePercent(thisWeekActions, prevWeekActions),
-          couponsRedeemed: lifetimeRedeemed,
-          couponsRedeemedChange: changePercent(thisWeekRedeemed, prevWeekRedeemed),
+          // KPI numbers for the selected period (or lifetime when period='all').
+          totalPlayers: curPlayers,
+          totalPlayersChange: changePercent(curPlayers, prevPlayers),
+          gamesPlayed: curPlays,
+          gamesPlayedChange: changePercent(curPlays, prevPlays),
+          actionsCompleted: curActions,
+          actionsCompletedChange: changePercent(curActions, prevActions),
+          couponsRedeemed: curRedeemed,
+          couponsRedeemedChange: changePercent(curRedeemed, prevRedeemed),
         },
         funnel: [
           { label: 'Unique Players', value: funnelPlayers, percentage: Math.round((funnelPlayers / funnelMax) * 100) },

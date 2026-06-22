@@ -69,7 +69,7 @@ export default function AnalyticsPage() {
       setLoading(true)
       setError(null)
       try {
-        const result = await fetchAnalytics(merchantId)
+        const result = await fetchAnalytics(merchantId, period)
         if (!cancelled) setData(result)
       } catch (err) {
         if (!cancelled) {
@@ -250,9 +250,11 @@ export default function AnalyticsPage() {
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {kpiCards.map((kpi) => {
           const Icon = kpi.Icon
-          const isPositive = kpi.change.startsWith('+')
-          const isNegative = kpi.change.startsWith('-')
-          const isNeutral = !isPositive && !isNegative
+          // Empty change ('') means the period doesn't have a meaningful
+          // prior comparison (e.g. 'all time'). Skip the trend row entirely.
+          const hasChange = kpi.change.length > 0
+          const isPositive = hasChange && kpi.change.startsWith('+')
+          const isNegative = hasChange && kpi.change.startsWith('-')
 
           return (
             <Card key={kpi.title} className="transition-shadow hover:shadow-md">
@@ -269,22 +271,23 @@ export default function AnalyticsPage() {
                   <div className="mt-1 truncate text-3xl font-bold tabular-nums tracking-tight text-foreground">
                     <AnimatedNumber value={kpi.value} />
                   </div>
-                  <div className="mt-1 flex items-center gap-1">
-                    {isPositive && <ArrowUpRight className="h-3 w-3 shrink-0 text-emerald-600" />}
-                    {isNegative && <ArrowDownRight className="h-3 w-3 shrink-0 text-destructive" />}
-                    <span
-                      className={`truncate text-xs font-medium ${
-                        isPositive
-                          ? 'text-emerald-600'
-                          : isNegative
-                            ? 'text-destructive'
-                            : 'text-muted-foreground'
-                      }`}
-                    >
-                      {kpi.change}
-                      {isNeutral ? '' : ' vs last period'}
-                    </span>
-                  </div>
+                  {hasChange && (
+                    <div className="mt-1 flex items-center gap-1">
+                      {isPositive && <ArrowUpRight className="h-3 w-3 shrink-0 text-emerald-600" />}
+                      {isNegative && <ArrowDownRight className="h-3 w-3 shrink-0 text-destructive" />}
+                      <span
+                        className={`truncate text-xs font-medium ${
+                          isPositive
+                            ? 'text-emerald-600'
+                            : isNegative
+                              ? 'text-destructive'
+                              : 'text-muted-foreground'
+                        }`}
+                      >
+                        {kpi.change} vs previous {period === 'today' ? 'day' : period}
+                      </span>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
