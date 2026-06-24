@@ -1322,7 +1322,9 @@ body {
   padding: 0.9rem 1.5rem;
   border: none;
   border-radius: var(--radius-sm);
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  /* Was hardcoded indigo → purple; now follows the active palette so
+     it respects the merchant's atmosphere (incl. custom colours). */
+  background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
   color: #fff;
   font-size: 1.15rem;
   font-weight: 700;

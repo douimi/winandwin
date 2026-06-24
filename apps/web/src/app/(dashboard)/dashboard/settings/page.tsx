@@ -51,6 +51,14 @@ export default function SettingsPage() {
   const [atmosphere, setAtmosphere] = useState('joyful')
   const [savingAtmosphere, setSavingAtmosphere] = useState(false)
 
+  // Custom-colour palette (3-stop). These are independent of the
+  // merchant brand primary/secondary and only take effect when the
+  // atmosphere is 'custom'.
+  const [customColor1, setCustomColor1] = useState('#dc2626')
+  const [customColor2, setCustomColor2] = useState('#0a0a0a')
+  const [customColor3, setCustomColor3] = useState('#f59e0b')
+  const [savingCustomColors, setSavingCustomColors] = useState(false)
+
   const loadMerchant = useCallback(async () => {
     if (!merchantId) {
       setLoading(false)
@@ -77,6 +85,9 @@ export default function SettingsPage() {
       setShowName((merchant as unknown as Record<string, boolean>).showName !== false)
       setLanguage(((merchant as unknown as Record<string, string>).language as 'en' | 'fr' | 'es' | 'ar') ?? 'en')
       setAtmosphere((merchant as unknown as Record<string, string>).atmosphere ?? 'joyful')
+      setCustomColor1((merchant as unknown as Record<string, string>).customColor1 ?? '#dc2626')
+      setCustomColor2((merchant as unknown as Record<string, string>).customColor2 ?? '#0a0a0a')
+      setCustomColor3((merchant as unknown as Record<string, string>).customColor3 ?? '#f59e0b')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load settings')
     } finally {
@@ -547,41 +558,67 @@ export default function SettingsPage() {
             <div className="mt-4 rounded-xl border border-primary/20 bg-primary/5 p-4">
               <p className="text-sm font-medium mb-3">Choose your 3 custom colors:</p>
               <div className="grid gap-3 sm:grid-cols-3">
-                {[
-                  { label: 'Primary', key: 'customColor1' as const, value: primaryColor || '#6366f1' },
-                  { label: 'Secondary', key: 'customColor2' as const, value: secondaryColor || '#ec4899' },
-                  { label: 'Accent', key: 'customColor3' as const, value: '#f59e0b' },
-                ].map((color) => (
-                  <div key={color.key} className="space-y-1">
+                {(
+                  [
+                    { label: 'Primary', value: customColor1, set: setCustomColor1 },
+                    { label: 'Secondary', value: customColor2, set: setCustomColor2 },
+                    { label: 'Accent', value: customColor3, set: setCustomColor3 },
+                  ] as const
+                ).map((color) => (
+                  <div key={color.label} className="space-y-1">
                     <Label className="text-xs">{color.label}</Label>
                     <div className="flex gap-2">
                       <input
                         type="color"
-                        defaultValue={color.value}
-                        onChange={async (e) => {
-                          if (!merchantId) return
-                          await updateMerchant(merchantId, { [color.key]: e.target.value } as Record<string, unknown>)
-                        }}
+                        value={color.value}
+                        onChange={(e) => color.set(e.target.value)}
                         className="h-9 w-12 cursor-pointer rounded border"
                       />
                       <Input
-                        defaultValue={color.value}
-                        className="flex-1 font-mono text-xs"
-                        readOnly
+                        value={color.value}
+                        onChange={(e) => color.set(e.target.value)}
+                        className="flex-1 font-mono text-xs uppercase"
                       />
                     </div>
                   </div>
                 ))}
               </div>
+
+              {/* Live preview — three swatches blended together so you can
+                  eyeball the palette before saving. */}
+              <div className="mt-3 flex items-center gap-2">
+                <span className="text-xs text-muted-foreground">Preview:</span>
+                <div
+                  className="h-6 flex-1 rounded-md border border-border"
+                  style={{
+                    background: `linear-gradient(135deg, ${customColor1} 0%, ${customColor2} 50%, ${customColor3} 100%)`,
+                  }}
+                />
+              </div>
+
               <Button
                 className="mt-3"
                 size="sm"
+                disabled={savingCustomColors}
                 onClick={async () => {
                   if (!merchantId) return
-                  showSuccess('Custom colors saved!')
+                  setSavingCustomColors(true)
+                  setError(null)
+                  try {
+                    await updateMerchant(merchantId, {
+                      customColor1,
+                      customColor2,
+                      customColor3,
+                    })
+                    showSuccess('Custom colors saved! Reload the player page to see them.')
+                  } catch (err) {
+                    setError(err instanceof Error ? err.message : 'Failed to save custom colors')
+                  } finally {
+                    setSavingCustomColors(false)
+                  }
                 }}
               >
-                Save Custom Colors
+                {savingCustomColors ? 'Saving…' : 'Save Custom Colors'}
               </Button>
             </div>
           )}

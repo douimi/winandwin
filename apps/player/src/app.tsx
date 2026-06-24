@@ -188,12 +188,22 @@ export function App() {
     [config?.merchantCategory],
   )
 
-  // Apply atmosphere theme + branding colors from config
+  // Apply atmosphere theme + branding colors from config.
+  // When the merchant has picked the 'custom' atmosphere, their three
+  // custom colors take over --primary/--secondary so the spin button,
+  // gradients, and any other surfaces tied to those tokens follow the
+  // chosen palette instead of the (possibly stale) merchant brand
+  // colors. Previously --primary was always merchantBrand.primaryColor,
+  // which is why setting a red/black custom atmosphere still left blue
+  // accents on the page.
   useEffect(() => {
     if (!config) return
     const root = document.documentElement
-    root.style.setProperty('--primary', config.game.branding.primaryColor)
-    root.style.setProperty('--secondary', config.game.branding.secondaryColor)
+    const isCustom = config.atmosphere === 'custom' && !!config.customColors
+    const primary = isCustom ? config.customColors!.c1 : config.game.branding.primaryColor
+    const secondary = isCustom ? config.customColors!.c2 : config.game.branding.secondaryColor
+    root.style.setProperty('--primary', primary)
+    root.style.setProperty('--secondary', secondary)
     // Apply atmosphere as the main background instead of simple gradient
     applyAtmosphereTheme(theme)
     root.style.setProperty('--bg', theme.bgGradient)
@@ -201,9 +211,9 @@ export function App() {
     root.style.setProperty('--text-muted', theme.secondaryText)
     root.style.setProperty('--card-bg', theme.cardBg)
     root.style.setProperty('--card-border', theme.cardBorder)
-    // Update theme-color meta tag
+    // Update theme-color meta tag — also follows the active palette
     const meta = document.querySelector('meta[name="theme-color"]')
-    if (meta) meta.setAttribute('content', config.game.branding.primaryColor)
+    if (meta) meta.setAttribute('content', primary)
   }, [config, theme])
 
   // Initialize: generate fingerprint, fetch config, fetch player state
