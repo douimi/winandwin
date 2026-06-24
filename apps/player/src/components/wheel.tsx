@@ -124,6 +124,51 @@ function lighten(color: string, amount = 0.3): string {
   return color
 }
 
+// Wrap a long label across up to 2 lines, splitting on whitespace at the
+// most balanced word boundary. Single long words fall back to truncation
+// with an ellipsis. Each resulting line is also capped so a single word
+// longer than the wedge can't overflow.
+function splitLabel(name: string, maxLineLen = 14): string[] {
+  const trimmed = name.trim()
+  if (trimmed.length <= maxLineLen) return [trimmed]
+
+  const words = trimmed.split(/\s+/)
+  if (words.length === 1) {
+    return [trimmed.slice(0, maxLineLen - 1) + '…']
+  }
+
+  // Find the split point that minimises the difference between the two
+  // line lengths — keeps the text block visually centred.
+  let bestSplit = 1
+  let bestDiff = Number.POSITIVE_INFINITY
+  for (let i = 1; i < words.length; i++) {
+    const left = words.slice(0, i).join(' ').length
+    const right = words.slice(i).join(' ').length
+    const diff = Math.abs(left - right)
+    if (diff < bestDiff) {
+      bestDiff = diff
+      bestSplit = i
+    }
+  }
+
+  let line1 = words.slice(0, bestSplit).join(' ')
+  let line2 = words.slice(bestSplit).join(' ')
+  if (line1.length > maxLineLen) line1 = line1.slice(0, maxLineLen - 1) + '…'
+  if (line2.length > maxLineLen) line2 = line2.slice(0, maxLineLen - 1) + '…'
+  return [line1, line2]
+}
+
+// Scale the font down as labels get longer so they fit the wedge width.
+// Try-again segments are always small + italic (their text is short).
+function labelFontSize(name: string, isPrize: boolean): number {
+  if (!isPrize) return 10
+  const len = name.trim().length
+  if (len <= 10) return 14
+  if (len <= 16) return 12
+  if (len <= 24) return 11
+  return 10
+}
+
 function darken(color: string, amount = 0.25): string {
   if (color.startsWith('#')) {
     const c = color.replace('#', '')
@@ -288,10 +333,14 @@ export function Wheel({ prizes, branding, onSpinComplete, spinning, onSpin, targ
               const emojiX = CENTER + emojiR * Math.cos(midAngleRad)
               const emojiY = CENTER + emojiR * Math.sin(midAngleRad)
 
-              // Wedges are wider now (no interleaved try-agains), so the label
-              // can breathe a bit. Still truncates on very long prize names.
-              const maxChars = seg.isPrize ? 14 : 12
-              const nameStr = seg.name.length > maxChars ? `${seg.name.slice(0, maxChars - 1)}…` : seg.name
+              // Multi-line labels prevent long names like "Dessert Délice
+              // Framboise" from overflowing into the neighbouring wedge.
+              const lines = splitLabel(seg.name)
+              const fontSize = labelFontSize(seg.name, seg.isPrize)
+              const lineSpacing = fontSize * 1.1
+              const labelFill = seg.isPrize
+                ? wheelText || '#fff'
+                : wheelText || 'rgba(255,255,255,0.65)'
 
               return (
                 <g key={seg.id}>
@@ -310,20 +359,30 @@ export function Wheel({ prizes, branding, onSpinComplete, spinning, onSpin, targ
                       {seg.emoji}
                     </text>
                   )}
-                  <text
-                    x={labelX} y={labelY}
-                    text-anchor="middle" dominant-baseline="central"
-                    fill={seg.isPrize ? (wheelText || '#fff') : `${wheelText || 'rgba(255,255,255,0.6)'}`}
-                    font-size={seg.isPrize ? '13' : '10'}
-                    font-weight={seg.isPrize ? '800' : '500'}
-                    font-style={seg.isPrize ? 'normal' : 'italic'}
-                    stroke={seg.isPrize ? 'rgba(0,0,0,0.4)' : 'none'}
-                    stroke-width={seg.isPrize ? '0.3' : '0'}
-                    paint-order="stroke"
-                    transform={`rotate(${textRot}, ${labelX}, ${labelY})`}
-                  >
-                    {nameStr}
-                  </text>
+                  {lines.map((line, lineIdx) => {
+                    // Stack the lines around (labelX, labelY) in screen space;
+                    // they then rotate together as a block around the same pivot
+                    // so the entire label stays aligned with the wedge.
+                    const offset = (lineIdx - (lines.length - 1) / 2) * lineSpacing
+                    const lineY = labelY + offset
+                    return (
+                      <text
+                        key={`label-${i}-${lineIdx}`}
+                        x={labelX} y={lineY}
+                        text-anchor="middle" dominant-baseline="central"
+                        fill={labelFill}
+                        font-size={fontSize}
+                        font-weight={seg.isPrize ? '800' : '500'}
+                        font-style={seg.isPrize ? 'normal' : 'italic'}
+                        stroke={seg.isPrize ? 'rgba(0,0,0,0.4)' : 'none'}
+                        stroke-width={seg.isPrize ? '0.3' : '0'}
+                        paint-order="stroke"
+                        transform={`rotate(${textRot}, ${labelX}, ${labelY})`}
+                      >
+                        {line}
+                      </text>
+                    )
+                  })}
                 </g>
               )
             })}
