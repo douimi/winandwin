@@ -902,22 +902,19 @@ body {
 
 .wheel-wrapper {
   position: relative;
-  width: 330px;
-  height: 330px;
+  /* Fill the available width — 92vw on mobile up to a 420px cap. The
+     wedges get noticeably larger and labels/emojis have more breathing
+     room. */
+  width: min(92vw, 420px);
+  height: min(92vw, 420px);
   filter: drop-shadow(0 8px 30px rgba(0, 0, 0, 0.3));
 }
 
-@media (min-width: 400px) {
+/* Tablet and up — give the wheel more presence on bigger screens. */
+@media (min-width: 600px) {
   .wheel-wrapper {
-    width: 350px;
-    height: 350px;
-  }
-}
-
-@media (max-width: 360px) {
-  .wheel-wrapper {
-    width: 290px;
-    height: 290px;
+    width: min(80vw, 500px);
+    height: min(80vw, 500px);
   }
 }
 
@@ -2334,7 +2331,8 @@ button:active {
 }
 .immersive-wheel-screen .wheel-container {
   width: 100%;
-  max-width: 360px;
+  /* Was 360px — capped the wheel even when the wrapper could grow. */
+  max-width: 540px;
   margin: 0 auto;
 }
 
