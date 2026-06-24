@@ -32,8 +32,14 @@ export interface WheelSegment {
 }
 
 /**
- * Build display segments: interleave real prizes with "Try Again" segments.
- * This ensures the wheel always has somewhere to land on a loss.
+ * Build display segments: one wedge per prize + a SINGLE muted "Try Again"
+ * wedge. Previous behaviour interleaved a "Try Again" after every prize,
+ * which produced 2× the wedge count, made labels overlap, and repeated
+ * the same "Try Again" text 5+ times — the issue merchants reported.
+ *
+ * For 1-prize games the prize is duplicated so the wheel doesn't look
+ * like a coin-flip; for everything else the "Try Again" wedge is enough
+ * for losses to land on while keeping the visual clean.
  */
 export function buildWheelSegments(
   prizes: { id: string; name: string; emoji?: string }[],
@@ -43,37 +49,24 @@ export function buildWheelSegments(
   if (prizes.length === 0) return []
 
   const segments: WheelSegment[] = []
-  // Ensure minimum 6 segments for visual appeal
-  const tryAgainCount = Math.max(prizes.length, 3)
-
-  for (let i = 0; i < prizes.length; i++) {
-    // Prize segment
-    segments.push({ ...prizes[i]!, isPrize: true })
-    // "Try Again" segment after each prize
-    segments.push({
-      id: `try-again-${i}`,
-      name: tryAgainText,
-      emoji: tryAgainEmoji,
-      isPrize: false,
-    })
+  for (const prize of prizes) {
+    segments.push({ ...prize, isPrize: true })
   }
 
-  // If only 1 prize (2 segments), pad to at least 6
-  while (segments.length < 6) {
-    const idx = segments.length
-    if (idx % 2 === 0) {
-      // Duplicate prize display (but it's just visual)
-      const prizeIdx = Math.floor((idx / 2) % prizes.length)
-      segments.push({ ...prizes[prizeIdx]!, id: `dup-${idx}`, isPrize: true })
-    } else {
-      segments.push({
-        id: `try-again-extra-${idx}`,
-        name: tryAgainText,
-        emoji: tryAgainEmoji,
-        isPrize: false,
-      })
-    }
+  // 1-prize edge case: duplicate the prize so the wheel feels like a
+  // wheel and not a binary toggle.
+  if (prizes.length === 1) {
+    segments.push({ ...prizes[0]!, id: `${prizes[0]!.id}-dup`, isPrize: true })
   }
+
+  // Exactly one "Try Again" wedge — visually muted (handled by segmentColor)
+  // and italic (handled in the label render path). Losses land here.
+  segments.push({
+    id: 'try-again',
+    name: tryAgainText,
+    emoji: tryAgainEmoji,
+    isPrize: false,
+  })
 
   return segments
 }
@@ -112,8 +105,11 @@ function segmentColor(index: number, isPrize: boolean, primary: string, secondar
     return atmosphereColors[index % atmosphereColors.length]!
   }
   if (!isPrize) return '#2d2d3d' // Dark muted for "Try Again"
+  // Was: index / 2 — that was tied to the old interleaved layout where
+  // adjacent prize+try-again pairs shared a colour. With one wedge per
+  // prize, use index directly so neighbouring prizes get distinct hues.
   const palette = [primary, secondary, '#f59e0b', '#10b981', '#8b5cf6', '#ef4444', '#06b6d4', '#f97316']
-  return palette[Math.floor(index / 2) % palette.length]!
+  return palette[index % palette.length]!
 }
 
 /** Lighten a hex/rgb color */
@@ -292,7 +288,10 @@ export function Wheel({ prizes, branding, onSpinComplete, spinning, onSpin, targ
               const emojiX = CENTER + emojiR * Math.cos(midAngleRad)
               const emojiY = CENTER + emojiR * Math.sin(midAngleRad)
 
-              const nameStr = seg.name.length > 10 ? `${seg.name.slice(0, 9)}...` : seg.name
+              // Wedges are wider now (no interleaved try-agains), so the label
+              // can breathe a bit. Still truncates on very long prize names.
+              const maxChars = seg.isPrize ? 14 : 12
+              const nameStr = seg.name.length > maxChars ? `${seg.name.slice(0, maxChars - 1)}…` : seg.name
 
               return (
                 <g key={seg.id}>
