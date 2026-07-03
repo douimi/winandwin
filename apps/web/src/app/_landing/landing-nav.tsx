@@ -30,10 +30,18 @@ export function LandingNav({ txt }: Props) {
           <a href="#contact" className="transition-colors hover:text-foreground">{txt.navContact}</a>
         </nav>
 
+        {/*
+          Optimistic render: assume the visitor is a NEW USER (Sign In +
+          Contact) and paint those buttons immediately. If the async auth
+          check later resolves to "logged in", swap to the Dashboard CTA
+          in place. Previously this whole block was gated on
+          `isLoggedIn === null` and rendered an animate-pulse skeleton
+          until /api/auth/check finished — that fetch hits a Node cold
+          start + a DB round-trip on the marketing page, which is what
+          the merchant was seeing as the slow "Sign In" button.
+        */}
         <div className="flex shrink-0 items-center gap-2" style={{ minWidth: 140 }}>
-          {isLoggedIn === null ? (
-            <div className="h-10 w-32 animate-pulse rounded-lg bg-muted" />
-          ) : isLoggedIn ? (
+          {isLoggedIn === true ? (
             <Link href="/dashboard" prefetch>
               <Button className="font-semibold">
                 {txt.myDashboard}

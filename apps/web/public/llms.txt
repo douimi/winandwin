@@ -1,0 +1,39 @@
+# Win & Win
+
+> Gamified customer-loyalty SaaS for restaurants, cafés, bars, gyms, salons and other brick-and-mortar businesses in Morocco, France and the wider EU. Every visit becomes a chance to spin, scratch or open a prize — behind a single QR code.
+
+Win & Win lets any physical business publish an interactive prize game (Wheel of Fortune, Slot Machine, or Mystery Box) accessible via a QR code placed on menus, table tents, receipts or storefronts. Before spinning, the customer completes a marketing action (Google review, Instagram follow, WhatsApp opt-in, email capture, and more), which turns walk-ins into measurable growth: reviews, followers, repeat visits, and captured leads.
+
+Coupons issued for winning plays are time-limited (activation delay + expiration configurable per prize) and can carry redemption conditions ("under condition of consumption", etc.). Coupons are delivered by email and validated in-store via a scannable QR code and a staff PIN.
+
+## Product
+
+- [Landing page](https://winandwin.club/): overview, features, pricing.
+- [How it works](https://winandwin.club/#how-it-works): 3-step setup (create game → share QR code → customers play & win).
+- [Games](https://winandwin.club/#games): Wheel of Fortune, Slot Machine, Mystery Box.
+- [Why merchants pick us](https://winandwin.club/#features): Google Reviews growth, Instagram follows, smart coupons, live analytics, device-fingerprint fraud protection, custom branding, multi-language.
+- [Pricing](https://winandwin.club/#plans): Starter 299 MAD/mo (500 plays/mo), Pro 599 MAD/mo (2,000 plays/mo), Enterprise custom.
+
+## Key facts
+
+- Founded and based in Casablanca, Morocco.
+- Live in under 10 minutes: create the game, download the QR code, place it in-store.
+- Supported languages on the customer-facing game: English, French, Spanish, Arabic.
+- All plans include a 14-day free trial. No credit card required to start.
+- 500+ businesses currently use the platform.
+- Coupons deliver a device-fingerprint-based fraud check to prevent multi-play from the same device.
+- Customer-facing player experience is a mobile web page — no app install required.
+
+## Common questions
+
+- Is there a free trial? — Yes, 14 days on every plan, no credit card required.
+- How long does setup take? — Under 10 minutes for most merchants.
+- What games can I offer? — Wheel of Fortune, Slot Machine, Mystery Box, each fully configurable (prize catalogue, per-prize win rate, per-prize daily/lifetime cap, brand colors, atmosphere).
+- How does it drive Google reviews? — Reviews (or Instagram follows, WhatsApp joins, TripAdvisor reviews, etc.) are the "ticket" a customer completes before the game unlocks.
+- Which regions do you serve? — Morocco (primary), France and the wider EU. All content is available in English and French.
+
+## Contact
+
+- Sign up / trial: https://winandwin.club/sign-up
+- Sales: https://winandwin.club/#contact
+- Documentation for the customer-facing experience: https://winandwin.club/#how-it-works
