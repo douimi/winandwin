@@ -1,3 +1,12 @@
+// Contact / WhatsApp — shared constants used by the contact section and the
+// floating WhatsApp button. `WHATSAPP_NUMBER_E164` is the raw E.164 form used
+// by wa.me; `WHATSAPP_DISPLAY` is the pretty version rendered on screen.
+export const WHATSAPP_NUMBER_E164 = '212628823717'
+export const WHATSAPP_DISPLAY = '+212 6 28 82 37 17'
+export const WHATSAPP_PREFILL =
+  'Bonjour, je souhaite plus d’informations sur Win & Win.'
+export const WHATSAPP_URL = `https://wa.me/${WHATSAPP_NUMBER_E164}?text=${encodeURIComponent(WHATSAPP_PREFILL)}`
+
 // Landing-page copy. Original two-language scaffold is preserved here so
 // future toggle work can re-enable FR without re-extracting strings.
 export const LANDING_TEXT = {

@@ -7,6 +7,7 @@ import { LandingFeatures } from './_landing/landing-features'
 import { LandingPlans } from './_landing/landing-plans'
 import { LandingContact } from './_landing/landing-contact'
 import { LandingFooter } from './_landing/landing-footer'
+import { LandingWhatsAppFab } from './_landing/landing-whatsapp-fab'
 
 export default function HomePage() {
   const txt = LANDING_TEXT.en
@@ -23,6 +24,7 @@ export default function HomePage() {
         <LandingContact txt={txt} />
       </main>
       <LandingFooter txt={txt} />
+      <LandingWhatsAppFab />
     </div>
   )
 }
