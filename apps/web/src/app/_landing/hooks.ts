@@ -3,67 +3,76 @@
 import { useEffect, useRef, useState } from 'react'
 
 // Tracks whether the current visitor has an active session, used by the nav
-// to swap "Sign in / Contact" for "My Dashboard".
+// to swap "Sign In / Contact" for "My Dashboard".
 //
-// The nav renders the "Sign In" state optimistically (see landing-nav.tsx),
-// so this hook only needs to fetch quickly enough to correct the render for
-// signed-in users. Two optimisations vs. the previous fetch:
-//   1. Read a client-visible marker cookie first — if it's absent we KNOW
-//      the visitor isn't logged in and can skip the network round-trip
-//      entirely. Cookie name matches the marker set by
-//      /api/auth/check on the last successful session read.
-//   2. sessionStorage cache the result for the tab — repeat page loads
-//      inside the same session don't re-fetch.
+// The nav renders the anon-user CTAs optimistically (see landing-nav.tsx),
+// so this hook only needs to correct the render for signed-in visitors.
+//
+// Caching strategy: we ONLY cache the `true` state in sessionStorage.
+// - When a logged-in visitor comes back to the landing (e.g. via the logo
+//   link from /dashboard, or a browser back after signing in), the cached
+//   `true` makes the nav paint the Dashboard button on the very first
+//   render — no flash of "Sign In".
+// - We never cache `false` because that was the bug in the previous
+//   version: a stale `false` from an earlier anon visit would win, and
+//   even after logging in, the landing would keep showing "Sign In".
+// - We also always re-verify with the server in the background so that
+//   if the cached `true` is stale (session expired, logged out from
+//   another tab), we correct the nav.
+//
+// Bonus: pageshow listener catches bfcache restores (browser back / forward
+// navigation), so the nav updates without a hard refresh.
 const CACHE_KEY = 'winandwin_auth_state_v1'
 
 function readCache(): boolean | null {
   if (typeof window === 'undefined') return null
   try {
-    const raw = sessionStorage.getItem(CACHE_KEY)
-    if (raw === '1') return true
-    if (raw === '0') return false
+    return sessionStorage.getItem(CACHE_KEY) === '1' ? true : null
+  } catch {
+    return null
+  }
+}
+
+function writeCache(loggedIn: boolean) {
+  try {
+    if (loggedIn) sessionStorage.setItem(CACHE_KEY, '1')
+    else sessionStorage.removeItem(CACHE_KEY)
   } catch { /* ignore */ }
-  return null
-}
-
-function writeCache(v: boolean) {
-  try { sessionStorage.setItem(CACHE_KEY, v ? '1' : '0') } catch { /* ignore */ }
-}
-
-function hasSessionCookie(): boolean {
-  if (typeof document === 'undefined') return false
-  const c = document.cookie
-  // better-auth stores session_data (non-httpOnly) alongside session_token.
-  // Presence of either is a strong signal the visitor has an active session.
-  return /(?:^|;\s*)better-auth\.session_data=/.test(c) ||
-    /(?:^|;\s*)better-auth\.session_token=/.test(c)
 }
 
 export function useIsLoggedIn() {
   const [loggedIn, setLoggedIn] = useState<boolean | null>(() => readCache())
 
   useEffect(() => {
-    // Fast path: no session cookie → definitely logged out. Skip the
-    // network entirely. This turns the common (anonymous visitor) case
-    // into a zero-latency check.
-    if (!hasSessionCookie()) {
-      writeCache(false)
-      setLoggedIn(false)
-      return
-    }
+    let cancelled = false
 
-    // Cookie is present — verify with the server. Result is cached for
-    // subsequent renders within the same tab.
-    fetch('/api/auth/check', { credentials: 'include' })
-      .then((r) => r.json())
-      .then((data: { authenticated: boolean }) => {
+    async function check() {
+      try {
+        const res = await fetch('/api/auth/check', { credentials: 'include' })
+        const data = (await res.json()) as { authenticated: boolean }
+        if (cancelled) return
         writeCache(data.authenticated)
         setLoggedIn(data.authenticated)
-      })
-      .catch(() => {
+      } catch {
+        if (cancelled) return
         writeCache(false)
         setLoggedIn(false)
-      })
+      }
+    }
+
+    check()
+
+    // Re-check when the page is restored from bfcache (browser back /
+    // forward after signing in on another route).
+    function onPageShow(e: PageTransitionEvent) {
+      if (e.persisted) check()
+    }
+    window.addEventListener('pageshow', onPageShow)
+
+    return () => {
+      cancelled = true
+      window.removeEventListener('pageshow', onPageShow)
+    }
   }, [])
 
   return loggedIn
