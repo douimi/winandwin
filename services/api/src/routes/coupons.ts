@@ -168,20 +168,18 @@ couponsRouter.post('/:id/redeem', async (c) => {
       )
     }
 
-    // Check validity window
+    // Only the expiration cutoff matters for the merchant admin action.
+    // We intentionally DON'T check validFrom (the activation-delay window)
+    // — that check exists on the customer-facing /validate/:code + PIN
+    // flow, where it prevents a customer from redeeming before the
+    // configured delay. But the merchant is physically with the customer
+    // when they click Redeem, so blocking them because "the coupon
+    // technically activates in 4 hours" would just leave staff staring
+    // at a silent 400 error (as a merchant reported).
     const now = new Date()
-    if (now < couponData.validFrom) {
-      return c.json(
-        {
-          success: false,
-          error: { code: 'NOT_YET_VALID', message: 'Coupon is not yet valid' },
-        },
-        400,
-      )
-    }
 
     if (now > couponData.validUntil) {
-      // Mark as expired
+      // Mark as expired so the list reflects the truth going forward.
       await db
         .update(coupons)
         .set({ status: 'expired' })

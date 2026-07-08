@@ -1,7 +1,7 @@
 'use client'
 
 import { Button, Card, CardContent, CardHeader, CardTitle } from '@winandwin/ui'
-import { Download, Lock, Ticket } from 'lucide-react'
+import { AlertTriangle, CheckCircle2, Download, Lock, Ticket, X } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   fetchCoupons,
@@ -16,6 +16,12 @@ import {
 } from '@/lib/api'
 import { useMerchantId, useMerchantTier } from '@/lib/merchant-context'
 import { hasFeature } from '@/lib/tier-features'
+
+// Confirmation dialog state — which coupon and which action to run.
+type ConfirmAction = { kind: 'redeem' | 'revoke'; coupon: CouponWithDetails } | null
+
+// Floating toast state — auto-dismisses after 4 seconds.
+type Toast = { kind: 'success' | 'error'; message: string } | null
 
 const STATUS_BADGE: Record<string, string> = {
   active: 'bg-green-100 text-green-800',
@@ -66,6 +72,17 @@ export default function CouponsPage() {
   const [error, setError] = useState<string | null>(null)
   const [actionLoading, setActionLoading] = useState<string | null>(null)
   const [exportLoading, setExportLoading] = useState(false)
+
+  const [confirm, setConfirm] = useState<ConfirmAction>(null)
+  const [toast, setToast] = useState<Toast>(null)
+
+  // Auto-dismiss the toast after 4 s. A separate useEffect (not a
+  // setTimeout in setToast) so back-to-back toasts reset the timer.
+  useEffect(() => {
+    if (!toast) return
+    const t = setTimeout(() => setToast(null), 4000)
+    return () => clearTimeout(t)
+  }, [toast])
 
   // Debounce search input
   useEffect(() => {
@@ -126,25 +143,49 @@ export default function CouponsPage() {
     return <span className="ml-1 text-primary text-xs">{sortDir === 'asc' ? '↑' : '↓'}</span>
   }
 
-  async function handleRedeem(couponId: string) {
-    setActionLoading(couponId)
-    try {
-      await redeemCoupon(couponId)
-      await Promise.all([loadCoupons(), loadStats()])
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to redeem coupon')
-    } finally {
-      setActionLoading(null)
-    }
+  // Optimistically flip a single row's status so the merchant sees
+  // immediate feedback next to the button they just tapped. If the API
+  // rejects the change we restore the previous state.
+  function patchCouponStatus(couponId: string, next: CouponWithDetails['status']) {
+    setPageData((prev) => {
+      if (!prev) return prev
+      return {
+        ...prev,
+        data: prev.data.map((c) =>
+          c.id === couponId
+            ? { ...c, status: next, redeemedAt: next === 'redeemed' ? new Date().toISOString() : c.redeemedAt }
+            : c,
+        ),
+      }
+    })
   }
 
-  async function handleRevoke(couponId: string) {
-    setActionLoading(couponId)
+  async function runConfirmedAction() {
+    if (!confirm) return
+    const { kind, coupon } = confirm
+    const prevStatus = coupon.status
+    setActionLoading(coupon.id)
+    setConfirm(null)
+
+    // Optimistic UI update — flip the row instantly.
+    patchCouponStatus(coupon.id, kind === 'redeem' ? 'redeemed' : 'revoked')
+
     try {
-      await revokeCoupon(couponId)
-      await Promise.all([loadCoupons(), loadStats()])
+      if (kind === 'redeem') {
+        await redeemCoupon(coupon.id)
+        setToast({ kind: 'success', message: `Coupon ${coupon.code} marked as redeemed.` })
+      } else {
+        await revokeCoupon(coupon.id)
+        setToast({ kind: 'success', message: `Coupon ${coupon.code} revoked.` })
+      }
+      // Refresh in the background so pagination + stats stay in sync.
+      loadCoupons().catch(() => { /* silent — the optimistic state is already correct */ })
+      loadStats().catch(() => {})
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to revoke coupon')
+      // Rollback the optimistic status.
+      patchCouponStatus(coupon.id, prevStatus)
+      const msg = err instanceof Error ? err.message : `Failed to ${kind} coupon`
+      setToast({ kind: 'error', message: msg })
     } finally {
       setActionLoading(null)
     }
@@ -411,9 +452,9 @@ export default function CouponsPage() {
                           <div className="flex gap-2">
                             <Button
                               size="sm"
-                              variant="outline"
+                              variant="default"
                               disabled={actionLoading === coupon.id}
-                              onClick={() => handleRedeem(coupon.id)}
+                              onClick={() => setConfirm({ kind: 'redeem', coupon })}
                             >
                               {actionLoading === coupon.id ? '...' : 'Redeem'}
                             </Button>
@@ -421,7 +462,7 @@ export default function CouponsPage() {
                               size="sm"
                               variant="outline"
                               disabled={actionLoading === coupon.id}
-                              onClick={() => handleRevoke(coupon.id)}
+                              onClick={() => setConfirm({ kind: 'revoke', coupon })}
                             >
                               {actionLoading === coupon.id ? '...' : 'Revoke'}
                             </Button>
@@ -486,6 +527,141 @@ export default function CouponsPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* ── Confirmation dialog ─────────────────────────────────────────
+          Both Redeem and Revoke are destructive-ish (Redeem can't be
+          undone; Revoke can't be redeemed later), so we require an
+          explicit second click. The modal shows exactly which coupon +
+          who owns it so staff can verify before pressing OK.
+      */}
+      {confirm && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="coupon-confirm-title"
+        >
+          <div
+            className="absolute inset-0 bg-foreground/40 backdrop-blur-sm"
+            onClick={() => setConfirm(null)}
+            role="presentation"
+          />
+          <div className="relative w-full max-w-sm rounded-2xl border border-border bg-card p-5 shadow-2xl sm:p-6">
+            <div className="flex items-start gap-3">
+              <div
+                className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${
+                  confirm.kind === 'redeem' ? 'bg-emerald-100 text-emerald-700' : 'bg-destructive/10 text-destructive'
+                }`}
+              >
+                {confirm.kind === 'redeem' ? (
+                  <CheckCircle2 className="h-5 w-5" />
+                ) : (
+                  <AlertTriangle className="h-5 w-5" />
+                )}
+              </div>
+              <div className="min-w-0 flex-1">
+                <h3 id="coupon-confirm-title" className="text-base font-semibold tracking-tight">
+                  {confirm.kind === 'redeem' ? 'Redeem this coupon?' : 'Revoke this coupon?'}
+                </h3>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {confirm.kind === 'redeem'
+                    ? 'The customer receives their reward and the coupon is marked used. This action cannot be undone.'
+                    : 'The coupon becomes invalid and cannot be used or redeemed. This cannot be undone.'}
+                </p>
+
+                <div className="mt-4 space-y-1 rounded-lg border border-border bg-muted/40 p-3 text-xs">
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-muted-foreground">Code</span>
+                    <span className="font-mono font-semibold tracking-wide">{confirm.coupon.code}</span>
+                  </div>
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-muted-foreground">Prize</span>
+                    <span className="font-medium">{confirm.coupon.prizeName}</span>
+                  </div>
+                  {confirm.coupon.playerName && (
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="text-muted-foreground">Player</span>
+                      <span className="truncate font-medium">{confirm.coupon.playerName}</span>
+                    </div>
+                  )}
+                  {confirm.coupon.playerEmail && (
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="text-muted-foreground">Email</span>
+                      <span className="max-w-[180px] truncate">{confirm.coupon.playerEmail}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="mt-5 flex gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                className="flex-1"
+                onClick={() => setConfirm(null)}
+                disabled={actionLoading === confirm.coupon.id}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                variant={confirm.kind === 'revoke' ? 'destructive' : 'default'}
+                className="flex-1"
+                onClick={runConfirmedAction}
+                disabled={actionLoading === confirm.coupon.id}
+                autoFocus
+              >
+                {confirm.kind === 'redeem' ? 'Yes, redeem' : 'Yes, revoke'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Floating toast ──────────────────────────────────────────────
+          Pinned to the bottom of the viewport so success + error feedback
+          is visible wherever the merchant is scrolled — the previous
+          setError(...) rendered at the TOP of the page, which was
+          invisible to anyone tapping a button on the coupons table on
+          mobile.
+      */}
+      {toast && (
+        <div
+          className="fixed inset-x-4 bottom-4 z-50 mx-auto max-w-sm sm:bottom-6"
+          style={{ paddingBottom: 'env(safe-area-inset-bottom, 0)' }}
+          role={toast.kind === 'error' ? 'alert' : 'status'}
+        >
+          <div
+            className={`flex items-start gap-3 rounded-xl border p-3.5 shadow-lg ${
+              toast.kind === 'success'
+                ? 'border-emerald-200 bg-emerald-50 text-emerald-900'
+                : 'border-destructive/30 bg-destructive/10 text-destructive'
+            }`}
+          >
+            <div className="mt-0.5 shrink-0">
+              {toast.kind === 'success' ? (
+                <CheckCircle2 className="h-5 w-5" />
+              ) : (
+                <AlertTriangle className="h-5 w-5" />
+              )}
+            </div>
+            <p className="flex-1 text-sm font-medium leading-snug">{toast.message}</p>
+            <button
+              type="button"
+              onClick={() => setToast(null)}
+              className={`shrink-0 rounded-md p-1 transition-colors ${
+                toast.kind === 'success'
+                  ? 'hover:bg-emerald-100 text-emerald-700'
+                  : 'hover:bg-destructive/10 text-destructive'
+              }`}
+              aria-label="Dismiss"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
