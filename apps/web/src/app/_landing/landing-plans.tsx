@@ -20,11 +20,18 @@ export function LandingPlans() {
   const reveal = useScrollReveal()
   const [openGroup, setOpenGroup] = useState<number>(0)
   const [openQ, setOpenQ] = useState<string | null>(null)
+  const [billing, setBilling] = useState<'monthly' | 'annual'>('annual')
+
+  // 20% annual discount vs monthly. Round down to the nearest MAD.
+  const monthlyToAnnual = (m: number) => Math.round((m * 12 * 0.8) / 12)
+
+  const starterPrice = billing === 'annual' ? monthlyToAnnual(299) : 299
+  const proPrice = billing === 'annual' ? monthlyToAnnual(599) : 599
 
   const plans: Plan[] = [
     {
       name: 'Starter',
-      price: '299',
+      price: String(starterPrice),
       priceSuffix: `MAD${txt.perMonth}`,
       features: [
         '500 parties/mois',
@@ -39,7 +46,7 @@ export function LandingPlans() {
     },
     {
       name: 'Pro',
-      price: '599',
+      price: String(proPrice),
       priceSuffix: `MAD${txt.perMonth}`,
       popular: true,
       features: [
@@ -73,9 +80,51 @@ export function LandingPlans() {
   return (
     <section id="plans" className="py-24 sm:py-32">
       <div ref={reveal.ref} className={`mx-auto max-w-5xl px-4 sm:px-6 ${reveal.className}`}>
-        <div className="mx-auto mb-14 max-w-2xl text-center">
+        <div className="mx-auto mb-8 max-w-2xl text-center">
           <h2 className="text-3xl font-bold tracking-tight sm:text-4xl lg:text-5xl">{txt.plans}</h2>
           <p className="mt-3 text-lg text-muted-foreground">{txt.plansSubtitle}</p>
+        </div>
+
+        {/* Monthly / Annual toggle */}
+        <div className="mb-10 flex items-center justify-center gap-3">
+          <div
+            role="group"
+            aria-label="Billing frequency"
+            className="inline-flex items-center rounded-full border border-border bg-card p-0.5 shadow-xs"
+          >
+            <button
+              type="button"
+              onClick={() => setBilling('monthly')}
+              aria-pressed={billing === 'monthly'}
+              className={`rounded-full px-4 py-1.5 text-sm font-semibold transition-colors ${
+                billing === 'monthly'
+                  ? 'bg-primary text-primary-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              {txt.billingMonthly}
+            </button>
+            <button
+              type="button"
+              onClick={() => setBilling('annual')}
+              aria-pressed={billing === 'annual'}
+              className={`inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-semibold transition-colors ${
+                billing === 'annual'
+                  ? 'bg-primary text-primary-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              {txt.billingAnnual}
+              <span className="rounded-full bg-emerald-500 px-1.5 py-0.5 text-[10px] font-bold text-white shadow-xs">
+                −20%
+              </span>
+            </button>
+          </div>
+          {billing === 'annual' && (
+            <p className="hidden text-xs text-muted-foreground sm:block">
+              {txt.billingAnnualSavings} · {txt.billingAnnualHint}
+            </p>
+          )}
         </div>
 
         <div className="grid gap-6 md:grid-cols-3">
