@@ -830,6 +830,67 @@ export async function fetchPlayerRanking(
   )
 }
 
+// ── Player detail ──────────────────────────────────────────────────────
+
+export interface PlayerProfile {
+  id: string
+  merchantId: string
+  name: string | null
+  email: string | null
+  phone: string | null
+  points: number
+  totalPlays: number
+  totalWins: number
+  winRate: number
+  suspiciousScore: number
+  createdAt: string
+  lastSeenAt: string
+}
+
+export interface PlayerGamePlay {
+  id: string
+  gameId: string
+  gameName: string
+  gameType: string
+  result: 'win' | 'lose'
+  prizeId: string | null
+  prizeName: string | null
+  prizeEmoji: string | null
+  completedActions: string[]
+  playedAt: string
+}
+
+export interface PlayerCoupon {
+  id: string
+  code: string
+  status: string
+  prizeName: string
+  prizeDescription: string | null
+  redemptionConditions: string[]
+  validFrom: string
+  validUntil: string
+  redeemedAt: string | null
+  createdAt: string
+}
+
+export interface PlayerDetail {
+  player: PlayerProfile
+  plays: PlayerGamePlay[]
+  coupons: PlayerCoupon[]
+}
+
+export async function fetchPlayerDetail(
+  merchantId: string,
+  playerId: string,
+  token?: string,
+): Promise<PlayerDetail> {
+  return request<PlayerDetail>(
+    `/api/v1/players/${encodeURIComponent(playerId)}?merchantId=${encodeURIComponent(merchantId)}`,
+    {},
+    token,
+  )
+}
+
 // ---------------------------------------------------------------------------
 // Usage
 // ---------------------------------------------------------------------------

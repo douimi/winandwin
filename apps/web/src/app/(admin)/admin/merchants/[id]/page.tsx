@@ -364,9 +364,12 @@ export default function AdminMerchantDetailPage() {
               </button>
             )}
 
-            {/* View Player Page */}
+            {/* View Player Page \u2014 uses the same env var as the dashboard shell.
+                Was href="/${slug}" which resolved to winandwin.club/${slug}
+                (the merchant dashboard host) instead of the player app on
+                winandwin-player.pages.dev, so the link was silently broken. */}
             <a
-              href={`/${merchant.slug}`}
+              href={`${process.env.NEXT_PUBLIC_PLAYER_URL || 'http://localhost:3001'}/${merchant.slug}`}
               target="_blank"
               rel="noopener noreferrer"
               className="rounded-lg border border-indigo-200 bg-white px-4 py-2 text-sm font-medium text-indigo-600 hover:bg-indigo-50 transition-colors"

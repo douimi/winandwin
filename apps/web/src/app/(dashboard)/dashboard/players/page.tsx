@@ -393,17 +393,27 @@ export default function PlayersPage() {
                     // Rank reflects position on the current page given the active sort
                     const overallRank = (pagination.page - 1) * pagination.pageSize + i + 1
                     return (
-                      <tr key={player.id} className="border-b transition-colors last:border-0 hover:bg-muted/30">
+                      <tr
+                        key={player.id}
+                        onClick={() => {
+                          window.location.href = `/dashboard/players/${player.id}`
+                        }}
+                        className="cursor-pointer border-b transition-colors last:border-0 hover:bg-muted/40"
+                      >
                         <td className="w-12 py-3">{getRankBadge(overallRank)}</td>
                         <td className="py-3">
-                          <div>
-                            <span className="font-medium">
+                          <a
+                            href={`/dashboard/players/${player.id}`}
+                            onClick={(e) => e.stopPropagation()}
+                            className="block"
+                          >
+                            <span className="font-medium hover:text-primary hover:underline">
                               {player.name || <span className="italic text-muted-foreground">Anonymous</span>}
                             </span>
                             {player.email && (
                               <p className="max-w-[200px] truncate text-xs text-muted-foreground">{player.email}</p>
                             )}
-                          </div>
+                          </a>
                         </td>
                         <td className="py-3 font-medium tabular-nums">{player.totalPlays}</td>
                         <td className="py-3">
