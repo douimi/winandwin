@@ -1,10 +1,16 @@
 import { Hono } from 'hono'
-import { eq, and, gte, sql, count, desc, ilike } from 'drizzle-orm'
+import { and, count, desc, eq, gte, ilike, isNotNull, or, sql } from 'drizzle-orm'
 import { merchants, games, gamePlays, players, coupons, ctas, users, platformSettings, prizes } from '@winandwin/db/schema'
 import { TIER_LIMITS } from '@winandwin/shared/constants'
 import type { AppEnv } from '../types'
 
 export const adminRouter = new Hono<AppEnv>()
+
+// Consistent with the merchant-facing players list: "identified" = has a
+// name OR an email. Everyone else is an anonymous device fingerprint that
+// spun once and closed the tab — we hide them from the admin views too so
+// the "Players (N)" counter and preview table reflect real customers.
+const identifiedPlayerFilter = or(isNotNull(players.name), isNotNull(players.email))!
 
 // Helper: get tier limits from DB, falling back to hardcoded defaults
 // biome-ignore lint/suspicious/noExplicitAny: db type is complex
@@ -323,7 +329,7 @@ adminRouter.get('/merchants/:id', async (c) => {
       db
         .select({ count: sql<number>`count(*)::int` })
         .from(players)
-        .where(eq(players.merchantId, id)),
+        .where(and(eq(players.merchantId, id), identifiedPlayerFilter)),
       db
         .select()
         .from(ctas)
@@ -331,7 +337,7 @@ adminRouter.get('/merchants/:id', async (c) => {
       db
         .select()
         .from(players)
-        .where(eq(players.merchantId, id))
+        .where(and(eq(players.merchantId, id), identifiedPlayerFilter))
         .orderBy(desc(players.lastSeenAt))
         .limit(20),
     ])
@@ -597,11 +603,17 @@ adminRouter.get('/merchants/:id/players', async (c) => {
   try {
     const db = c.get('db')
     const id = c.req.param('id')
+    // Same filter as the rest of the admin surface — anonymous fingerprints
+    // are excluded by default. Add ?includeAnonymous=1 to see them.
+    const includeAnonymous = c.req.query('includeAnonymous') === '1'
+    const whereExpr = includeAnonymous
+      ? eq(players.merchantId, id)
+      : and(eq(players.merchantId, id), identifiedPlayerFilter)!
 
     const merchantPlayers = await db
       .select()
       .from(players)
-      .where(eq(players.merchantId, id))
+      .where(whereExpr)
       .orderBy(desc(players.lastSeenAt))
       .limit(100)
 
