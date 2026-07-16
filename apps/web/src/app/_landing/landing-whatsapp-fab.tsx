@@ -2,7 +2,8 @@
 
 import { MessageCircle, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { WHATSAPP_DISPLAY, WHATSAPP_URL } from './text'
+import { useLanding } from './lang-context'
+import { WHATSAPP_DISPLAY, whatsAppUrl } from './text'
 
 /**
  * Floating WhatsApp "action button" pinned to the bottom-right of the
@@ -15,12 +16,11 @@ import { WHATSAPP_DISPLAY, WHATSAPP_URL } from './text'
  * dismissed by the visitor.
  */
 export function LandingWhatsAppFab() {
+  const { txt, lang } = useLanding()
   const [showBubble, setShowBubble] = useState(false)
   const [dismissed, setDismissed] = useState(false)
 
   useEffect(() => {
-    // Skip the bubble entirely if the visitor already dismissed it in
-    // this tab — don't badger them.
     try {
       if (sessionStorage.getItem('winandwin_wa_bubble_dismissed') === '1') {
         setDismissed(true)
@@ -40,6 +40,9 @@ export function LandingWhatsAppFab() {
     } catch { /* ignore */ }
   }
 
+  const bubbleTitle = lang === 'fr' ? 'Une question ?' : 'Any question?'
+  const bubbleSub = lang === 'fr' ? 'Écrivez-nous sur WhatsApp' : 'Message us on WhatsApp'
+
   return (
     <div
       className="fixed bottom-5 right-5 z-40 flex items-end gap-3 sm:bottom-8 sm:right-8"
@@ -55,22 +58,20 @@ export function LandingWhatsAppFab() {
           >
             <X className="h-3.5 w-3.5" />
           </button>
-          <p className="text-sm font-semibold text-slate-900">Une question ?</p>
-          <p className="text-xs text-slate-500">Écrivez-nous sur WhatsApp</p>
-          {/* Little tail pointing to the fab */}
+          <p className="text-sm font-semibold text-slate-900">{bubbleTitle}</p>
+          <p className="text-xs text-slate-500">{bubbleSub}</p>
           <div className="absolute -right-1.5 bottom-4 h-3 w-3 rotate-45 border-b border-r border-emerald-200 bg-white" />
         </div>
       )}
 
       <a
-        href={WHATSAPP_URL}
+        href={whatsAppUrl(lang)}
         target="_blank"
         rel="noopener noreferrer"
-        aria-label={`Contacter Win & Win sur WhatsApp — ${WHATSAPP_DISPLAY}`}
+        aria-label={`Contact Win & Win on WhatsApp — ${WHATSAPP_DISPLAY}`}
         title={`WhatsApp — ${WHATSAPP_DISPLAY}`}
         className="group relative flex h-14 w-14 items-center justify-center rounded-full bg-emerald-500 text-white shadow-xl transition-all hover:scale-110 hover:bg-emerald-600 hover:shadow-emerald-500/40 active:scale-95"
       >
-        {/* Subtle pulse ring to draw the eye without being annoying */}
         <span
           aria-hidden
           className="absolute inset-0 rounded-full bg-emerald-500 opacity-60"
@@ -81,7 +82,6 @@ export function LandingWhatsAppFab() {
         <MessageCircle className="relative h-6 w-6" fill="currentColor" strokeWidth={0} />
       </a>
 
-      {/* Local keyframes — scoped inline to avoid touching globals.css. */}
       <style>{`
         @keyframes wa-fab-pulse {
           0%   { transform: scale(1);    opacity: 0.5; }

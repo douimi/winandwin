@@ -1,6 +1,7 @@
 'use client'
 
 import {
+  BadgeCheck,
   BarChart3,
   Globe,
   Palette,
@@ -11,11 +12,7 @@ import {
   type LucideIcon,
 } from 'lucide-react'
 import { useScrollReveal } from './hooks'
-import type { LandingText } from './text'
-
-interface Props {
-  txt: LandingText
-}
+import { useLanding } from './lang-context'
 
 interface Feature {
   Icon: LucideIcon
@@ -24,53 +21,20 @@ interface Feature {
   desc: string
 }
 
-const FEATURES: Feature[] = [
-  {
-    Icon: Star,
-    iconClass: 'bg-amber-50 text-amber-700',
-    title: 'Google Reviews',
-    desc: 'Customers leave reviews before playing. Watch your rating climb.',
-  },
-  {
-    Icon: Smartphone,
-    iconClass: 'bg-sky-50 text-sky-700',
-    title: 'Social Growth',
-    desc: 'Require Instagram follows or shares. Turn players into followers.',
-  },
-  {
-    Icon: Ticket,
-    iconClass: 'bg-violet-50 text-violet-700',
-    title: 'Smart Coupons',
-    desc: 'Time-limited prizes that drive return visits. Sent by email.',
-  },
-  {
-    Icon: BarChart3,
-    iconClass: 'bg-emerald-50 text-emerald-700',
-    title: 'Live Analytics',
-    desc: 'Track plays, wins, and redemptions in real-time.',
-  },
-  {
-    Icon: ShieldCheck,
-    iconClass: 'bg-rose-50 text-rose-700',
-    title: 'Fraud Protection',
-    desc: 'Device fingerprinting prevents cheating. One play per customer.',
-  },
-  {
-    Icon: Palette,
-    iconClass: 'bg-pink-50 text-pink-700',
-    title: 'Your Brand',
-    desc: 'Customize colors, logo, and theme to match your business.',
-  },
-  {
-    Icon: Globe,
-    iconClass: 'bg-indigo-50 text-indigo-700',
-    title: 'Multi-Language',
-    desc: "Support for French, English, and more. Your game speaks your customers' language.",
-  },
-]
-
-export function LandingFeatures({ txt }: Props) {
+export function LandingFeatures() {
+  const { txt } = useLanding()
   const reveal = useScrollReveal()
+
+  const features: Feature[] = [
+    { Icon: Star, iconClass: 'bg-amber-50 text-amber-700', title: txt.featureReviews, desc: txt.featureReviewsDesc },
+    { Icon: Smartphone, iconClass: 'bg-sky-50 text-sky-700', title: txt.featureSocial, desc: txt.featureSocialDesc },
+    { Icon: Ticket, iconClass: 'bg-violet-50 text-violet-700', title: txt.featureCoupons, desc: txt.featureCouponsDesc },
+    { Icon: BarChart3, iconClass: 'bg-emerald-50 text-emerald-700', title: txt.featureAnalytics, desc: txt.featureAnalyticsDesc },
+    { Icon: ShieldCheck, iconClass: 'bg-rose-50 text-rose-700', title: txt.featureFraud, desc: txt.featureFraudDesc },
+    { Icon: Palette, iconClass: 'bg-pink-50 text-pink-700', title: txt.featureBrand, desc: txt.featureBrandDesc },
+    { Icon: Globe, iconClass: 'bg-indigo-50 text-indigo-700', title: txt.featureLanguages, desc: txt.featureLanguagesDesc },
+    { Icon: BadgeCheck, iconClass: 'bg-slate-100 text-slate-700', title: txt.featureValidation, desc: txt.featureValidationDesc },
+  ]
 
   return (
     <section id="features" className="bg-muted/40 py-24 sm:py-32">
@@ -80,8 +44,8 @@ export function LandingFeatures({ txt }: Props) {
           <p className="mt-3 text-lg text-muted-foreground">{txt.featuresSubtitle}</p>
         </div>
 
-        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {FEATURES.map((feature) => {
+        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          {features.map((feature) => {
             const Icon = feature.Icon
             return (
               <article
@@ -91,8 +55,8 @@ export function LandingFeatures({ txt }: Props) {
                 <div className={`flex h-12 w-12 items-center justify-center rounded-xl ${feature.iconClass}`}>
                   <Icon className="h-6 w-6" />
                 </div>
-                <h3 className="mt-4 text-base font-semibold text-foreground">{feature.title}</h3>
-                <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">{feature.desc}</p>
+                <h3 className="mt-4 text-base font-semibold leading-tight text-foreground">{feature.title}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{feature.desc}</p>
               </article>
             )
           })}

@@ -4,15 +4,13 @@ import { Button, Card, CardContent, Input, Label } from '@winandwin/ui'
 import { CheckCircle2, Loader2, MapPin, MessageCircle } from 'lucide-react'
 import { useState } from 'react'
 import { useScrollReveal } from './hooks'
-import { WHATSAPP_DISPLAY, WHATSAPP_URL, type LandingText } from './text'
-
-interface Props {
-  txt: LandingText
-}
+import { useLanding } from './lang-context'
+import { WHATSAPP_DISPLAY, whatsAppUrl } from './text'
 
 type FormStatus = 'idle' | 'loading' | 'success' | 'error'
 
-export function LandingContact({ txt }: Props) {
+export function LandingContact() {
+  const { txt, lang } = useLanding()
   const reveal = useScrollReveal()
   const [status, setStatus] = useState<FormStatus>('idle')
   const [form, setForm] = useState({
@@ -65,16 +63,11 @@ export function LandingContact({ txt }: Props) {
             <MapPin className="h-3.5 w-3.5" />
             {txt.basedIn}
           </div>
+          <p className="mt-2 text-xs text-muted-foreground">⏱️ {txt.whatsAppFast}</p>
         </div>
 
-        {/*
-          Fast lane: for prospects who prefer to chat, a prominent WhatsApp
-          card sits above the contact form so they don't have to fill out
-          anything. Opens the WhatsApp app on mobile or web.whatsapp.com on
-          desktop with a prefilled message.
-        */}
         <a
-          href={WHATSAPP_URL}
+          href={whatsAppUrl(lang)}
           target="_blank"
           rel="noopener noreferrer"
           className="mb-6 flex items-center gap-4 rounded-2xl border border-emerald-200 bg-emerald-50 p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md sm:p-5"
@@ -84,21 +77,21 @@ export function LandingContact({ txt }: Props) {
           </div>
           <div className="min-w-0 flex-1">
             <p className="text-sm font-semibold text-emerald-900">
-              Une question ? Écrivez-nous sur WhatsApp
+              {txt.whatsAppCardTitle}
             </p>
             <p className="truncate text-xs text-emerald-800/80 sm:text-sm">
-              Réponse rapide au{' '}
+              {txt.whatsAppCardSub}{' '}
               <span className="font-medium tabular-nums">{WHATSAPP_DISPLAY}</span>
             </p>
           </div>
           <span className="hidden shrink-0 rounded-full bg-emerald-500 px-3 py-1.5 text-xs font-semibold text-white shadow-sm sm:inline-flex">
-            Ouvrir WhatsApp
+            {txt.whatsAppCardOpen}
           </span>
         </a>
 
         <div className="mb-6 flex items-center gap-3 text-xs uppercase tracking-wider text-muted-foreground">
           <span className="h-px flex-1 bg-border" />
-          <span>ou remplissez le formulaire</span>
+          <span>{txt.formOrLine}</span>
           <span className="h-px flex-1 bg-border" />
         </div>
 
@@ -123,7 +116,7 @@ export function LandingContact({ txt }: Props) {
                       required
                       value={form.businessName}
                       onChange={handleChange}
-                      placeholder="e.g. Café Atlas"
+                      placeholder={lang === 'fr' ? 'ex. Café Atlas' : 'e.g. Café Atlas'}
                     />
                   </div>
                   <div className="space-y-1.5">
@@ -179,14 +172,14 @@ export function LandingContact({ txt }: Props) {
                   >
                     <option value="">{txt.selectBusinessType}</option>
                     <option value="restaurant">Restaurant</option>
-                    <option value="cafe">Cafe</option>
+                    <option value="cafe">Café</option>
                     <option value="bar">Bar</option>
                     <option value="retail">Retail</option>
                     <option value="salon">Salon</option>
                     <option value="gym">Gym</option>
                     <option value="hotel">Hotel</option>
                     <option value="riad">Riad</option>
-                    <option value="other">Other</option>
+                    <option value="other">Autre</option>
                   </select>
                 </div>
 

@@ -18,9 +18,13 @@ const jakarta = Plus_Jakarta_Sans({
 
 const SITE_URL = 'https://winandwin.club'
 
-const TITLE = 'Win & Win — QR-Code Games for Restaurants, Cafés & Retail'
+// French-first metadata — the landing is FR-primary. The `alternateLocale`
+// hint below still tells search engines EN content exists via the client-
+// side toggle. If we later ship an /en/ route we'll split these per-locale.
+const TITLE =
+  'Win & Win — Jeux QR-code pour restaurants, cafés et commerces'
 const DESCRIPTION =
-  'Turn every customer visit into a game. Deploy a Wheel of Fortune, Slot Machine or Mystery Box behind a QR code — collect Google reviews, grow your Instagram, drive repeat visits. Live in under 10 minutes.'
+  'Vos clients scannent un QR code, laissent un avis Google, vous suivent sur Instagram, et jouent à la roue pour gagner un prix. En moins de 10 minutes vous récoltez des avis, des abonnés, et des visites récurrentes. Essai gratuit 14 jours.'
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -57,8 +61,8 @@ export const metadata: Metadata = {
     title: TITLE,
     description: DESCRIPTION,
     type: 'website',
-    locale: 'en_US',
-    alternateLocale: ['fr_FR', 'fr_MA'],
+    locale: 'fr_MA',
+    alternateLocale: ['fr_FR', 'en_US'],
     siteName: 'Win & Win',
     url: SITE_URL,
     images: [
@@ -66,7 +70,7 @@ export const metadata: Metadata = {
         url: '/og.png',
         width: 1200,
         height: 630,
-        alt: 'Win & Win — Turn every customer visit into a game',
+        alt: 'Win & Win — Le jeu qui fait revenir vos clients',
       },
     ],
   },
@@ -188,48 +192,39 @@ const SOFTWARE_JSONLD = {
   },
 }
 
+// JSON-LD FAQPage — mirrors the 15-question grouped FAQ shipped in the
+// landing UI. Kept in French because the site is FR-primary; Google
+// indexes the FR content for the .club domain based on the marketing
+// audience. When we add an EN /en/ route we'll ship an EN FAQ variant
+// under that path with the same shape.
 const FAQ_JSONLD = {
   '@context': 'https://schema.org',
   '@type': 'FAQPage',
   mainEntity: [
-    {
-      '@type': 'Question',
-      name: 'Is there a free trial?',
-      acceptedAnswer: {
-        '@type': 'Answer',
-        text: 'Yes, every plan includes a 14-day free trial. No credit card required to start.',
-      },
-    },
-    {
-      '@type': 'Question',
-      name: 'How long does setup take?',
-      acceptedAnswer: {
-        '@type': 'Answer',
-        text: 'Most businesses go live in under 10 minutes: create a game, print the QR code, place it on your tables or receipts.',
-      },
-    },
-    {
-      '@type': 'Question',
-      name: 'What games can I offer?',
-      acceptedAnswer: {
-        '@type': 'Answer',
-        text: 'Wheel of Fortune, Slot Machine and Mystery Box, each with customizable prizes and win rates.',
-      },
-    },
-    {
-      '@type': 'Question',
-      name: 'How does Win & Win drive Google reviews?',
-      acceptedAnswer: {
-        '@type': 'Answer',
-        text: 'Before playing, customers can complete a Call-to-Action such as leaving a Google review, following your Instagram, or joining your WhatsApp list. This is the ticket to spin the wheel.',
-      },
-    },
+    // Démarrage
+    { '@type': 'Question', name: 'Combien de temps pour être en ligne ?', acceptedAnswer: { '@type': 'Answer', text: 'La plupart des commerces sont opérationnels en moins de 10 minutes : vous créez votre jeu, téléchargez le QR code, et le placez sur vos tables.' } },
+    { '@type': 'Question', name: 'Faut-il télécharger une application ?', acceptedAnswer: { '@type': 'Answer', text: 'Non. Vos clients scannent le QR et jouent directement dans leur navigateur mobile. Aucune app à installer côté client.' } },
+    { '@type': 'Question', name: 'Puis-je essayer Win & Win gratuitement ?', acceptedAnswer: { '@type': 'Answer', text: 'Oui. Tous les plans incluent un essai gratuit de 14 jours, sans carte bancaire.' } },
+    { '@type': 'Question', name: 'Où doit-on placer le QR code ?', acceptedAnswer: { '@type': 'Answer', text: 'Sur les chevalets de table, au dos des tickets de caisse, sur les menus, en vitrine, ou même sur l\'écran d\'attente. On vous aide à choisir le meilleur emplacement.' } },
+    { '@type': 'Question', name: 'Comment se passe la mise en place ?', acceptedAnswer: { '@type': 'Answer', text: 'Vous vous inscrivez, choisissez votre jeu, ajoutez vos prix, et téléchargez votre flyer QR au format PDF. Support disponible sur WhatsApp.' } },
+    // Fonctionnement
+    { '@type': 'Question', name: 'Comment fonctionne l\'anti-fraude ?', acceptedAnswer: { '@type': 'Answer', text: 'Chaque terminal client est identifié par une empreinte digitale (résolution écran, GPU, timezone, etc.). Un même téléphone ne peut pas jouer plusieurs fois pendant la période de cooldown que vous configurez.' } },
+    { '@type': 'Question', name: 'Puis-je limiter le nombre de gagnants ?', acceptedAnswer: { '@type': 'Answer', text: 'Oui. Vous fixez un plafond par prix (max 5 gagnants par jour) et un plafond total. Le prix est retiré de la roue automatiquement une fois atteint.' } },
+    { '@type': 'Question', name: 'Comment un client réclame son prix en boutique ?', acceptedAnswer: { '@type': 'Answer', text: 'Le client montre le coupon reçu par email. Votre staff scanne le QR code du coupon, entre le PIN de validation, et le coupon est marqué comme utilisé. Impossible à réutiliser.' } },
+    { '@type': 'Question', name: 'Puis-je changer les prix à tout moment ?', acceptedAnswer: { '@type': 'Answer', text: 'Oui. Vous pouvez ajouter, éditer, supprimer ou réinitialiser un prix à tout moment depuis votre dashboard. Les coupons déjà gagnés restent valables.' } },
+    { '@type': 'Question', name: 'Les coupons expirent-ils ?', acceptedAnswer: { '@type': 'Answer', text: 'Vous choisissez la durée par prix : 1 semaine, 1 mois, 3 mois, ou personnalisé. Un délai d\'activation est également configurable.' } },
+    // Tarifs & support
+    { '@type': 'Question', name: 'Puis-je changer de plan ?', acceptedAnswer: { '@type': 'Answer', text: 'Oui, à tout moment. Vous nous écrivez sur WhatsApp et on gère le changement dans la journée.' } },
+    { '@type': 'Question', name: 'Y a-t-il un engagement de durée ?', acceptedAnswer: { '@type': 'Answer', text: 'Aucun. Vous êtes libre d\'arrêter à tout moment. Pas de frais de résiliation.' } },
+    { '@type': 'Question', name: 'La facturation inclut-elle la TVA ?', acceptedAnswer: { '@type': 'Answer', text: 'Oui, TVA marocaine 20% ou TVA française 20% selon le pays de facturation. Facture PDF envoyée chaque mois.' } },
+    { '@type': 'Question', name: 'Le support est-il en français ?', acceptedAnswer: { '@type': 'Answer', text: 'Oui. Support en français par WhatsApp et par email. Temps de réponse moyen : moins de 15 minutes en journée ouvrée.' } },
+    { '@type': 'Question', name: 'Que se passe-t-il si je dépasse mon quota de parties ?', acceptedAnswer: { '@type': 'Answer', text: 'Le jeu reste actif. On vous prévient à 80% du quota et on vous propose de passer au plan supérieur — jamais de coupure surprise.' } },
   ],
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={jakarta.variable}>
+    <html lang="fr" className={jakarta.variable}>
       <head>
         {/* API host is on Cloudflare Workers — DNS + TLS handshake in parallel with HTML parse. */}
         <link rel="preconnect" href="https://winandwin-api.douimiotmane.workers.dev" />

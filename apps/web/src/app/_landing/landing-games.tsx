@@ -1,14 +1,11 @@
 'use client'
 
 import { useScrollReveal } from './hooks'
+import { useLanding } from './lang-context'
 import { PhoneWheelSVG } from './phone-wheel'
-import type { LandingText } from './text'
 
-interface Props {
-  txt: LandingText
-}
-
-export function LandingGames({ txt }: Props) {
+export function LandingGames() {
+  const { txt } = useLanding()
   const reveal = useScrollReveal()
 
   return (
@@ -31,10 +28,8 @@ export function LandingGames({ txt }: Props) {
               </div>
             </div>
             <div className="p-6">
-              <h3 className="text-lg font-semibold text-foreground">Wheel of Fortune</h3>
-              <p className="mt-2 text-sm text-muted-foreground">
-                The classic spin-to-win. Customers love the anticipation.
-              </p>
+              <h3 className="text-lg font-semibold text-foreground">{txt.gameWheel}</h3>
+              <p className="mt-2 text-sm text-muted-foreground">{txt.gameWheelDesc}</p>
             </div>
           </article>
 
@@ -55,10 +50,8 @@ export function LandingGames({ txt }: Props) {
               ))}
             </div>
             <div className="p-6">
-              <h3 className="text-lg font-semibold text-foreground">Slot Machine</h3>
-              <p className="mt-2 text-sm text-muted-foreground">
-                Match symbols to win. Pure casino-style excitement.
-              </p>
+              <h3 className="text-lg font-semibold text-foreground">{txt.gameSlots}</h3>
+              <p className="mt-2 text-sm text-muted-foreground">{txt.gameSlotsDesc}</p>
             </div>
           </article>
 
@@ -90,10 +83,8 @@ export function LandingGames({ txt }: Props) {
               ))}
             </div>
             <div className="p-6">
-              <h3 className="text-lg font-semibold text-foreground">Mystery Box</h3>
-              <p className="mt-2 text-sm text-muted-foreground">
-                Tap to reveal. Simple, fun, and addictive.
-              </p>
+              <h3 className="text-lg font-semibold text-foreground">{txt.gameMystery}</h3>
+              <p className="mt-2 text-sm text-muted-foreground">{txt.gameMysteryDesc}</p>
             </div>
           </article>
         </div>

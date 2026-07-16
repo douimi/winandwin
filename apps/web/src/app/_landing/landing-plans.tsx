@@ -1,13 +1,10 @@
 'use client'
 
 import { Button } from '@winandwin/ui'
-import { Check, Sparkles } from 'lucide-react'
+import { Check, ChevronDown, Sparkles } from 'lucide-react'
+import { useState } from 'react'
 import { useScrollReveal } from './hooks'
-import type { LandingText } from './text'
-
-interface Props {
-  txt: LandingText
-}
+import { useLanding } from './lang-context'
 
 interface Plan {
   name: string
@@ -15,10 +12,14 @@ interface Plan {
   priceSuffix?: string
   features: string[]
   popular?: boolean
+  roi: string
 }
 
-export function LandingPlans({ txt }: Props) {
+export function LandingPlans() {
+  const { txt } = useLanding()
   const reveal = useScrollReveal()
+  const [openGroup, setOpenGroup] = useState<number>(0)
+  const [openQ, setOpenQ] = useState<string | null>(null)
 
   const plans: Plan[] = [
     {
@@ -26,14 +27,15 @@ export function LandingPlans({ txt }: Props) {
       price: '299',
       priceSuffix: `MAD${txt.perMonth}`,
       features: [
-        '500 plays/month',
-        '1 active game',
-        '3 prizes per game',
-        '3 CTA types',
-        'Basic QR code',
-        'Email coupons',
-        'Basic analytics',
+        '500 parties/mois',
+        '1 jeu actif',
+        '3 prix par jeu',
+        '3 types de CTA',
+        'QR code basique',
+        'Coupons par email',
+        'Analytics de base',
       ],
+      roi: txt.planRoiStarter,
     },
     {
       name: 'Pro',
@@ -41,35 +43,31 @@ export function LandingPlans({ txt }: Props) {
       priceSuffix: `MAD${txt.perMonth}`,
       popular: true,
       features: [
-        '2,000 plays/month',
-        '3 active games',
-        '10 prizes per game',
-        'All CTA types',
-        'Branded QR materials',
-        'Full analytics',
-        'Marketing automation',
-        'WhatsApp support',
+        '2 000 parties/mois',
+        '3 jeux actifs',
+        '10 prix par jeu',
+        'Tous les types de CTA',
+        'Flyer QR imprimable',
+        'Analytics complet',
+        'Automatisation marketing',
+        'Support WhatsApp prioritaire',
       ],
+      roi: txt.planRoiPro,
     },
     {
       name: 'Enterprise',
       price: txt.custom,
       features: [
-        'Unlimited plays',
-        'Unlimited games',
-        'Multi-location support',
-        'White-label option',
-        'Dedicated account manager',
-        'Custom integrations',
-        'Priority support',
+        'Parties illimitées',
+        'Jeux illimités',
+        'Multi-établissements',
+        'Marque blanche',
+        'Account manager dédié',
+        'Intégrations sur mesure',
+        'Support prioritaire',
       ],
+      roi: txt.planRoiEnterprise,
     },
-  ]
-
-  const faqs = [
-    { q: txt.faq1q, a: txt.faq1a },
-    { q: txt.faq2q, a: txt.faq2a },
-    { q: txt.faq3q, a: txt.faq3a },
   ]
 
   return (
@@ -91,7 +89,7 @@ export function LandingPlans({ txt }: Props) {
               {plan.popular && (
                 <div className="absolute -top-3 left-1/2 inline-flex -translate-x-1/2 items-center gap-1 rounded-full bg-primary px-3 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-primary-foreground shadow-sm">
                   <Sparkles className="h-3 w-3" />
-                  Recommended
+                  {txt.planRecommended}
                 </div>
               )}
 
@@ -105,6 +103,11 @@ export function LandingPlans({ txt }: Props) {
                 )}
               </div>
 
+              {/* ROI anchor line — one of the biggest per-plan conversion tweaks */}
+              <p className="mt-2 rounded-md bg-emerald-50 px-2.5 py-1 text-xs font-medium text-emerald-700 ring-1 ring-emerald-100">
+                💰 {plan.roi}
+              </p>
+
               <ul className="mt-6 flex-1 space-y-2.5 text-sm">
                 {plan.features.map((f) => (
                   <li key={f} className="flex items-start gap-2">
@@ -115,10 +118,7 @@ export function LandingPlans({ txt }: Props) {
               </ul>
 
               <a href="#contact" className="mt-8 block">
-                <Button
-                  className="w-full font-semibold"
-                  variant={plan.popular ? 'default' : 'outline'}
-                >
+                <Button className="w-full font-semibold" variant={plan.popular ? 'default' : 'outline'}>
                   {txt.contactUs}
                 </Button>
               </a>
@@ -128,18 +128,63 @@ export function LandingPlans({ txt }: Props) {
 
         <p className="mt-8 text-center text-sm text-muted-foreground">{txt.trialNote}</p>
 
-        {/* FAQ */}
-        <div className="mx-auto mt-20 max-w-2xl">
-          <h3 className="mb-6 text-center text-xl font-semibold text-foreground">
+        {/* ── Deep FAQ — grouped accordion ─────────────────────────── */}
+        <div className="mx-auto mt-20 max-w-3xl">
+          <h3 className="mb-6 text-center text-2xl font-semibold text-foreground">
             {txt.faqHeading}
           </h3>
-          <div className="space-y-3">
-            {faqs.map((faq) => (
-              <div key={faq.q} className="rounded-xl border border-border bg-card p-5 shadow-xs">
-                <h4 className="font-semibold text-foreground">{faq.q}</h4>
-                <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{faq.a}</p>
-              </div>
+
+          {/* Group tabs */}
+          <div className="mb-6 flex flex-wrap justify-center gap-2">
+            {txt.faqGroups.map((group, idx) => (
+              <button
+                key={group.title}
+                type="button"
+                onClick={() => {
+                  setOpenGroup(idx)
+                  setOpenQ(null)
+                }}
+                className={`rounded-full px-4 py-1.5 text-sm font-semibold transition-colors ${
+                  openGroup === idx
+                    ? 'bg-primary text-primary-foreground shadow-sm'
+                    : 'bg-muted text-muted-foreground hover:bg-muted/70'
+                }`}
+              >
+                {group.title}
+              </button>
             ))}
+          </div>
+
+          {/* Questions in the active group */}
+          <div className="space-y-3">
+            {txt.faqGroups[openGroup]?.questions.map((qa) => {
+              const isOpen = openQ === qa.q
+              return (
+                <div
+                  key={qa.q}
+                  className="overflow-hidden rounded-xl border border-border bg-card shadow-xs"
+                >
+                  <button
+                    type="button"
+                    onClick={() => setOpenQ(isOpen ? null : qa.q)}
+                    aria-expanded={isOpen}
+                    className="flex w-full items-center justify-between gap-3 px-5 py-4 text-left transition-colors hover:bg-muted/30"
+                  >
+                    <span className="font-semibold text-foreground">{qa.q}</span>
+                    <ChevronDown
+                      className={`h-4 w-4 shrink-0 text-muted-foreground transition-transform ${
+                        isOpen ? 'rotate-180' : ''
+                      }`}
+                    />
+                  </button>
+                  {isOpen && (
+                    <div className="border-t border-border px-5 py-4 text-sm leading-relaxed text-muted-foreground">
+                      {qa.a}
+                    </div>
+                  )}
+                </div>
+              )
+            })}
           </div>
         </div>
       </div>
