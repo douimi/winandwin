@@ -82,6 +82,8 @@ const fr = {
 
   // Games section
   games: 'Choisissez votre jeu',
+  gamesEyebrow: 'Interactif — testez-les',
+  gamesTapToPlay: 'Cliquez pour jouer',
   gamesSubtitle:
     'Faites tourner, grattez, tapez — vos clients choisissent leur émotion.',
   gameWheel: 'Roue de la Fortune',
@@ -490,6 +492,8 @@ const en = {
   step3Practical: 'Coupons validated in-store in 3 seconds.',
 
   games: 'Pick your game',
+  gamesEyebrow: 'Interactive — try them live',
+  gamesTapToPlay: 'Tap to play',
   gamesSubtitle: 'Spin, scratch, or tap — your customers choose the thrill.',
   gameWheel: 'Wheel of Fortune',
   gameWheelDesc:

@@ -79,10 +79,113 @@ h1, h2, h3, h4, h5, h6 {
 
 html { scroll-behavior: smooth; }
 
-/* Validate-page success-state pop (only remaining custom keyframe).
-   Other legacy landing animations were removed during the Phase 5 restructure. */
+/* Validate-page success-state pop. */
 @keyframes bounceIn {
   0% { transform: scale(0.5); opacity: 0; }
   60% { transform: scale(1.1); }
   100% { transform: scale(1); opacity: 1; }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   Landing "Games" showcase — real, playful motion.
+   Kept in globals so the animated cards can be simple stateless
+   components. Each idle animation loops calmly; hover/tap
+   accelerates via a data attribute or class swap.
+   ───────────────────────────────────────────────────────────── */
+
+/* Wheel of Fortune — idle slow rotation, spin-up on demand. */
+@keyframes wnw-wheel-idle {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+@keyframes wnw-wheel-spin {
+  0%   { transform: rotate(0deg); }
+  70%  { transform: rotate(1080deg); }
+  100% { transform: rotate(1260deg); }
+}
+
+/* Slot reels — each reel scrolls a symbol strip upwards. Idle drifts,
+   spin animation runs faster and with a bounce at the end. */
+@keyframes wnw-reel-idle {
+  from { transform: translateY(0); }
+  to   { transform: translateY(-50%); }
+}
+@keyframes wnw-reel-spin {
+  0%   { transform: translateY(0); }
+  85%  { transform: translateY(-1200%); }
+  100% { transform: translateY(-1200%); }
+}
+
+/* Mystery box — a gentle wiggle so it reads as "there's something inside." */
+@keyframes wnw-box-wiggle {
+  0%, 100% { transform: rotate(-3deg); }
+  25%      { transform: rotate(4deg); }
+  50%      { transform: rotate(-2deg); }
+  75%      { transform: rotate(2deg); }
+}
+
+/* Mystery box — the lid pops when opened. */
+@keyframes wnw-lid-open {
+  0%   { transform: translateY(0) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(-38px) rotate(-22deg); opacity: 1; }
+}
+
+/* Prize burst that emerges from an opened mystery box. */
+@keyframes wnw-prize-pop {
+  0%   { transform: scale(0.2) translateY(10px); opacity: 0; }
+  50%  { transform: scale(1.15) translateY(-6px); opacity: 1; }
+  100% { transform: scale(1) translateY(-4px); opacity: 1; }
+}
+
+/* Confetti pieces launched from the box — each gets a random delay + tint
+   via inline style. Angle diverges through --wnw-x/--wnw-y CSS variables. */
+@keyframes wnw-confetti {
+  0%   { transform: translate3d(0, 0, 0) rotate(0deg); opacity: 0; }
+  10%  { opacity: 1; }
+  100% {
+    transform: translate3d(var(--wnw-x), var(--wnw-y), 0) rotate(var(--wnw-rot, 540deg));
+    opacity: 0;
+  }
+}
+
+/* Ambient sparkle stars around the game cards — twinkle on repeat. */
+@keyframes wnw-twinkle {
+  0%, 100% { opacity: 0.15; transform: scale(0.9); }
+  50%      { opacity: 0.95; transform: scale(1.2); }
+}
+
+/* Soft floating glow that circulates behind each card. */
+@keyframes wnw-orbit {
+  0%   { transform: translate(0, 0); }
+  33%  { transform: translate(30px, -18px); }
+  66%  { transform: translate(-24px, 12px); }
+  100% { transform: translate(0, 0); }
+}
+
+/* "TAP TO PLAY" pill pulses so visitors know these cards are interactive. */
+@keyframes wnw-pulse-cta {
+  0%, 100% { transform: scale(1);   box-shadow: 0 0 0 0 rgba(255,255,255,0.35); }
+  50%      { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(255,255,255,0); }
+}
+
+/* Jackpot flash overlay after a slots WIN. */
+@keyframes wnw-flash {
+  0%, 100% { opacity: 0; }
+  50%      { opacity: 0.6; }
+}
+
+/* Softly rotating conic ring behind featured cards. */
+@keyframes wnw-conic-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* Respect users who prefer no motion. */
+@media (prefers-reduced-motion: reduce) {
+  .wnw-anim,
+  .wnw-anim * {
+    animation-duration: 0s !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0s !important;
+  }
 }
