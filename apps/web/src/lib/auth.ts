@@ -23,6 +23,15 @@ export function getAuth() {
       secret: process.env.BETTER_AUTH_SECRET,
       baseURL: process.env.BETTER_AUTH_URL,
       basePath: '/api/auth',
+      // Accept requests coming from both the apex domain and the www.
+      // subdomain (whichever way the visitor typed the URL). Without this,
+      // hitting www.winandwin.club when BETTER_AUTH_URL points at the apex
+      // (or vice-versa) triggers a CSRF/invalid-origin 403.
+      trustedOrigins: [
+        'https://winandwin.club',
+        'https://www.winandwin.club',
+        'http://localhost:3000',
+      ],
       emailAndPassword: {
         enabled: true,
         minPasswordLength: 8,

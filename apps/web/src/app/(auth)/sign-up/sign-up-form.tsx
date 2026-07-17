@@ -102,7 +102,7 @@ export function SignUpForm({ googleEnabled }: { googleEnabled: boolean }) {
   return (
     <div className="mx-auto flex w-full flex-col items-center">
       <a href="/" className="mb-6 flex flex-col items-center gap-2">
-        <img src="/logo.png" alt="Win & Win" className="h-36 w-auto" />
+        <img src="/logo.png" alt="Win & Win" className="h-48 w-auto" />
       </a>
 
       <div className="grid w-full gap-6 lg:grid-cols-[1fr_1.2fr]">

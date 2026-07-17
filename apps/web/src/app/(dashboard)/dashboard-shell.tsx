@@ -94,7 +94,7 @@ export function DashboardShell({
       {/* Brand */}
       <div className="border-b border-border px-5 py-5">
         <a href="/dashboard" className="flex items-center gap-2">
-          <img src="/logo.png" alt="Win & Win" className="h-9 w-auto" />
+          <img src="/logo.png" alt="Win & Win" className="h-20 w-auto" />
           <span className="sr-only">winandwin.club</span>
         </a>
         {merchantName && (
