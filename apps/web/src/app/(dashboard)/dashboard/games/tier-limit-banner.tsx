@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { fetchMerchant, fetchGames, fetchCtas } from '@/lib/api'
 import { useMerchantId } from '@/lib/merchant-context'
+import { useApp } from '@/lib/i18n/app-lang-context'
 import { TIER_LIMITS } from '@winandwin/shared/constants'
 
 interface Props {
@@ -10,8 +11,9 @@ interface Props {
 }
 
 export function TierLimitBanner({ resource }: Props) {
+  const { lang } = useApp()
   const merchantId = useMerchantId()
-  const [message, setMessage] = useState<string | null>(null)
+  const [state, setState] = useState<{ max: number; tier: string } | null>(null)
 
   useEffect(() => {
     if (!merchantId) return
@@ -28,9 +30,7 @@ export function TierLimitBanner({ resource }: Props) {
           if (maxGames && maxGames !== Infinity) {
             const gamesList = await fetchGames(merchantId)
             if (!cancelled && gamesList.length >= maxGames) {
-              setMessage(
-                `You've reached the maximum of ${maxGames} game${maxGames !== 1 ? 's' : ''} for your ${tier} plan. Upgrade to add more.`,
-              )
+              setState({ max: maxGames, tier })
             }
           }
         } else if (resource === 'ctas') {
@@ -38,9 +38,7 @@ export function TierLimitBanner({ resource }: Props) {
           if (maxCtas !== Infinity) {
             const ctasList = await fetchCtas(merchantId)
             if (!cancelled && ctasList.length >= maxCtas) {
-              setMessage(
-                `You've reached the maximum of ${maxCtas} CTA${maxCtas !== 1 ? 's' : ''} for your ${tier} plan. Upgrade to add more.`,
-              )
+              setState({ max: maxCtas, tier })
             }
           }
         }
@@ -53,13 +51,29 @@ export function TierLimitBanner({ resource }: Props) {
     return () => { cancelled = true }
   }, [merchantId, resource])
 
-  if (!message) return null
+  if (!state) return null
+
+  const noun =
+    resource === 'games'
+      ? state.max === 1
+        ? (lang === 'fr' ? 'jeu' : 'game')
+        : (lang === 'fr' ? 'jeux' : 'games')
+      : state.max === 1
+        ? 'CTA'
+        : 'CTAs'
+
+  const message =
+    lang === 'fr'
+      ? `Vous avez atteint la limite de ${state.max} ${noun} pour votre plan ${state.tier}. Passez à un plan supérieur pour en ajouter plus.`
+      : `You've reached the maximum of ${state.max} ${noun} for your ${state.tier} plan. Upgrade to add more.`
+
+  const upgradeLink = lang === 'fr' ? 'Voir les plans' : 'Upgrade now'
 
   return (
     <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
       {message}{' '}
       <a href="/dashboard/upgrade" className="font-medium underline">
-        Upgrade now
+        {upgradeLink}
       </a>
     </div>
   )

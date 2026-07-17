@@ -19,6 +19,8 @@ import {
 } from 'lucide-react'
 import { Button } from '@winandwin/ui'
 import { signOut } from '@/lib/auth-client'
+import { AppLanguageToggle, useApp } from '@/lib/i18n/app-lang-context'
+import type { AppText } from '@/lib/i18n/app-text'
 
 interface User {
   id: string
@@ -40,25 +42,19 @@ type IconComponent = ComponentType<SVGProps<SVGSVGElement>>
 
 interface NavItem {
   href: string
-  label: string
+  labelKey: keyof AppText
   Icon: IconComponent
 }
 
 const navItems: NavItem[] = [
-  { href: '/dashboard', label: 'Dashboard', Icon: LayoutDashboard },
-  { href: '/dashboard/games', label: 'Games', Icon: Gamepad2 },
-  { href: '/dashboard/coupons', label: 'Coupons', Icon: Ticket },
-  { href: '/dashboard/players', label: 'Players', Icon: Users },
-  { href: '/dashboard/analytics', label: 'Analytics', Icon: BarChart3 },
-  { href: '/dashboard/ctas', label: 'CTAs', Icon: Link2 },
-  { href: '/dashboard/settings', label: 'Settings', Icon: Settings },
+  { href: '/dashboard', labelKey: 'shellNavDashboard', Icon: LayoutDashboard },
+  { href: '/dashboard/games', labelKey: 'shellNavGames', Icon: Gamepad2 },
+  { href: '/dashboard/coupons', labelKey: 'shellNavCoupons', Icon: Ticket },
+  { href: '/dashboard/players', labelKey: 'shellNavPlayers', Icon: Users },
+  { href: '/dashboard/analytics', labelKey: 'shellNavAnalytics', Icon: BarChart3 },
+  { href: '/dashboard/ctas', labelKey: 'shellNavCtas', Icon: Link2 },
+  { href: '/dashboard/settings', labelKey: 'shellNavSettings', Icon: Settings },
 ]
-
-const TIER_LABEL: Record<string, string> = {
-  free: 'Free',
-  pro: 'Pro',
-  enterprise: 'Enterprise',
-}
 
 export function DashboardShell({
   user,
@@ -68,6 +64,7 @@ export function DashboardShell({
   isAdmin,
   children,
 }: DashboardShellProps) {
+  const { txt } = useApp()
   const pathname = usePathname()
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
@@ -80,7 +77,15 @@ export function DashboardShell({
     return pathname.startsWith(href)
   }
 
-  const currentPageLabel = navItems.find((item) => isActive(item.href))?.label || 'Dashboard'
+  const tierLabels: Record<string, string> = {
+    free: txt.shellTierFree,
+    starter: txt.shellTierStarter,
+    pro: txt.shellTierPro,
+    enterprise: txt.shellTierEnterprise,
+  }
+
+  const activeItem = navItems.find((item) => isActive(item.href))
+  const currentPageLabel = activeItem ? txt[activeItem.labelKey] : txt.shellNavDashboard
   const userInitial = user.name?.charAt(0).toUpperCase() || '?'
   const showUpgradeCta = merchantTier && merchantTier !== 'enterprise'
 
@@ -97,7 +102,7 @@ export function DashboardShell({
             <p className="truncate text-xs font-medium text-foreground/80">{merchantName}</p>
             {merchantTier && (
               <span className="inline-flex shrink-0 items-center rounded-full bg-accent px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-accent-foreground">
-                {TIER_LABEL[merchantTier] ?? merchantTier}
+                {tierLabels[merchantTier] ?? merchantTier}
               </span>
             )}
           </div>
@@ -125,7 +130,7 @@ export function DashboardShell({
                   active ? 'text-primary-foreground' : 'text-muted-foreground group-hover:text-accent-foreground'
                 }`}
               />
-              <span className="truncate">{item.label}</span>
+              <span className="truncate">{txt[item.labelKey]}</span>
             </a>
           )
         })}
@@ -141,7 +146,7 @@ export function DashboardShell({
               onClick={() => setSidebarOpen(false)}
             >
               <ArrowUpRight className="h-4 w-4 shrink-0 text-muted-foreground group-hover:text-accent-foreground" />
-              <span className="truncate">Open Player Page</span>
+              <span className="truncate">{txt.shellOpenPlayerPage}</span>
             </a>
           )}
 
@@ -152,7 +157,7 @@ export function DashboardShell({
               onClick={() => setSidebarOpen(false)}
             >
               <Sparkles className="h-4 w-4 shrink-0" />
-              <span>Upgrade Plan</span>
+              <span>{txt.shellUpgradePlan}</span>
             </a>
           )}
         </div>
@@ -176,7 +181,7 @@ export function DashboardShell({
             className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg border border-foreground/10 bg-foreground/5 px-3 py-1.5 text-xs font-semibold text-foreground transition-colors hover:bg-foreground hover:text-background"
           >
             <Shield className="h-3.5 w-3.5" />
-            Super Admin
+            {txt.shellSuperAdmin}
           </a>
         )}
 
@@ -188,7 +193,7 @@ export function DashboardShell({
           className="mt-2 flex w-full items-center justify-center gap-2 rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
         >
           <LogOut className="h-3.5 w-3.5" />
-          Sign Out
+          {txt.shellSignOut}
         </button>
       </div>
     </div>
@@ -216,7 +221,7 @@ export function DashboardShell({
                 type="button"
                 onClick={() => setSidebarOpen(false)}
                 className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-                aria-label="Close menu"
+                aria-label={txt.commonClose}
               >
                 <X className="h-5 w-5" />
               </button>
@@ -234,25 +239,27 @@ export function DashboardShell({
             type="button"
             onClick={() => setSidebarOpen(true)}
             className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground lg:hidden"
-            aria-label="Open menu"
+            aria-label={txt.commonOpen}
           >
             <Menu className="h-5 w-5" />
           </button>
 
           <div className="min-w-0 flex-1">
             <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-              {merchantName ?? 'Workspace'}
+              {merchantName ?? txt.shellWorkspace}
             </p>
             <h2 className="truncate text-lg font-semibold leading-tight text-foreground">
               {currentPageLabel}
             </h2>
           </div>
 
+          <AppLanguageToggle />
+
           {playerUrl && (
             <Button asChild variant="outline" size="sm" className="hidden sm:inline-flex">
               <a href={playerUrl} target="_blank" rel="noopener noreferrer">
                 <ArrowUpRight className="h-4 w-4" />
-                View Player Page
+                {txt.shellViewPlayerPage}
               </a>
             </Button>
           )}

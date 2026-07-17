@@ -5,16 +5,17 @@ import { Box, Disc, Gamepad2, type LucideIcon, Sparkles } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { fetchGames, type GameWithStats } from '@/lib/api'
 import { useMerchantId } from '@/lib/merchant-context'
+import { useApp } from '@/lib/i18n/app-lang-context'
+import type { AppText } from '@/lib/i18n/app-text'
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8787'
 
-// Visual identity per game type. Lucide icons replace the emojis that were
-// flagged by the UX checklist — the channel/type is still recognisable at a
-// glance because the icon + label live together.
-const GAME_TYPE_META: Record<string, { label: string; Icon: LucideIcon; tone: string }> = {
-  wheel: { label: 'Wheel of Fortune', Icon: Disc, tone: 'bg-sky-50 text-sky-700' },
-  slots: { label: 'Slot Machine', Icon: Sparkles, tone: 'bg-violet-50 text-violet-700' },
-  mystery_box: { label: 'Mystery Box', Icon: Box, tone: 'bg-amber-50 text-amber-700' },
+// Visual identity per game type. Labels live in the app text bundle so the
+// tile subtitles switch on FR/EN.
+const GAME_TYPE_META: Record<string, { labelKey: keyof AppText; Icon: LucideIcon; tone: string }> = {
+  wheel: { labelKey: 'gamesTypeWheel', Icon: Disc, tone: 'bg-sky-50 text-sky-700' },
+  slots: { labelKey: 'gamesTypeSlots', Icon: Sparkles, tone: 'bg-violet-50 text-violet-700' },
+  mystery_box: { labelKey: 'gamesTypeMystery', Icon: Box, tone: 'bg-amber-50 text-amber-700' },
 }
 
 const STATUS_STYLES: Record<string, string> = {
@@ -25,6 +26,7 @@ const STATUS_STYLES: Record<string, string> = {
 }
 
 export function GameList() {
+  const { txt, lang } = useApp()
   const merchantId = useMerchantId()
   const [games, setGames] = useState<GameWithStats[]>([])
   const [loading, setLoading] = useState(true)
@@ -46,7 +48,7 @@ export function GameList() {
         }
       } catch (err) {
         if (!cancelled) {
-          setError(err instanceof Error ? err.message : 'Failed to load games')
+          setError(err instanceof Error ? err.message : txt.commonError)
         }
       } finally {
         if (!cancelled) {
@@ -59,13 +61,26 @@ export function GameList() {
     return () => {
       cancelled = true
     }
-  }, [merchantId])
+  }, [merchantId, txt])
+
+  const statusLabels: Record<string, string> = {
+    active: txt.gamesStatusActive,
+    draft: txt.gamesStatusDraft,
+    paused: txt.gamesStatusPaused,
+    ended: txt.gamesStatusEnded,
+  }
+
+  const actionLabels = {
+    pause: lang === 'fr' ? 'Mettre en pause' : 'Pause',
+    resume: lang === 'fr' ? 'Reprendre' : 'Resume',
+    activate: lang === 'fr' ? 'Activer' : 'Activate',
+  }
 
   if (loading) {
     return (
       <Card>
         <CardContent className="flex items-center justify-center py-12">
-          <p className="text-sm text-muted-foreground">Loading games...</p>
+          <p className="text-sm text-muted-foreground">{txt.commonLoading}</p>
         </CardContent>
       </Card>
     )
@@ -88,9 +103,9 @@ export function GameList() {
           <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-muted text-muted-foreground">
             <Gamepad2 className="h-6 w-6" />
           </div>
-          <p className="mt-3 text-lg font-medium">No games yet</p>
+          <p className="mt-3 text-lg font-medium">{txt.gamesEmptyTitle}</p>
           <p className="text-sm text-muted-foreground">
-            Create your first game to start engaging customers.
+            {txt.gamesEmptyBody}
           </p>
         </CardContent>
       </Card>
@@ -109,20 +124,25 @@ export function GameList() {
         prev.map((g) => (g.id === gameId ? { ...g, status: newStatus } : g)),
       )
     } catch {
-      setError('Failed to update game status')
+      setError(txt.commonError)
     }
   }
 
   return (
     <div className="grid gap-4 md:grid-cols-2">
       {games.map((game) => {
-        const meta = GAME_TYPE_META[game.type] || {
-          label: game.type,
-          Icon: Gamepad2,
-          tone: 'bg-muted text-muted-foreground',
-        }
-        const Icon = meta.Icon
+        const meta = GAME_TYPE_META[game.type]
+        const Icon = meta?.Icon ?? Gamepad2
+        const tone = meta?.tone ?? 'bg-muted text-muted-foreground'
+        const subtitle = meta ? txt[meta.labelKey] : game.type
         const statusClass = STATUS_STYLES[game.status] || STATUS_STYLES.draft!
+        const statusLabel = statusLabels[game.status] ?? game.status
+        const actionLabel =
+          game.status === 'active'
+            ? actionLabels.pause
+            : game.status === 'paused'
+              ? actionLabels.resume
+              : actionLabels.activate
 
         return (
           <a key={game.id} href={`/dashboard/games/${game.id}`} className="block">
@@ -130,19 +150,19 @@ export function GameList() {
               <CardHeader className="flex flex-row items-center justify-between pb-3">
                 <div className="flex min-w-0 items-center gap-3">
                   <div
-                    className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${meta.tone}`}
+                    className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${tone}`}
                   >
                     <Icon className="h-5 w-5" />
                   </div>
                   <div className="min-w-0">
                     <CardTitle className="truncate text-base">{game.name}</CardTitle>
-                    <p className="truncate text-xs text-muted-foreground">{meta.label}</p>
+                    <p className="truncate text-xs text-muted-foreground">{subtitle}</p>
                   </div>
                 </div>
                 <span
-                  className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium capitalize ${statusClass}`}
+                  className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] font-medium ${statusClass}`}
                 >
-                  {game.status}
+                  {statusLabel}
                 </span>
               </CardHeader>
               <CardContent>
@@ -152,19 +172,19 @@ export function GameList() {
                       <span className="font-semibold tabular-nums text-foreground">
                         {game.totalPlays}
                       </span>{' '}
-                      plays
+                      {txt.gamesColPlays.toLowerCase()}
                     </div>
                     <div>
                       <span className="font-semibold tabular-nums text-foreground">
                         {game.totalWins}
                       </span>{' '}
-                      wins
+                      {txt.gamesColWins.toLowerCase()}
                     </div>
                     <div>
                       <span className="font-semibold tabular-nums text-foreground">
                         {game.prizes}
                       </span>{' '}
-                      prizes
+                      {txt.gamesColPrizes.toLowerCase()}
                     </div>
                   </div>
                   <Button
@@ -175,11 +195,7 @@ export function GameList() {
                       toggleStatus(game.id, game.status)
                     }}
                   >
-                    {game.status === 'active'
-                      ? 'Pause'
-                      : game.status === 'paused'
-                        ? 'Resume'
-                        : 'Activate'}
+                    {actionLabel}
                   </Button>
                 </div>
               </CardContent>

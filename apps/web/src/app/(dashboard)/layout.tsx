@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation'
 import { requireSessionWithMerchant } from '@/lib/session'
 import { MerchantProvider } from '@/lib/merchant-context'
+import { AppLangProvider } from '@/lib/i18n/app-lang-context'
 import { DashboardShell } from './dashboard-shell'
 import { fetchMerchant } from '@/lib/api'
 
@@ -30,16 +31,18 @@ export default async function DashboardLayout({ children }: { children: React.Re
   }
 
   return (
-    <MerchantProvider merchantId={merchantId ?? ''} merchantTier={merchantTier}>
-      <DashboardShell
-        user={session.user}
-        merchantName={merchantName}
-        merchantSlug={merchantSlug}
-        merchantTier={merchantTier}
-        isAdmin={isAdmin}
-      >
-        {children}
-      </DashboardShell>
-    </MerchantProvider>
+    <AppLangProvider>
+      <MerchantProvider merchantId={merchantId ?? ''} merchantTier={merchantTier}>
+        <DashboardShell
+          user={session.user}
+          merchantName={merchantName}
+          merchantSlug={merchantSlug}
+          merchantTier={merchantTier}
+          isAdmin={isAdmin}
+        >
+          {children}
+        </DashboardShell>
+      </MerchantProvider>
+    </AppLangProvider>
   )
 }
