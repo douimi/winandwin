@@ -13,6 +13,11 @@ export const users = pgTable('user', {
   merchantId: text('merchantId').references(() => merchants.id, { onDelete: 'set null' }),
   role: varchar('role', { length: 20 }).notNull().default('owner'),
   isAdmin: boolean('isAdmin').notNull().default(false),
+  // Moderation state. 'active' means the user can sign in normally. 'pending'
+  // means their sign-up is awaiting admin approval — sign-in is blocked
+  // with a friendly message, and admins see them in /admin/pending. Set to
+  // 'pending' automatically whenever the "public sign-up" flag is off.
+  activationStatus: varchar('activationStatus', { length: 20 }).notNull().default('active'),
   createdAt: timestamp('createdAt').notNull().defaultNow(),
   updatedAt: timestamp('updatedAt').notNull().defaultNow(),
 })

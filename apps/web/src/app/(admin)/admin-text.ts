@@ -13,6 +13,7 @@ const fr = {
   shellSectionNavigation: 'Navigation',
   shellNavOverview: 'Aperçu',
   shellNavMerchants: 'Commerçants',
+  shellNavPending: 'En attente',
   shellNavContacts: 'Contacts',
   shellNavSettings: 'Paramètres',
   shellBackToDashboard: 'Retour au tableau de bord',
@@ -33,6 +34,9 @@ const fr = {
   commonNotFound: 'Introuvable',
   commonUnauthorized: 'Non autorisé',
   commonUnknownError: 'Une erreur est survenue',
+  commonName: 'Nom',
+  commonEmail: 'Email',
+  commonActions: 'Actions',
 
   // Overview
   overviewTitle: 'Aperçu',
@@ -200,6 +204,29 @@ const fr = {
   settingsSignupBadgeOn: 'Activée',
   settingsSignupBadgeOff: 'Désactivée',
 
+  // Pending activations page
+  pendingPageTitle: 'Inscriptions en attente',
+  pendingPageCountOne: 'compte à examiner',
+  pendingPageCountMany: 'comptes à examiner',
+  pendingColBusiness: 'Entreprise',
+  pendingColSignedUp: 'Inscrit le',
+  pendingEmptyTitle: 'Aucune inscription en attente',
+  pendingEmptyBody: 'Les nouveaux comptes créés en mode modération apparaîtront ici.',
+  pendingActivate: 'Activer le compte',
+  pendingFeedbackActivated: 'compte activé',
+  pendingFeedbackFailed: 'Impossible d\'activer le compte',
+  pendingMailSubject: 'Votre inscription Win & Win',
+
+  // Notifications bell
+  notifBellTitle: 'Notifications',
+  notifBellEmpty: 'Rien à signaler pour le moment.',
+  notifBellPending: 'inscription en attente d\'approbation',
+  notifBellPendingMany: 'inscriptions en attente d\'approbation',
+  notifBellContact: 'nouvelle demande de contact',
+  notifBellContactMany: 'nouvelles demandes de contact',
+  notifBellViewPending: 'Voir les inscriptions',
+  notifBellViewContacts: 'Voir les demandes',
+
   // Atmospheres (select options)
   atmosphereJoyful: 'Joyeux',
   atmosphereElegant: 'Élégant',
@@ -226,6 +253,7 @@ const en: AdminText = {
   shellSectionNavigation: 'Navigation',
   shellNavOverview: 'Overview',
   shellNavMerchants: 'Merchants',
+  shellNavPending: 'Pending',
   shellNavContacts: 'Contacts',
   shellNavSettings: 'Settings',
   shellBackToDashboard: 'Back to Dashboard',
@@ -245,6 +273,9 @@ const en: AdminText = {
   commonNotFound: 'Not found',
   commonUnauthorized: 'Unauthorized',
   commonUnknownError: 'Something went wrong',
+  commonName: 'Name',
+  commonEmail: 'Email',
+  commonActions: 'Actions',
 
   overviewTitle: 'Overview',
   overviewKpiMerchants: 'Merchants',
@@ -404,6 +435,27 @@ const en: AdminText = {
   settingsSignupFeedbackFail: 'Failed to save setting',
   settingsSignupBadgeOn: 'Enabled',
   settingsSignupBadgeOff: 'Disabled',
+
+  pendingPageTitle: 'Pending sign-ups',
+  pendingPageCountOne: 'account to review',
+  pendingPageCountMany: 'accounts to review',
+  pendingColBusiness: 'Business',
+  pendingColSignedUp: 'Signed up',
+  pendingEmptyTitle: 'No pending sign-ups',
+  pendingEmptyBody: 'New accounts created in moderation mode will show up here.',
+  pendingActivate: 'Activate account',
+  pendingFeedbackActivated: 'account activated',
+  pendingFeedbackFailed: 'Unable to activate account',
+  pendingMailSubject: 'Your Win & Win sign-up',
+
+  notifBellTitle: 'Notifications',
+  notifBellEmpty: 'Nothing to review right now.',
+  notifBellPending: 'sign-up awaiting approval',
+  notifBellPendingMany: 'sign-ups awaiting approval',
+  notifBellContact: 'new contact request',
+  notifBellContactMany: 'new contact requests',
+  notifBellViewPending: 'View sign-ups',
+  notifBellViewContacts: 'View requests',
 
   atmosphereJoyful: 'Joyful',
   atmosphereElegant: 'Elegant',

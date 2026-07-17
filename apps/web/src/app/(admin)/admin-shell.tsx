@@ -11,10 +11,12 @@ import {
   Settings,
   Shield,
   Store,
+  UserCheck,
   X,
 } from 'lucide-react'
 import { signOut } from '@/lib/auth-client'
 import { AdminLanguageToggle, useAdmin } from './admin-lang-context'
+import { NotificationBell } from './notification-bell'
 
 interface User {
   id: string
@@ -32,13 +34,19 @@ type IconComponent = ComponentType<SVGProps<SVGSVGElement>>
 
 interface NavItem {
   href: string
-  labelKey: 'shellNavOverview' | 'shellNavMerchants' | 'shellNavContacts' | 'shellNavSettings'
+  labelKey:
+    | 'shellNavOverview'
+    | 'shellNavMerchants'
+    | 'shellNavPending'
+    | 'shellNavContacts'
+    | 'shellNavSettings'
   Icon: IconComponent
 }
 
 const navItems: NavItem[] = [
   { href: '/admin', labelKey: 'shellNavOverview', Icon: LayoutDashboard },
   { href: '/admin/merchants', labelKey: 'shellNavMerchants', Icon: Store },
+  { href: '/admin/pending', labelKey: 'shellNavPending', Icon: UserCheck },
   { href: '/admin/contacts', labelKey: 'shellNavContacts', Icon: Inbox },
   { href: '/admin/settings', labelKey: 'shellNavSettings', Icon: Settings },
 ]
@@ -184,6 +192,7 @@ export function AdminShell({ user, children }: AdminShellProps) {
             <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{txt.shellSuperAdminLabel}</p>
             <h2 className="truncate text-lg font-semibold leading-tight text-foreground">{currentPageText}</h2>
           </div>
+          <NotificationBell />
           <AdminLanguageToggle />
         </header>
 

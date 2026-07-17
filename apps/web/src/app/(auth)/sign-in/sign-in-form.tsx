@@ -1,7 +1,7 @@
 'use client'
 
 import { Button, Card, CardContent, CardHeader, CardTitle, Input, Label } from '@winandwin/ui'
-import { Eye, EyeOff, Loader2 } from 'lucide-react'
+import { Clock, Eye, EyeOff, Loader2 } from 'lucide-react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useState } from 'react'
 import { signIn } from '@/lib/auth-client'
@@ -17,6 +17,11 @@ export function SignInForm({ googleEnabled }: { googleEnabled: boolean }) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
+  // Set when better-auth reports the user is still awaiting activation.
+  // Rendered as a bigger, calmer amber banner (not the destructive red
+  // used for wrong-credentials) so the merchant reads it as reassurance,
+  // not a rejection.
+  const [pending, setPending] = useState(false)
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
 
@@ -24,11 +29,21 @@ export function SignInForm({ googleEnabled }: { googleEnabled: boolean }) {
     e.preventDefault()
     setLoading(true)
     setError('')
+    setPending(false)
 
     const result = await signIn.email({ email, password })
 
     if (result.error) {
-      setError(result.error.message || txt.signInInvalidCredentials)
+      // Better-auth encodes our custom error via the `code` field. We
+      // handle a couple by string match too because some transport layers
+      // strip the code between server and client.
+      const code = (result.error as { code?: string }).code
+      const msg = result.error.message ?? ''
+      if (code === 'PENDING_ACTIVATION' || /awaiting approval|pending activation/i.test(msg)) {
+        setPending(true)
+      } else {
+        setError(msg || txt.signInInvalidCredentials)
+      }
       setLoading(false)
     } else {
       router.push(callbackUrl)
@@ -97,6 +112,20 @@ export function SignInForm({ googleEnabled }: { googleEnabled: boolean }) {
                 </button>
               </div>
             </div>
+
+            {pending && (
+              <div className="rounded-lg border border-amber-300/60 bg-amber-50 p-3">
+                <div className="flex items-start gap-2.5">
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-amber-100 text-amber-700">
+                    <Clock className="h-4 w-4" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-semibold text-amber-900">{txt.signInPendingTitle}</p>
+                    <p className="mt-0.5 text-xs text-amber-800">{txt.signInPendingBody}</p>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {error && (
               <div className="rounded-lg border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">

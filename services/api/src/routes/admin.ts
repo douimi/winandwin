@@ -679,3 +679,113 @@ adminRouter.patch('/settings/:key', async (c) => {
     )
   }
 })
+
+// ---------------------------------------------------------------------------
+// GET /users?status=pending — list users awaiting activation
+//
+// Also joins the merchants table so the admin sees business name +
+// category alongside each user (the sign-up form provisions the merchant
+// even in the moderated state so admins have this context at review time).
+// ---------------------------------------------------------------------------
+adminRouter.get('/users', async (c) => {
+  try {
+    const db = c.get('db')
+    const status = c.req.query('status')
+
+    const rows = await db
+      .select({
+        id: users.id,
+        name: users.name,
+        email: users.email,
+        activationStatus: users.activationStatus,
+        createdAt: users.createdAt,
+        merchantId: users.merchantId,
+        merchantName: merchants.name,
+        merchantCategory: merchants.category,
+        merchantSlug: merchants.slug,
+      })
+      .from(users)
+      .leftJoin(merchants, eq(merchants.id, users.merchantId))
+      .where(status ? eq(users.activationStatus, status) : sql`TRUE`)
+      .orderBy(desc(users.createdAt))
+      .limit(200)
+
+    return c.json({ success: true, data: rows })
+  } catch (err) {
+    console.error('Error listing users:', err)
+    return c.json(
+      { success: false, error: { code: 'INTERNAL_ERROR', message: 'Failed to list users' } },
+      500,
+    )
+  }
+})
+
+// ---------------------------------------------------------------------------
+// POST /users/:id/activate — flip a pending user to active
+// ---------------------------------------------------------------------------
+adminRouter.post('/users/:id/activate', async (c) => {
+  try {
+    const db = c.get('db')
+    const id = c.req.param('id')
+    const [row] = await db
+      .update(users)
+      .set({ activationStatus: 'active', updatedAt: new Date() })
+      .where(eq(users.id, id))
+      .returning({ id: users.id, activationStatus: users.activationStatus })
+
+    if (!row) {
+      return c.json(
+        { success: false, error: { code: 'NOT_FOUND', message: 'User not found' } },
+        404,
+      )
+    }
+    return c.json({ success: true, data: row })
+  } catch (err) {
+    console.error('Error activating user:', err)
+    return c.json(
+      { success: false, error: { code: 'INTERNAL_ERROR', message: 'Failed to activate user' } },
+      500,
+    )
+  }
+})
+
+// ---------------------------------------------------------------------------
+// GET /notifications/counts — feeds the admin topbar bell
+//
+// Counts are cheap: rows in a "review" state. When either count is > 0
+// the bell shows a badge; the dropdown links to the matching admin page.
+// ---------------------------------------------------------------------------
+adminRouter.get('/notifications/counts', async (c) => {
+  try {
+    const db = c.get('db')
+    const [pendingRow, newContactsRow] = await Promise.all([
+      db
+        .select({ n: sql<number>`count(*)::int` })
+        .from(users)
+        .where(eq(users.activationStatus, 'pending')),
+      // contact_requests is created via raw SQL in the Next.js contact API
+      // route, so it isn't in the drizzle schema. Raw query here.
+      db.execute(sql`SELECT count(*)::int AS n FROM contact_requests WHERE status = 'new'`),
+    ])
+
+    const pendingUsers = pendingRow[0]?.n ?? 0
+    const rawContacts = (newContactsRow as { rows?: Array<{ n?: number }> }).rows
+    const newContacts = rawContacts?.[0]?.n ?? 0
+
+    return c.json({
+      success: true,
+      data: {
+        pendingUsers,
+        newContacts,
+        total: pendingUsers + newContacts,
+      },
+    })
+  } catch (err) {
+    console.error('Error getting notification counts:', err)
+    // Fail-open: don't 500 the topbar — return zeros.
+    return c.json({
+      success: true,
+      data: { pendingUsers: 0, newContacts: 0, total: 0 },
+    })
+  }
+})

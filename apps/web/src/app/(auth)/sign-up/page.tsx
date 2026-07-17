@@ -1,7 +1,6 @@
 import type { Metadata } from 'next'
 import { isGoogleAuthEnabled } from '@/lib/auth-config'
 import { getPublicSignupEnabled } from '@/lib/platform-flags'
-import { SignUpDisabled } from './sign-up-disabled'
 import { SignUpForm } from './sign-up-form'
 
 export const metadata: Metadata = {
@@ -12,13 +11,14 @@ export const metadata: Metadata = {
 }
 
 export default async function SignUpPage() {
-  // When public sign-up is off the sign-up page becomes a "contact us"
-  // funnel. Existing merchants keep signing in normally at /sign-in.
-  const signupEnabled = await getPublicSignupEnabled()
-  if (!signupEnabled) {
-    return <SignUpDisabled />
-  }
-
-  const googleEnabled = isGoogleAuthEnabled()
-  return <SignUpForm googleEnabled={googleEnabled} />
+  // Public sign-up stays open in both flag states. When the flag is off,
+  // new accounts get an `activationStatus = 'pending'` on the server and
+  // sign-in is blocked until an admin approves them. The form still lets
+  // users complete the signup — it just switches to a "thanks, we'll
+  // review" success screen instead of routing to /dashboard.
+  const [signupEnabled, googleEnabled] = await Promise.all([
+    getPublicSignupEnabled(),
+    Promise.resolve(isGoogleAuthEnabled()),
+  ])
+  return <SignUpForm googleEnabled={googleEnabled} moderationEnabled={!signupEnabled} />
 }

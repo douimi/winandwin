@@ -48,7 +48,18 @@ const CATEGORIES: Category[] = [
   { value: 'other', labelKey: 'catOther', Icon: Building2 },
 ]
 
-export function SignUpForm({ googleEnabled }: { googleEnabled: boolean }) {
+interface SignUpFormProps {
+  googleEnabled: boolean
+  /**
+   * When true, sign-ups are moderated: better-auth sets `activationStatus`
+   * to 'pending' on the new user, sign-in is blocked until an admin
+   * approves, and the form ends on a "pending approval" success screen
+   * instead of routing to /dashboard.
+   */
+  moderationEnabled: boolean
+}
+
+export function SignUpForm({ googleEnabled, moderationEnabled }: SignUpFormProps) {
   const { txt } = useApp()
   const router = useRouter()
   const [formData, setFormData] = useState({
@@ -61,6 +72,7 @@ export function SignUpForm({ googleEnabled }: { googleEnabled: boolean }) {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
+  const [pendingApproval, setPendingApproval] = useState<string | null>(null)
 
   function updateField(field: string, value: string) {
     setFormData((prev) => ({ ...prev, [field]: value }))
@@ -85,18 +97,39 @@ export function SignUpForm({ googleEnabled }: { googleEnabled: boolean }) {
       }
 
       const userId = result.data?.user?.id
-      await createMerchant({
-        name: formData.businessName,
-        category: formData.category,
-        email: formData.email,
-        userId: userId,
-      })
+      // Provision the merchant record right away in both flag states so the
+      // admin has all context (business name + category) at approval time.
+      // Failures here are swallowed on the moderated path — the account is
+      // still created and an admin can finish onboarding manually.
+      try {
+        await createMerchant({
+          name: formData.businessName,
+          category: formData.category,
+          email: formData.email,
+          userId: userId,
+        })
+      } catch (mErr) {
+        if (!moderationEnabled) throw mErr
+      }
+
+      if (moderationEnabled) {
+        // Sign-in is blocked until admin approves, so we can't route into
+        // /dashboard. Show a friendly success card with the submitted
+        // email for reassurance.
+        setPendingApproval(formData.email)
+        setLoading(false)
+        return
+      }
 
       router.push('/dashboard')
     } catch (err) {
       setError(err instanceof Error ? err.message : txt.signUpErrorSetup)
       setLoading(false)
     }
+  }
+
+  if (pendingApproval) {
+    return <PendingApprovalCard email={pendingApproval} />
   }
 
   return (
@@ -301,5 +334,69 @@ function ProofTile({
         <p className="text-xs text-muted-foreground">{detail}</p>
       </div>
     </li>
+  )
+}
+
+// Shown after a successful sign-up when moderation is on. The account
+// exists in the DB with activationStatus='pending' — sign-in is blocked
+// until an admin flips it to 'active' from the admin console.
+function PendingApprovalCard({ email }: { email: string }) {
+  const { txt } = useApp()
+  return (
+    <div className="mx-auto flex max-w-lg flex-col items-center">
+      <a href="/" className="mb-6 flex flex-col items-center gap-2">
+        <img src="/logo.png" alt="Win & Win" className="h-48 w-auto" />
+      </a>
+
+      <Card className="w-full shadow-lg">
+        <CardHeader className="pb-3 text-center">
+          <div className="mx-auto mb-2 inline-flex w-fit items-center gap-1.5 rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-amber-700">
+            <Sparkles className="h-3 w-3" />
+            {txt.pendingBadge}
+          </div>
+          <CardTitle className="text-2xl font-semibold tracking-tight">
+            {txt.pendingTitle}
+          </CardTitle>
+          <p className="mt-2 text-sm text-muted-foreground">
+            {txt.pendingBody}
+          </p>
+        </CardHeader>
+
+        <CardContent className="space-y-4">
+          <div className="rounded-xl border border-border bg-muted/40 px-4 py-3 text-center">
+            <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+              {txt.pendingSubmittedEmail}
+            </p>
+            <p className="mt-1 truncate font-mono text-sm font-semibold text-foreground">{email}</p>
+          </div>
+
+          <ul className="space-y-2 rounded-xl border border-border bg-card px-4 py-3 text-xs text-muted-foreground">
+            <li className="flex items-start gap-2">
+              <Star className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-500 fill-current" />
+              {txt.pendingLead1}
+            </li>
+            <li className="flex items-start gap-2">
+              <TrendingUp className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-600" />
+              {txt.pendingLead2}
+            </li>
+            <li className="flex items-start gap-2">
+              <Zap className="mt-0.5 h-3.5 w-3.5 shrink-0 text-sky-600" />
+              {txt.pendingLead3}
+            </li>
+          </ul>
+
+          <p className="text-center text-xs text-muted-foreground">
+            {txt.pendingSupport}
+          </p>
+
+          <a
+            href="/"
+            className="flex h-11 w-full items-center justify-center rounded-lg bg-primary px-4 text-sm font-semibold text-primary-foreground transition-all hover:-translate-y-0.5 hover:bg-primary/90"
+          >
+            {txt.pendingBackHome}
+          </a>
+        </CardContent>
+      </Card>
+    </div>
   )
 }

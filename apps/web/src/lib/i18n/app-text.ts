@@ -128,6 +128,23 @@ const fr = {
   signupDisabledLead2: 'Premier jeu en ligne en moins de 24 h',
   signupDisabledLead3: 'Aucun engagement, test gratuit',
 
+  // ── Pending approval (after sign-up, moderation on) ─────────────────
+  pendingBadge: 'En attente d\'approbation',
+  pendingTitle: 'Votre compte a bien été créé',
+  pendingBody:
+    'Notre équipe va examiner votre inscription et vous contactera très bientôt pour finaliser la configuration de votre espace.',
+  pendingSubmittedEmail: 'Email transmis',
+  pendingLead1: 'Un expert prend le relais pour vous',
+  pendingLead2: 'Prise de contact sous 24 heures ouvrées',
+  pendingLead3: 'Aucune action requise de votre part pour l\'instant',
+  pendingSupport: 'Une question ? Répondez à l\'email que vous allez recevoir de notre équipe.',
+  pendingBackHome: 'Retour à l\'accueil',
+
+  // Sign-in — friendly error when the account is still pending admin review
+  signInPendingTitle: 'Compte en attente d\'approbation',
+  signInPendingBody:
+    'Votre inscription a bien été enregistrée. Notre équipe vous contactera sous peu pour valider votre compte et démarrer votre onboarding.',
+
   // ── Business categories ────────────────────────────────────────────
   catRestaurant: 'Restaurant',
   catCafe: 'Café',
@@ -518,6 +535,21 @@ const en: AppText = {
   signupDisabledLead1: 'A dedicated expert walks you through it',
   signupDisabledLead2: 'First game live within 24 hours',
   signupDisabledLead3: 'No commitment, free trial',
+
+  pendingBadge: 'Awaiting approval',
+  pendingTitle: 'Your account has been created',
+  pendingBody:
+    'Our team will review your sign-up and reach out shortly to finish setting up your workspace with you.',
+  pendingSubmittedEmail: 'Submitted email',
+  pendingLead1: 'A dedicated expert takes it from here',
+  pendingLead2: 'Reach-out within 24 business hours',
+  pendingLead3: 'Nothing to do on your side for now',
+  pendingSupport: 'Any questions? Reply to the welcome email our team will send you.',
+  pendingBackHome: 'Back to home',
+
+  signInPendingTitle: 'Account awaiting approval',
+  signInPendingBody:
+    'Your sign-up is registered. Our team will contact you soon to activate your account and start your onboarding.',
 
   catRestaurant: 'Restaurant',
   catCafe: 'Cafe',

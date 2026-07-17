@@ -197,3 +197,41 @@ export function updateAdminSetting(key: string, value: unknown): Promise<unknown
     body: JSON.stringify({ value }),
   })
 }
+
+// ---------------------------------------------------------------------------
+// Pending activations + notifications
+// ---------------------------------------------------------------------------
+
+export interface AdminUserRow {
+  id: string
+  name: string
+  email: string
+  activationStatus: 'active' | 'pending' | string
+  createdAt: string
+  merchantId: string | null
+  merchantName: string | null
+  merchantCategory: string | null
+  merchantSlug: string | null
+}
+
+export function fetchAdminUsers(status?: 'pending' | 'active'): Promise<AdminUserRow[]> {
+  const params = status ? `?status=${encodeURIComponent(status)}` : ''
+  return adminRequest<AdminUserRow[]>(`/api/v1/admin/users${params}`)
+}
+
+export function activateAdminUser(id: string): Promise<{ id: string; activationStatus: string }> {
+  return adminRequest<{ id: string; activationStatus: string }>(
+    `/api/v1/admin/users/${encodeURIComponent(id)}/activate`,
+    { method: 'POST' },
+  )
+}
+
+export interface AdminNotificationCounts {
+  pendingUsers: number
+  newContacts: number
+  total: number
+}
+
+export function fetchAdminNotificationCounts(): Promise<AdminNotificationCounts> {
+  return adminRequest<AdminNotificationCounts>('/api/v1/admin/notifications/counts')
+}

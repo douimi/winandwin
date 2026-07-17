@@ -2,6 +2,7 @@ import { betterAuth } from 'better-auth'
 import { drizzleAdapter } from 'better-auth/adapters/drizzle'
 import { nextCookies } from 'better-auth/next-js'
 import { APIError } from 'better-auth/api'
+import { eq } from 'drizzle-orm'
 import { users, sessions, accounts, verifications } from '@winandwin/db'
 import { getDb } from './db'
 import { getPublicSignupEnabled } from './platform-flags'
@@ -67,22 +68,54 @@ export function getAuth() {
           maxAge: 5 * 60,
         },
       },
-      // Enforce the "Try the app" toggle at the DB write step so it blocks
-      // BOTH email/password sign-ups AND Google OAuth flows for brand-new
-      // accounts. Existing users signing in via Google trigger an account-
-      // link (not a create), so they're never affected. When the flag is
-      // absent we fail open — a broken settings query shouldn't wall off
-      // real visitors.
+      // Moderation flow for the "public sign-up" flag.
+      //
+      // user.create.before — when the flag is OFF, mark every new user as
+      //   'pending' before they hit the DB. Sign-up still succeeds; admins
+      //   see the row in /admin/pending and activate manually.
+      // session.create.before — reject session creation for pending users
+      //   so a pending merchant who tries to sign in gets a clean 403 with
+      //   a friendly code (`PENDING_ACTIVATION`) the sign-in form can
+      //   translate into a message.
+      //
+      // On any DB error we fail open — a broken settings query shouldn't
+      // wall off real visitors.
       databaseHooks: {
         user: {
           create: {
-            before: async () => {
+            before: async (userInput) => {
               const allowed = await getPublicSignupEnabled()
-              if (!allowed) {
-                throw APIError.from('FORBIDDEN', {
-                  message: 'Public sign-up is currently disabled. Please contact us to open an account.',
-                  code: 'PUBLIC_SIGNUP_DISABLED',
-                })
+              if (allowed) return
+              return {
+                data: {
+                  ...userInput,
+                  activationStatus: 'pending',
+                },
+              }
+            },
+          },
+        },
+        session: {
+          create: {
+            before: async (sessionInput) => {
+              const uid = (sessionInput as { userId?: string }).userId
+              if (!uid) return
+              try {
+                const row = await getDb()
+                  .select({ status: users.activationStatus })
+                  .from(users)
+                  .where(eq(users.id, uid))
+                  .limit(1)
+                if (row[0]?.status === 'pending') {
+                  throw APIError.from('FORBIDDEN', {
+                    message: 'Your account is awaiting approval. Our team will contact you shortly to complete the onboarding.',
+                    code: 'PENDING_ACTIVATION',
+                  })
+                }
+              } catch (err) {
+                // Re-throw our own APIError; swallow anything else (fail
+                // open on transient DB errors).
+                if (err instanceof APIError) throw err
               }
             },
           },
