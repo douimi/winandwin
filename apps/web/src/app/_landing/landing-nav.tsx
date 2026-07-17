@@ -17,7 +17,7 @@ export function LandingNav() {
     <header className="sticky top-0 z-50 border-b border-border bg-background/70 backdrop-blur-md backdrop-saturate-150">
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
         <a href="/" className="flex items-center">
-          <img src="/logo.png" alt="Win & Win" className="h-12 w-auto sm:h-14" />
+          <img src="/logo.png" alt="Win & Win" className="h-16 w-auto sm:h-20" />
         </a>
 
         <nav className="hidden items-center gap-6 text-sm font-medium text-muted-foreground md:flex">

@@ -62,7 +62,7 @@ export function AdminShell({ user, children }: AdminShellProps) {
       {/* Brand */}
       <div className="border-b border-border px-5 py-5">
         <a href="/admin" className="flex items-center gap-2">
-          <img src="/logo.png" alt={txt.shellBrand} className="h-9 w-auto" />
+          <img src="/logo.png" alt={txt.shellBrand} className="h-14 w-auto" />
           <span className="sr-only">winandwin.club Admin</span>
         </a>
         <span className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-foreground px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-background">
