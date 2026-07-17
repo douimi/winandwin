@@ -10,29 +10,34 @@ import { signIn } from '@/lib/auth-client'
 //   /dashboard   — for existing users signing in
 //   /onboarding  — for new sign-ups, so they can finish creating a merchant
 //
-// The button only renders when NEXT_PUBLIC_GOOGLE_ENABLED === 'true'. Set
-// that flag alongside the server-side GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET
-// vars in Vercel — otherwise better-auth throws "Provider not found" the
-// moment a visitor clicks it.
-const GOOGLE_ENABLED = process.env.NEXT_PUBLIC_GOOGLE_ENABLED === 'true'
-
+// The `enabled` prop is set by each auth page's server component after
+// reading process.env.GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET. That keeps
+// the server-side env check off the client bundle: no NEXT_PUBLIC_* var
+// is needed, and no bogus "Provider not found" click ever fires.
 export function GoogleButton({
   label,
   callbackURL,
+  enabled,
 }: {
   label: string
   callbackURL: string
+  enabled: boolean
 }) {
-  if (!GOOGLE_ENABLED) return null
-
+  if (!enabled) return null
   return <GoogleButtonImpl label={label} callbackURL={callbackURL} />
 }
 
 // Divider ("— or —") to place between the Google button and the email form.
 // Renders nothing when Google is disabled, so the auth form doesn't have a
 // dangling divider hanging above it.
-export function GoogleDivider({ label = 'or' }: { label?: string }) {
-  if (!GOOGLE_ENABLED) return null
+export function GoogleDivider({
+  label = 'or',
+  enabled,
+}: {
+  label?: string
+  enabled: boolean
+}) {
+  if (!enabled) return null
   return (
     <div className="my-5 flex items-center gap-3 text-xs uppercase tracking-wider text-muted-foreground">
       <span className="h-px flex-1 bg-border" />

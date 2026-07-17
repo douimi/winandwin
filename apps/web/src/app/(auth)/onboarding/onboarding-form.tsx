@@ -18,23 +18,25 @@ import {
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { createMerchant } from '@/lib/api'
+import { useApp } from '@/lib/i18n/app-lang-context'
+import type { AppText } from '@/lib/i18n/app-text'
 
 interface Category {
   value: string
-  label: string
+  labelKey: keyof AppText
   Icon: LucideIcon
 }
 
 const CATEGORIES: Category[] = [
-  { value: 'restaurant', label: 'Restaurant', Icon: Utensils },
-  { value: 'cafe', label: 'Cafe', Icon: Coffee },
-  { value: 'bar', label: 'Bar', Icon: Martini },
-  { value: 'retail', label: 'Retail Store', Icon: ShoppingBag },
-  { value: 'salon', label: 'Salon', Icon: Scissors },
-  { value: 'gym', label: 'Gym / Fitness', Icon: Dumbbell },
-  { value: 'entertainment', label: 'Entertainment', Icon: Theater },
-  { value: 'hotel', label: 'Hotel', Icon: Hotel },
-  { value: 'other', label: 'Other', Icon: Building2 },
+  { value: 'restaurant', labelKey: 'catRestaurant', Icon: Utensils },
+  { value: 'cafe', labelKey: 'catCafe', Icon: Coffee },
+  { value: 'bar', labelKey: 'catBar', Icon: Martini },
+  { value: 'retail', labelKey: 'catRetail', Icon: ShoppingBag },
+  { value: 'salon', labelKey: 'catSalon', Icon: Scissors },
+  { value: 'gym', labelKey: 'catGym', Icon: Dumbbell },
+  { value: 'entertainment', labelKey: 'catEntertainment', Icon: Theater },
+  { value: 'hotel', labelKey: 'catHotel', Icon: Hotel },
+  { value: 'other', labelKey: 'catOther', Icon: Building2 },
 ]
 
 interface OnboardingFormProps {
@@ -44,6 +46,7 @@ interface OnboardingFormProps {
 }
 
 export function OnboardingForm({ userName, userEmail, userId }: OnboardingFormProps) {
+  const { txt } = useApp()
   const router = useRouter()
   const [businessName, setBusinessName] = useState('')
   const [category, setCategory] = useState('restaurant')
@@ -65,7 +68,7 @@ export function OnboardingForm({ userName, userEmail, userId }: OnboardingFormPr
       router.push('/dashboard')
       router.refresh()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to set up your business')
+      setError(err instanceof Error ? err.message : txt.onboardingErrorGeneric)
       setLoading(false)
     }
   }
@@ -80,22 +83,22 @@ export function OnboardingForm({ userName, userEmail, userId }: OnboardingFormPr
         <CardHeader className="pb-3 text-center">
           <div className="mx-auto mb-2 inline-flex w-fit items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-primary">
             <Sparkles className="h-3 w-3" />
-            One last step
+            {txt.onboardingBadge}
           </div>
           <CardTitle className="text-2xl font-semibold tracking-tight">
-            Welcome{userName ? `, ${userName.split(' ')[0]}` : ''} 👋
+            {txt.onboardingTitle}{userName ? `, ${userName.split(' ')[0]}` : ''} 👋
           </CardTitle>
           <p className="text-sm text-muted-foreground">
-            Tell us about your business so we can spin up your workspace.
+            {txt.onboardingSubtitle}
           </p>
         </CardHeader>
         <CardContent className="pt-2">
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-1.5">
-              <Label htmlFor="businessName">Business name</Label>
+              <Label htmlFor="businessName">{txt.onboardingBusinessName}</Label>
               <Input
                 id="businessName"
-                placeholder="My Restaurant"
+                placeholder={txt.onboardingBusinessNamePlaceholder}
                 value={businessName}
                 onChange={(e) => setBusinessName(e.target.value)}
                 required
@@ -106,7 +109,7 @@ export function OnboardingForm({ userName, userEmail, userId }: OnboardingFormPr
             </div>
 
             <div className="space-y-1.5">
-              <Label>Business category</Label>
+              <Label>{txt.onboardingBusinessCategory}</Label>
               <div className="grid grid-cols-3 gap-2">
                 {CATEGORIES.map((cat) => {
                   const Icon = cat.Icon
@@ -123,7 +126,7 @@ export function OnboardingForm({ userName, userEmail, userId }: OnboardingFormPr
                       }`}
                     >
                       <Icon className={`h-4 w-4 ${selected ? 'text-primary' : 'text-muted-foreground'}`} />
-                      <span className="text-[11px] font-medium leading-tight">{cat.label}</span>
+                      <span className="text-[11px] font-medium leading-tight">{txt[cat.labelKey]}</span>
                     </button>
                   )
                 })}
@@ -140,10 +143,10 @@ export function OnboardingForm({ userName, userEmail, userId }: OnboardingFormPr
               {loading ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin" />
-                  Setting things up…
+                  {txt.onboardingSubmitting}
                 </>
               ) : (
-                'Go to my dashboard'
+                txt.onboardingSubmit
               )}
             </Button>
           </form>

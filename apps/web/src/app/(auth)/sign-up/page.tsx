@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { isGoogleAuthEnabled } from '@/lib/auth-config'
 import { SignUpForm } from './sign-up-form'
 
 export const metadata: Metadata = {
@@ -9,5 +10,6 @@ export const metadata: Metadata = {
 }
 
 export default function SignUpPage() {
-  return <SignUpForm />
+  const googleEnabled = isGoogleAuthEnabled()
+  return <SignUpForm googleEnabled={googleEnabled} />
 }

@@ -5,9 +5,11 @@ import { Eye, EyeOff, Loader2 } from 'lucide-react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useState } from 'react'
 import { signIn } from '@/lib/auth-client'
+import { useApp } from '@/lib/i18n/app-lang-context'
 import { GoogleButton, GoogleDivider } from '../google-button'
 
-export function SignInForm() {
+export function SignInForm({ googleEnabled }: { googleEnabled: boolean }) {
+  const { txt } = useApp()
   const router = useRouter()
   const searchParams = useSearchParams()
   const callbackUrl = searchParams.get('callbackUrl') || '/dashboard'
@@ -26,7 +28,7 @@ export function SignInForm() {
     const result = await signIn.email({ email, password })
 
     if (result.error) {
-      setError(result.error.message || 'Invalid email or password')
+      setError(result.error.message || txt.signInInvalidCredentials)
       setLoading(false)
     } else {
       router.push(callbackUrl)
@@ -41,20 +43,20 @@ export function SignInForm() {
 
       <Card className="w-full shadow-lg">
         <CardHeader className="pb-3 text-center">
-          <CardTitle className="text-2xl font-semibold tracking-tight">Welcome back</CardTitle>
-          <p className="text-sm text-muted-foreground">Sign in to access your dashboard</p>
+          <CardTitle className="text-2xl font-semibold tracking-tight">{txt.signInTitle}</CardTitle>
+          <p className="text-sm text-muted-foreground">{txt.signInSubtitle}</p>
         </CardHeader>
         <CardContent className="pt-2">
-          <GoogleButton label="Continue with Google" callbackURL={callbackUrl} />
-          <GoogleDivider label="or" />
+          <GoogleButton label={txt.signInGoogle} callbackURL={callbackUrl} enabled={googleEnabled} />
+          <GoogleDivider label={txt.signInOr} enabled={googleEnabled} />
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-1.5">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">{txt.signInEmail}</Label>
               <Input
                 id="email"
                 type="email"
-                placeholder="you@example.com"
+                placeholder={txt.signInEmailPlaceholder}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -65,19 +67,19 @@ export function SignInForm() {
 
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="password">{txt.signInPassword}</Label>
                 <a
                   href="#"
                   className="text-xs font-medium text-primary transition-colors hover:underline"
                 >
-                  Forgot password?
+                  {txt.signInForgot}
                 </a>
               </div>
               <div className="relative">
                 <Input
                   id="password"
                   type={showPassword ? 'text' : 'password'}
-                  placeholder="Enter your password"
+                  placeholder={txt.signInPasswordPlaceholder}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
@@ -88,7 +90,7 @@ export function SignInForm() {
                   type="button"
                   onClick={() => setShowPassword((v) => !v)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground"
-                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                  aria-label={showPassword ? txt.signInHidePassword : txt.signInShowPassword}
                   tabIndex={-1}
                 >
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -106,21 +108,21 @@ export function SignInForm() {
               {loading ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin" />
-                  Signing in…
+                  {txt.signInSubmitting}
                 </>
               ) : (
-                'Sign In'
+                txt.signInSubmit
               )}
             </Button>
           </form>
 
           <p className="mt-6 text-center text-sm text-muted-foreground">
-            Don&apos;t have an account?{' '}
+            {txt.signInNoAccount}{' '}
             <a
               href="/sign-up"
               className="font-semibold text-primary transition-colors hover:underline"
             >
-              Create one free
+              {txt.signInCreateAccount}
             </a>
           </p>
         </CardContent>

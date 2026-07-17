@@ -1,5 +1,6 @@
 import { Suspense } from 'react'
 import type { Metadata } from 'next'
+import { isGoogleAuthEnabled } from '@/lib/auth-config'
 import { SignInForm } from './sign-in-form'
 
 export const metadata: Metadata = {
@@ -10,9 +11,10 @@ export const metadata: Metadata = {
 }
 
 export default function SignInPage() {
+  const googleEnabled = isGoogleAuthEnabled()
   return (
     <Suspense>
-      <SignInForm />
+      <SignInForm googleEnabled={googleEnabled} />
     </Suspense>
   )
 }
