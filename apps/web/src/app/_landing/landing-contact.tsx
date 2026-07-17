@@ -5,7 +5,7 @@ import { CheckCircle2, Loader2, MapPin, MessageCircle } from 'lucide-react'
 import { useState } from 'react'
 import { useScrollReveal } from './hooks'
 import { useLanding } from './lang-context'
-import { WHATSAPP_DISPLAY, whatsAppUrl } from './text'
+import { whatsAppUrl } from './text'
 
 type FormStatus = 'idle' | 'loading' | 'success' | 'error'
 
@@ -80,8 +80,7 @@ export function LandingContact() {
               {txt.whatsAppCardTitle}
             </p>
             <p className="truncate text-xs text-emerald-800/80 sm:text-sm">
-              {txt.whatsAppCardSub}{' '}
-              <span className="font-medium tabular-nums">{WHATSAPP_DISPLAY}</span>
+              {txt.whatsAppCardSub}
             </p>
           </div>
           <span className="hidden shrink-0 rounded-full bg-emerald-500 px-3 py-1.5 text-xs font-semibold text-white shadow-sm sm:inline-flex">
