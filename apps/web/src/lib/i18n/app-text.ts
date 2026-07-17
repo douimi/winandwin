@@ -115,6 +115,19 @@ const fr = {
   onboardingSubmitting: 'Configuration…',
   onboardingErrorGeneric: 'Impossible de configurer votre entreprise',
 
+  // ── Sign-up disabled (feature-flag off) ─────────────────────────────
+  signupDisabledBadge: 'Inscription sur invitation',
+  signupDisabledTitle: 'Ouverture d\'un compte sur mesure',
+  signupDisabledBody:
+    'Nous configurons chaque nouveau compte avec vous : jeux, prix et branding. Contactez-nous pour démarrer — c\'est rapide.',
+  signupDisabledWhatsApp: 'Discuter sur WhatsApp',
+  signupDisabledContactForm: 'Ouvrir le formulaire de contact',
+  signupDisabledHaveAccount: 'Vous avez déjà un compte ?',
+  signupDisabledSignIn: 'Se connecter',
+  signupDisabledLead1: 'Un expert dédié vous accompagne',
+  signupDisabledLead2: 'Premier jeu en ligne en moins de 24 h',
+  signupDisabledLead3: 'Aucun engagement, test gratuit',
+
   // ── Business categories ────────────────────────────────────────────
   catRestaurant: 'Restaurant',
   catCafe: 'Café',
@@ -493,6 +506,18 @@ const en: AppText = {
   onboardingSubmit: 'Go to my dashboard',
   onboardingSubmitting: 'Setting things up…',
   onboardingErrorGeneric: 'Failed to set up your business',
+
+  signupDisabledBadge: 'Invite-only sign-up',
+  signupDisabledTitle: 'Get your account set up with us',
+  signupDisabledBody:
+    'We onboard every new account together — games, prizes, and branding. Reach out and we\'ll get you started, fast.',
+  signupDisabledWhatsApp: 'Chat on WhatsApp',
+  signupDisabledContactForm: 'Open the contact form',
+  signupDisabledHaveAccount: 'Already have an account?',
+  signupDisabledSignIn: 'Sign in',
+  signupDisabledLead1: 'A dedicated expert walks you through it',
+  signupDisabledLead2: 'First game live within 24 hours',
+  signupDisabledLead3: 'No commitment, free trial',
 
   catRestaurant: 'Restaurant',
   catCafe: 'Cafe',

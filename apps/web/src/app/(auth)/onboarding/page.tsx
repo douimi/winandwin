@@ -1,6 +1,8 @@
 import type { Metadata } from 'next'
 import { redirect } from 'next/navigation'
 import { requireSession, getUserInfo } from '@/lib/session'
+import { getPublicSignupEnabled } from '@/lib/platform-flags'
+import { SignUpDisabled } from '../sign-up/sign-up-disabled'
 import { OnboardingForm } from './onboarding-form'
 
 // Post-Google-signup step. A user who signed up with Google has an auth
@@ -19,6 +21,14 @@ export default async function OnboardingPage() {
   const { merchantId } = await getUserInfo(session.user.id)
   if (merchantId) {
     redirect('/dashboard')
+  }
+
+  // If public sign-up is off, a brand-new Google user who slipped past the
+  // create-user hook would still land here to finish creating a merchant.
+  // Render the contact-us card instead so they close the loop with sales.
+  const signupEnabled = await getPublicSignupEnabled()
+  if (!signupEnabled) {
+    return <SignUpDisabled />
   }
 
   return (

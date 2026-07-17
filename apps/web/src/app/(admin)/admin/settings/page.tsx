@@ -47,6 +47,11 @@ export default function AdminSettingsPage() {
   const [supportEmail, setSupportEmail] = useState('')
   const [editedPlatform, setEditedPlatform] = useState(false)
 
+  // Public sign-up toggle. `null` while we're still loading so the switch
+  // stays disabled + non-interactive until we know its real state.
+  const [publicSignupEnabled, setPublicSignupEnabled] = useState<boolean | null>(null)
+  const [signupToggleSaving, setSignupToggleSaving] = useState(false)
+
   useEffect(() => {
     loadSettings()
   }, [])
@@ -72,10 +77,47 @@ export default function AdminSettingsPage() {
 
       const supportSetting = data.find((s) => s.key === 'support_email')
       if (supportSetting) setSupportEmail(supportSetting.value as string)
+
+      // Public sign-up flag. Missing row → default to enabled so a fresh
+      // Neon instance still allows sign-ups until an admin explicitly turns
+      // it off. Accept boolean or "false"/"true" string values from the DB.
+      const signupSetting = data.find((s) => s.key === 'public_signup_enabled')
+      if (signupSetting === undefined) {
+        setPublicSignupEnabled(true)
+      } else {
+        const raw = signupSetting.value
+        if (typeof raw === 'boolean') setPublicSignupEnabled(raw)
+        else if (typeof raw === 'string') setPublicSignupEnabled(raw !== 'false')
+        else setPublicSignupEnabled(true)
+      }
     } catch {
       // Settings may not exist yet
+      setPublicSignupEnabled(true)
     } finally {
       setLoading(false)
+    }
+  }
+
+  async function togglePublicSignup(nextValue: boolean) {
+    setSignupToggleSaving(true)
+    setFeedback(null)
+    // Optimistic update so the pill flips immediately.
+    setPublicSignupEnabled(nextValue)
+    try {
+      await adminRequest('/api/v1/admin/settings/public_signup_enabled', {
+        method: 'PATCH',
+        body: JSON.stringify({ value: nextValue }),
+      })
+      setFeedback({ type: 'success', message: txt.settingsSignupFeedbackSaved })
+    } catch (err) {
+      // Revert on error
+      setPublicSignupEnabled(!nextValue)
+      setFeedback({
+        type: 'error',
+        message: err instanceof Error ? err.message : txt.settingsSignupFeedbackFail,
+      })
+    } finally {
+      setSignupToggleSaving(false)
     }
   }
 
@@ -248,6 +290,59 @@ export default function AdminSettingsPage() {
           </CardContent>
         </Card>
       )}
+
+      {/* Public sign-up toggle \u2014 placed above tier limits so admins see the
+          most consequential switch first. Flipping it here immediately
+          changes what /sign-up and /onboarding render across the site. */}
+      <div className="space-y-4">
+        <div>
+          <h2 className="text-lg font-bold text-gray-900">{txt.settingsSignupSectionTitle}</h2>
+          <p className="text-sm text-gray-500">{txt.settingsSignupSectionSubtitle}</p>
+        </div>
+
+        <Card className="overflow-hidden border border-gray-200 bg-white shadow-sm rounded-xl">
+          <CardContent className="py-5">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2">
+                  <p className="text-sm font-semibold text-gray-900">{txt.settingsSignupToggleLabel}</p>
+                  <span
+                    className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${
+                      publicSignupEnabled
+                        ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+                        : 'border-rose-200 bg-rose-50 text-rose-700'
+                    }`}
+                  >
+                    {publicSignupEnabled ? txt.settingsSignupBadgeOn : txt.settingsSignupBadgeOff}
+                  </span>
+                </div>
+                <p className="mt-1 text-xs text-gray-500">
+                  {publicSignupEnabled ? txt.settingsSignupToggleDescOn : txt.settingsSignupToggleDescOff}
+                </p>
+              </div>
+
+              {/* Toggle switch \u2014 pill with sliding thumb, same vocabulary as
+                  the merchant-disable switch on the Merchants list */}
+              <button
+                type="button"
+                role="switch"
+                aria-checked={publicSignupEnabled ?? undefined}
+                disabled={publicSignupEnabled === null || signupToggleSaving}
+                onClick={() => togglePublicSignup(!publicSignupEnabled)}
+                className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${
+                  publicSignupEnabled ? 'bg-primary' : 'bg-gray-300'
+                }`}
+              >
+                <span
+                  className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                    publicSignupEnabled ? 'translate-x-5' : 'translate-x-0'
+                  }`}
+                />
+              </button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
 
       {/* Tier Limits Section */}
       <div className="space-y-4">

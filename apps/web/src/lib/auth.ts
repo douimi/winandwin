@@ -1,8 +1,10 @@
 import { betterAuth } from 'better-auth'
 import { drizzleAdapter } from 'better-auth/adapters/drizzle'
 import { nextCookies } from 'better-auth/next-js'
+import { APIError } from 'better-auth/api'
 import { users, sessions, accounts, verifications } from '@winandwin/db'
 import { getDb } from './db'
+import { getPublicSignupEnabled } from './platform-flags'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let _auth: any = null
@@ -63,6 +65,27 @@ export function getAuth() {
         cookieCache: {
           enabled: true,
           maxAge: 5 * 60,
+        },
+      },
+      // Enforce the "Try the app" toggle at the DB write step so it blocks
+      // BOTH email/password sign-ups AND Google OAuth flows for brand-new
+      // accounts. Existing users signing in via Google trigger an account-
+      // link (not a create), so they're never affected. When the flag is
+      // absent we fail open — a broken settings query shouldn't wall off
+      // real visitors.
+      databaseHooks: {
+        user: {
+          create: {
+            before: async () => {
+              const allowed = await getPublicSignupEnabled()
+              if (!allowed) {
+                throw APIError.from('FORBIDDEN', {
+                  message: 'Public sign-up is currently disabled. Please contact us to open an account.',
+                  code: 'PUBLIC_SIGNUP_DISABLED',
+                })
+              }
+            },
+          },
         },
       },
       plugins: [nextCookies()],

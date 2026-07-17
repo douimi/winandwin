@@ -186,6 +186,20 @@ const fr = {
   settingsSourceInfoBody:
     'Tous les paramètres sont stockés dans la table platform_settings. Les modifications prennent effet dans les 30 secondes. Les valeurs par défaut ne s\'appliquent que si aucune valeur n\'existe en base.',
 
+  // Public sign-up toggle
+  settingsSignupSectionTitle: 'Essayez l\'application',
+  settingsSignupSectionSubtitle:
+    'Contrôlez si les visiteurs peuvent créer un compte eux-mêmes.',
+  settingsSignupToggleLabel: 'Inscription publique',
+  settingsSignupToggleDescOn:
+    'Activée — les visiteurs peuvent créer un compte via /sign-up (email/mot de passe ou Google).',
+  settingsSignupToggleDescOff:
+    'Désactivée — la page /sign-up affiche un message de contact (WhatsApp + formulaire). Vous créez les comptes manuellement.',
+  settingsSignupFeedbackSaved: 'Statut enregistré',
+  settingsSignupFeedbackFail: 'Échec de l\'enregistrement du statut',
+  settingsSignupBadgeOn: 'Activée',
+  settingsSignupBadgeOff: 'Désactivée',
+
   // Atmospheres (select options)
   atmosphereJoyful: 'Joyeux',
   atmosphereElegant: 'Élégant',
@@ -377,6 +391,19 @@ const en: AdminText = {
   settingsSourceInfoTitle: 'Database-backed configuration',
   settingsSourceInfoBody:
     'All settings are stored in the platform_settings table. Changes take effect within 30 seconds. Default values are only used if no database values exist.',
+
+  settingsSignupSectionTitle: 'Try the app',
+  settingsSignupSectionSubtitle:
+    'Control whether visitors can create an account on their own.',
+  settingsSignupToggleLabel: 'Public sign-up',
+  settingsSignupToggleDescOn:
+    'Enabled — visitors can create an account through /sign-up (email/password or Google).',
+  settingsSignupToggleDescOff:
+    'Disabled — /sign-up shows a contact card (WhatsApp + form). You create accounts manually.',
+  settingsSignupFeedbackSaved: 'Setting saved',
+  settingsSignupFeedbackFail: 'Failed to save setting',
+  settingsSignupBadgeOn: 'Enabled',
+  settingsSignupBadgeOff: 'Disabled',
 
   atmosphereJoyful: 'Joyful',
   atmosphereElegant: 'Elegant',
