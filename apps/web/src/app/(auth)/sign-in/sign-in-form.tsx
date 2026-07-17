@@ -5,7 +5,7 @@ import { Eye, EyeOff, Loader2 } from 'lucide-react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useState } from 'react'
 import { signIn } from '@/lib/auth-client'
-import { GoogleButton } from '../google-button'
+import { GoogleButton, GoogleDivider } from '../google-button'
 
 export function SignInForm() {
   const router = useRouter()
@@ -46,12 +46,7 @@ export function SignInForm() {
         </CardHeader>
         <CardContent className="pt-2">
           <GoogleButton label="Continue with Google" callbackURL={callbackUrl} />
-
-          <div className="my-5 flex items-center gap-3 text-xs uppercase tracking-wider text-muted-foreground">
-            <span className="h-px flex-1 bg-border" />
-            <span>or</span>
-            <span className="h-px flex-1 bg-border" />
-          </div>
+          <GoogleDivider label="or" />
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-1.5">

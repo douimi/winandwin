@@ -9,6 +9,13 @@ import { signIn } from '@/lib/auth-client'
 // The caller decides where to land after auth via callbackURL:
 //   /dashboard   — for existing users signing in
 //   /onboarding  — for new sign-ups, so they can finish creating a merchant
+//
+// The button only renders when NEXT_PUBLIC_GOOGLE_ENABLED === 'true'. Set
+// that flag alongside the server-side GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET
+// vars in Vercel — otherwise better-auth throws "Provider not found" the
+// moment a visitor clicks it.
+const GOOGLE_ENABLED = process.env.NEXT_PUBLIC_GOOGLE_ENABLED === 'true'
+
 export function GoogleButton({
   label,
   callbackURL,
@@ -16,6 +23,26 @@ export function GoogleButton({
   label: string
   callbackURL: string
 }) {
+  if (!GOOGLE_ENABLED) return null
+
+  return <GoogleButtonImpl label={label} callbackURL={callbackURL} />
+}
+
+// Divider ("— or —") to place between the Google button and the email form.
+// Renders nothing when Google is disabled, so the auth form doesn't have a
+// dangling divider hanging above it.
+export function GoogleDivider({ label = 'or' }: { label?: string }) {
+  if (!GOOGLE_ENABLED) return null
+  return (
+    <div className="my-5 flex items-center gap-3 text-xs uppercase tracking-wider text-muted-foreground">
+      <span className="h-px flex-1 bg-border" />
+      <span>{label}</span>
+      <span className="h-px flex-1 bg-border" />
+    </div>
+  )
+}
+
+function GoogleButtonImpl({ label, callbackURL }: { label: string; callbackURL: string }) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 

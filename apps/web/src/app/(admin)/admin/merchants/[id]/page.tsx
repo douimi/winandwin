@@ -10,6 +10,8 @@ import {
   deleteMerchant,
   type AdminMerchantDetail,
 } from '@/lib/admin-api'
+import { useAdmin } from '../../../admin-lang-context'
+import type { AdminText } from '../../../admin-text'
 import { TierChanger } from './tier-changer'
 
 const TIER_STYLES: Record<string, string> = {
@@ -70,6 +72,7 @@ function ConfirmDialog({
   onConfirm,
   onCancel,
   loading,
+  txt,
 }: {
   title: string
   message: string
@@ -78,6 +81,7 @@ function ConfirmDialog({
   onConfirm: () => void
   onCancel: () => void
   loading?: boolean
+  txt: AdminText
 }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
@@ -91,7 +95,7 @@ function ConfirmDialog({
             disabled={loading}
             className="rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors"
           >
-            Cancel
+            {txt.commonCancel}
           </button>
           <button
             type="button"
@@ -99,7 +103,7 @@ function ConfirmDialog({
             disabled={loading}
             className={`rounded-lg px-4 py-2 text-sm font-semibold text-white transition-colors disabled:opacity-50 ${confirmStyle ?? 'bg-red-600 hover:bg-red-700'}`}
           >
-            {loading ? 'Processing...' : confirmLabel}
+            {loading ? txt.commonProcessing : confirmLabel}
           </button>
         </div>
       </div>
@@ -108,6 +112,7 @@ function ConfirmDialog({
 }
 
 export default function AdminMerchantDetailPage() {
+  const { txt } = useAdmin()
   const params = useParams<{ id: string }>()
   const [detail, setDetail] = useState<AdminMerchantDetail | null>(null)
   const [loading, setLoading] = useState(true)
@@ -125,7 +130,7 @@ export default function AdminMerchantDetailPage() {
     setError(null)
     fetchAdminMerchantDetail(params.id)
       .then(setDetail)
-      .catch((e) => setError(e instanceof Error ? e.message : 'Failed to load merchant'))
+      .catch((e) => setError(e instanceof Error ? e.message : txt.merchantDetailLoadFail))
       .finally(() => setLoading(false))
   }
 
@@ -146,12 +151,12 @@ export default function AdminMerchantDetailPage() {
       )
       setFeedback({
         type: 'success',
-        message: detail.merchant.disabled ? 'Merchant enabled' : 'Merchant disabled',
+        message: detail.merchant.disabled ? txt.merchantDetailFeedbackEnabled : txt.merchantDetailFeedbackDisabled,
       })
     } catch (err) {
       setFeedback({
         type: 'error',
-        message: err instanceof Error ? err.message : 'Failed to update',
+        message: err instanceof Error ? err.message : txt.merchantDetailFeedbackUpdateFail,
       })
     } finally {
       setTogglingDisabled(false)
@@ -165,14 +170,14 @@ export default function AdminMerchantDetailPage() {
       const result = await resetMerchantPlays(detail.merchant.id)
       setFeedback({
         type: 'success',
-        message: `Reset ${result.deletedCount} plays for this month`,
+        message: `${result.deletedCount} ${txt.merchantDetailFeedbackResetOk}`,
       })
       setShowResetConfirm(false)
       loadDetail()
     } catch (err) {
       setFeedback({
         type: 'error',
-        message: err instanceof Error ? err.message : 'Failed to reset plays',
+        message: err instanceof Error ? err.message : txt.merchantDetailFeedbackResetFail,
       })
     } finally {
       setResetting(false)
@@ -188,7 +193,7 @@ export default function AdminMerchantDetailPage() {
     } catch (err) {
       setFeedback({
         type: 'error',
-        message: err instanceof Error ? err.message : 'Failed to delete merchant',
+        message: err instanceof Error ? err.message : txt.merchantDetailFeedbackDeleteFail,
       })
       setDeleting(false)
       setShowDeleteConfirm(false)
@@ -203,18 +208,18 @@ export default function AdminMerchantDetailPage() {
     return (
       <div className="space-y-4">
         <a href="/admin/merchants" className="inline-flex items-center gap-1 text-sm text-indigo-600 hover:text-indigo-700 transition-colors">
-          {'\u2190'} Merchants
+          {'\u2190'} {txt.merchantDetailBack}
         </a>
         <Card className="border border-gray-200 bg-white shadow-sm rounded-xl">
           <CardContent className="py-12 text-center">
             <span className="text-3xl">{'\uD83D\uDEAB'}</span>
-            <p className="mt-2 text-sm text-gray-500">{error ?? 'Merchant not found'}</p>
+            <p className="mt-2 text-sm text-gray-500">{error ?? txt.merchantDetailNotFound}</p>
             <button
               type="button"
               onClick={loadDetail}
               className="mt-4 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 transition-colors"
             >
-              Retry
+              {txt.commonRetry}
             </button>
           </CardContent>
         </Card>
@@ -235,10 +240,10 @@ export default function AdminMerchantDetailPage() {
     usagePercent > 90 ? 'text-red-600' : usagePercent > 70 ? 'text-yellow-600' : 'text-green-600'
 
   const statCards = [
-    { label: 'Total Players', value: playerCount, icon: '\uD83D\uDC65' },
-    { label: 'Total Games', value: games.length, icon: '\uD83C\uDFAE' },
-    { label: 'Active Games', value: activeGames, icon: '\u25B6\uFE0F' },
-    { label: 'Coupons Redeemed', value: redeemedCoupons, icon: '\uD83C\uDF9F\uFE0F' },
+    { label: txt.merchantDetailStatTotalPlayers, value: playerCount, icon: '\uD83D\uDC65' },
+    { label: txt.merchantDetailStatTotalGames, value: games.length, icon: '\uD83C\uDFAE' },
+    { label: txt.merchantDetailStatActiveGames, value: activeGames, icon: '\u25B6\uFE0F' },
+    { label: txt.merchantDetailStatCouponsRedeemed, value: redeemedCoupons, icon: '\uD83C\uDF9F\uFE0F' },
   ]
 
   const playerAppUrl = typeof window !== 'undefined'
@@ -250,28 +255,30 @@ export default function AdminMerchantDetailPage() {
       {/* Confirmation dialogs */}
       {showResetConfirm && (
         <ConfirmDialog
-          title="Reset Monthly Plays"
-          message={`This will permanently delete all game plays for "${merchant.name}" from this month. This cannot be undone.`}
-          confirmLabel="Reset Plays"
+          title={txt.merchantDetailResetConfirmTitle}
+          message={txt.merchantDetailResetConfirmBody}
+          confirmLabel={txt.merchantDetailResetConfirmButton}
           onConfirm={handleResetPlays}
           onCancel={() => setShowResetConfirm(false)}
           loading={resetting}
+          txt={txt}
         />
       )}
       {showDeleteConfirm && (
         <ConfirmDialog
-          title="Delete Merchant"
-          message={`This will permanently delete "${merchant.name}" and ALL associated data (games, players, coupons, plays). This action CANNOT be undone.`}
-          confirmLabel="Delete Forever"
+          title={txt.merchantDetailDeleteConfirmTitle}
+          message={txt.merchantDetailDeleteConfirmBody}
+          confirmLabel={txt.merchantDetailDeleteConfirmButton}
           onConfirm={handleDelete}
           onCancel={() => setShowDeleteConfirm(false)}
           loading={deleting}
+          txt={txt}
         />
       )}
 
       {/* Back link */}
       <a href="/admin/merchants" className="inline-flex items-center gap-1 text-sm text-indigo-600 hover:text-indigo-700 transition-colors">
-        {'\u2190'} Merchants
+        {'\u2190'} {txt.merchantDetailBack}
       </a>
 
       {/* Feedback banner */}
@@ -301,9 +308,9 @@ export default function AdminMerchantDetailPage() {
             <div className="flex items-center gap-3">
               <span className="text-2xl">{'\u26A0\uFE0F'}</span>
               <div className="flex-1">
-                <p className="text-sm font-bold text-red-700">This merchant is disabled</p>
+                <p className="text-sm font-bold text-red-700">{txt.merchantDetailDisabledBannerTitle}</p>
                 <p className="text-sm text-red-600">
-                  Players cannot access the game page. The merchant will see a &quot;Game Unavailable&quot; screen.
+                  {txt.merchantDetailDisabledBannerBody}
                 </p>
               </div>
               <button
@@ -312,7 +319,7 @@ export default function AdminMerchantDetailPage() {
                 disabled={togglingDisabled}
                 className="rounded-lg bg-green-600 px-4 py-2 text-sm font-semibold text-white hover:bg-green-700 transition-colors disabled:opacity-50"
               >
-                {togglingDisabled ? 'Enabling...' : 'Enable Merchant'}
+                {togglingDisabled ? txt.merchantDetailEnabling : txt.merchantDetailEnableButton}
               </button>
             </div>
           </CardContent>
@@ -330,7 +337,7 @@ export default function AdminMerchantDetailPage() {
             <TierBadge tier={merchant.subscriptionTier} />
             {!merchant.disabled && (
               <span className="inline-flex items-center rounded-full border border-green-300 bg-green-50 px-2.5 py-0.5 text-xs font-semibold text-green-600">
-                Active
+                {txt.merchantDetailStatActive}
               </span>
             )}
           </div>
@@ -338,9 +345,9 @@ export default function AdminMerchantDetailPage() {
             {merchant.email} {merchant.phone && `\u00B7 ${merchant.phone}`}
           </p>
           <p className="text-xs text-gray-400 mt-0.5">
-            Slug: <code className="rounded bg-gray-100 border border-gray-200 px-1.5 py-0.5 text-xs text-indigo-600">{merchant.slug}</code>
+            {txt.merchantDetailSlug}: <code className="rounded bg-gray-100 border border-gray-200 px-1.5 py-0.5 text-xs text-indigo-600">{merchant.slug}</code>
             {' \u00B7 '}
-            Created {new Date(merchant.createdAt).toLocaleDateString()}
+            {txt.merchantDetailCreated} {new Date(merchant.createdAt).toLocaleDateString()}
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -360,7 +367,7 @@ export default function AdminMerchantDetailPage() {
                 disabled={togglingDisabled}
                 className="rounded-lg border border-red-200 bg-white px-4 py-2 text-sm font-medium text-red-600 hover:bg-red-50 transition-colors disabled:opacity-50"
               >
-                {togglingDisabled ? 'Disabling...' : 'Disable Merchant'}
+                {togglingDisabled ? txt.merchantDetailDisabling : txt.merchantDetailDisableButton}
               </button>
             )}
 
@@ -374,7 +381,7 @@ export default function AdminMerchantDetailPage() {
               rel="noopener noreferrer"
               className="rounded-lg border border-indigo-200 bg-white px-4 py-2 text-sm font-medium text-indigo-600 hover:bg-indigo-50 transition-colors"
             >
-              View Player Page {'\u2197'}
+              {txt.merchantDetailViewPlayerPage} {'\u2197'}
             </a>
 
             {/* Reset Monthly Plays */}
@@ -383,7 +390,7 @@ export default function AdminMerchantDetailPage() {
               onClick={() => setShowResetConfirm(true)}
               className="rounded-lg border border-yellow-200 bg-white px-4 py-2 text-sm font-medium text-yellow-700 hover:bg-yellow-50 transition-colors"
             >
-              Reset Monthly Plays
+              {txt.merchantDetailResetPlays}
             </button>
 
             {/* Delete Merchant */}
@@ -392,7 +399,7 @@ export default function AdminMerchantDetailPage() {
               onClick={() => setShowDeleteConfirm(true)}
               className="rounded-lg border border-red-300 bg-red-50 px-4 py-2 text-sm font-semibold text-red-700 hover:bg-red-100 transition-colors"
             >
-              Delete Merchant
+              {txt.merchantDetailDelete}
             </button>
           </div>
         </CardContent>
@@ -401,7 +408,7 @@ export default function AdminMerchantDetailPage() {
       {/* Usage Card */}
       <Card className="border border-gray-200 bg-white shadow-sm rounded-xl">
         <CardHeader>
-          <CardTitle className="text-gray-900">Monthly Usage</CardTitle>
+          <CardTitle className="text-gray-900">{txt.merchantDetailUsageTitle}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex items-baseline gap-2 mb-3">
@@ -409,7 +416,7 @@ export default function AdminMerchantDetailPage() {
               {usage.playsThisMonth.toLocaleString()}
             </span>
             <span className="text-gray-500">
-              / {usage.monthlyLimit ? usage.monthlyLimit.toLocaleString() : 'Unlimited'} plays
+              / {usage.monthlyLimit ? usage.monthlyLimit.toLocaleString() : txt.merchantDetailUsageUnlimited} {txt.merchantDetailUsagePlaysUnit}
             </span>
           </div>
           {usage.monthlyLimit ? (
@@ -421,11 +428,11 @@ export default function AdminMerchantDetailPage() {
                 />
               </div>
               <p className={`mt-2 text-sm font-medium ${usageTextColor}`}>
-                {usagePercent}% of monthly limit used
+                {usagePercent}{txt.merchantDetailUsagePercentUsed}
               </p>
             </>
           ) : (
-            <p className="text-sm text-gray-500">Unlimited plan &mdash; no usage cap</p>
+            <p className="text-sm text-gray-500">{txt.merchantDetailUsageUnlimitedNote}</p>
           )}
         </CardContent>
       </Card>
@@ -450,24 +457,24 @@ export default function AdminMerchantDetailPage() {
       {/* Games Table */}
       <Card className="border border-gray-200 bg-white shadow-sm rounded-xl">
         <CardHeader>
-          <CardTitle className="text-gray-900">Games ({games.length})</CardTitle>
+          <CardTitle className="text-gray-900">{txt.merchantDetailGamesTitle} ({games.length})</CardTitle>
         </CardHeader>
         <CardContent>
           {games.length === 0 ? (
             <div className="py-8 text-center">
               <span className="text-2xl">{'\uD83C\uDFAE'}</span>
-              <p className="mt-2 text-sm text-gray-500">No games configured yet.</p>
+              <p className="mt-2 text-sm text-gray-500">{txt.merchantDetailGamesEmpty}</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-gray-200 text-left">
-                    <th className="px-4 py-3 font-medium text-gray-500">Name</th>
-                    <th className="px-4 py-3 font-medium text-gray-500">Type</th>
-                    <th className="px-4 py-3 font-medium text-gray-500">Status</th>
-                    <th className="px-4 py-3 font-medium text-gray-500">Plays</th>
-                    <th className="px-4 py-3 font-medium text-gray-500">Created</th>
+                    <th className="px-4 py-3 font-medium text-gray-500">{txt.overviewColName}</th>
+                    <th className="px-4 py-3 font-medium text-gray-500">{txt.merchantDetailColType}</th>
+                    <th className="px-4 py-3 font-medium text-gray-500">{txt.merchantsColStatus}</th>
+                    <th className="px-4 py-3 font-medium text-gray-500">{txt.merchantDetailColPlays}</th>
+                    <th className="px-4 py-3 font-medium text-gray-500">{txt.merchantDetailColCreated}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -490,30 +497,30 @@ export default function AdminMerchantDetailPage() {
       {/* Recent Players */}
       <Card className="border border-gray-200 bg-white shadow-sm rounded-xl">
         <CardHeader>
-          <CardTitle className="text-gray-900">Players ({playerCount})</CardTitle>
+          <CardTitle className="text-gray-900">{txt.merchantDetailPlayersTitle} ({playerCount})</CardTitle>
         </CardHeader>
         <CardContent>
           {recentPlayers.length === 0 ? (
             <div className="py-8 text-center">
               <span className="text-2xl">{'\uD83D\uDC65'}</span>
-              <p className="mt-2 text-sm text-gray-500">No players yet.</p>
+              <p className="mt-2 text-sm text-gray-500">{txt.merchantDetailPlayersEmpty}</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-gray-200 text-left">
-                    <th className="px-4 py-3 font-medium text-gray-500">Name</th>
-                    <th className="px-4 py-3 font-medium text-gray-500">Email</th>
-                    <th className="px-4 py-3 font-medium text-gray-500">Plays</th>
-                    <th className="px-4 py-3 font-medium text-gray-500">Wins</th>
-                    <th className="px-4 py-3 font-medium text-gray-500">Last Seen</th>
+                    <th className="px-4 py-3 font-medium text-gray-500">{txt.overviewColName}</th>
+                    <th className="px-4 py-3 font-medium text-gray-500">{txt.merchantDetailColEmail}</th>
+                    <th className="px-4 py-3 font-medium text-gray-500">{txt.merchantDetailColPlays}</th>
+                    <th className="px-4 py-3 font-medium text-gray-500">{txt.merchantDetailColWins}</th>
+                    <th className="px-4 py-3 font-medium text-gray-500">{txt.merchantDetailColLastSeen}</th>
                   </tr>
                 </thead>
                 <tbody>
                   {recentPlayers.map((p, i) => (
                     <tr key={p.id} className={`border-b border-gray-100 transition-colors hover:bg-gray-50 ${i % 2 === 1 ? 'bg-gray-50/50' : ''}`}>
-                      <td className="px-4 py-3 font-medium text-gray-900">{p.name || 'Anonymous'}</td>
+                      <td className="px-4 py-3 font-medium text-gray-900">{p.name || txt.merchantDetailPlayerAnonymous}</td>
                       <td className="px-4 py-3 text-gray-600 text-xs">{p.email || '-'}</td>
                       <td className="px-4 py-3 font-medium text-gray-700">{p.totalPlays}</td>
                       <td className="px-4 py-3 font-medium text-green-600">{p.totalWins}</td>
@@ -524,7 +531,7 @@ export default function AdminMerchantDetailPage() {
               </table>
               {playerCount > recentPlayers.length && (
                 <p className="mt-3 text-center text-xs text-gray-400">
-                  Showing {recentPlayers.length} of {playerCount} players
+                  {recentPlayers.length} {txt.merchantDetailPlayersShowingOf} {playerCount} {txt.merchantDetailPlayersShowingSuffix}
                 </p>
               )}
             </div>
@@ -535,24 +542,24 @@ export default function AdminMerchantDetailPage() {
       {/* Recent Coupons */}
       <Card className="border border-gray-200 bg-white shadow-sm rounded-xl">
         <CardHeader>
-          <CardTitle className="text-gray-900">Recent Coupons ({coupons.length})</CardTitle>
+          <CardTitle className="text-gray-900">{txt.merchantDetailCouponsTitle} ({coupons.length})</CardTitle>
         </CardHeader>
         <CardContent>
           {coupons.length === 0 ? (
             <div className="py-8 text-center">
               <span className="text-2xl">{'\uD83C\uDF9F\uFE0F'}</span>
-              <p className="mt-2 text-sm text-gray-500">No coupons generated yet.</p>
+              <p className="mt-2 text-sm text-gray-500">{txt.merchantDetailCouponsEmpty}</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-gray-200 text-left">
-                    <th className="px-4 py-3 font-medium text-gray-500">Code</th>
-                    <th className="px-4 py-3 font-medium text-gray-500">Prize</th>
-                    <th className="px-4 py-3 font-medium text-gray-500">Status</th>
-                    <th className="px-4 py-3 font-medium text-gray-500">Valid Until</th>
-                    <th className="px-4 py-3 font-medium text-gray-500">Created</th>
+                    <th className="px-4 py-3 font-medium text-gray-500">{txt.merchantDetailColCode}</th>
+                    <th className="px-4 py-3 font-medium text-gray-500">{txt.merchantDetailColPrize}</th>
+                    <th className="px-4 py-3 font-medium text-gray-500">{txt.merchantsColStatus}</th>
+                    <th className="px-4 py-3 font-medium text-gray-500">{txt.merchantDetailColValidUntil}</th>
+                    <th className="px-4 py-3 font-medium text-gray-500">{txt.merchantDetailColCreated}</th>
                   </tr>
                 </thead>
                 <tbody>

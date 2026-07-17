@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { Card, CardContent } from '@winandwin/ui'
 import { fetchAdminMerchants, updateAdminMerchant, type AdminMerchantRow } from '@/lib/admin-api'
+import { useAdmin } from '../../admin-lang-context'
 import { MerchantSearch } from './merchant-search'
 
 const TIER_STYLES: Record<string, string> = {
@@ -42,6 +43,7 @@ function SkeletonRows() {
 }
 
 export default function AdminMerchantsPage() {
+  const { txt } = useAdmin()
   const searchParams = useSearchParams()
   const search = searchParams.get('search') ?? ''
   const [merchants, setMerchants] = useState<AdminMerchantRow[]>([])
@@ -77,15 +79,17 @@ export default function AdminMerchantsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Merchants</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">{txt.merchantsTitle}</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            {loading ? 'Loading...' : `${merchants.length} merchant${merchants.length !== 1 ? 's' : ''} found`}
+            {loading
+              ? txt.commonLoading
+              : `${merchants.length} ${merchants.length === 1 ? txt.merchantsCountOne : txt.merchantsCountMany}`}
           </p>
         </div>
         {error && (
           <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-medium text-amber-800">
             <AlertTriangle className="h-3 w-3" />
-            API offline
+            {txt.commonApiOffline}
           </span>
         )}
       </div>
@@ -98,13 +102,13 @@ export default function AdminMerchantsPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border bg-muted/40 text-left">
-                  <th className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Name</th>
-                  <th className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Category</th>
-                  <th className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Tier</th>
-                  <th className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Status</th>
-                  <th className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Monthly Plays</th>
-                  <th className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Usage</th>
-                  <th className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Joined</th>
+                  <th className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">{txt.merchantsColName}</th>
+                  <th className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">{txt.merchantsColCategory}</th>
+                  <th className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">{txt.merchantsColTier}</th>
+                  <th className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">{txt.merchantsColStatus}</th>
+                  <th className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">{txt.merchantsColMonthlyPlays}</th>
+                  <th className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">{txt.merchantsColUsage}</th>
+                  <th className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">{txt.merchantsColJoined}</th>
                 </tr>
               </thead>
               <tbody>
@@ -118,7 +122,7 @@ export default function AdminMerchantsPage() {
                           <Store className="h-6 w-6" />
                         </div>
                         <p className="text-sm text-muted-foreground">
-                          {error ? 'Unable to load merchants.' : 'No merchants found.'}
+                          {error ? txt.merchantsErrorLoad : txt.merchantsEmpty}
                         </p>
                       </div>
                     </td>
@@ -172,7 +176,7 @@ export default function AdminMerchantsPage() {
                                 ? 'border-red-300 text-red-600 bg-red-50'
                                 : 'border-green-300 text-green-600 bg-green-50'
                             }`}>
-                              {m.disabled ? 'Disabled' : 'Active'}
+                              {m.disabled ? txt.merchantsStatusDisabled : txt.merchantsStatusActive}
                             </span>
                             <button
                               type="button"
@@ -181,7 +185,7 @@ export default function AdminMerchantsPage() {
                               className={`relative inline-flex h-5 w-9 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 ${
                                 m.disabled ? 'bg-gray-300' : 'bg-primary'
                               } ${togglingId === m.id ? 'opacity-50' : ''}`}
-                              aria-label={m.disabled ? 'Enable merchant' : 'Disable merchant'}
+                              aria-label={m.disabled ? txt.merchantsToggleEnable : txt.merchantsToggleDisable}
                             >
                               <span
                                 className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
@@ -222,7 +226,7 @@ export default function AdminMerchantsPage() {
                               ? 'border-red-300 text-red-600 bg-red-50'
                               : 'border-green-300 text-green-600 bg-green-50'
                           }`}>
-                            {usagePercent > 90 ? 'At limit' : `${usagePercent}%`}
+                            {usagePercent > 90 ? txt.merchantsUsageAtLimit : `${usagePercent}%`}
                           </span>
                         </td>
                         <td className="px-4 py-3.5 text-gray-500 text-xs">

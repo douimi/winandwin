@@ -1,7 +1,7 @@
 'use client'
 
 import { Button } from '@winandwin/ui'
-import { ArrowRight } from 'lucide-react'
+import { ArrowRight, LogIn, Sparkles } from 'lucide-react'
 import Link from 'next/link'
 import { useIsLoggedIn } from './hooks'
 import { useLanding } from './lang-context'
@@ -40,15 +40,32 @@ export function LandingNav() {
             </Link>
           ) : (
             <>
-              <Link href="/sign-in" prefetch className="hidden sm:block">
-                <Button variant="ghost" size="sm">
-                  {txt.signIn}
-                </Button>
+              {/* Log In — clean icon pill, small footprint */}
+              <Link
+                href="/sign-in"
+                prefetch
+                className="hidden items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-xs font-semibold text-foreground shadow-xs transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:bg-primary/5 hover:text-primary hover:shadow-md sm:inline-flex"
+              >
+                <LogIn className="h-3.5 w-3.5" />
+                {txt.signIn}
               </Link>
-              <Link href="/sign-up" prefetch>
-                <Button size="sm" className="font-semibold">
-                  {txt.signUp}
-                </Button>
+
+              {/* Sign Up — the primary CTA. Gradient fill, sparkle icon, subtle
+                  translate + glow on hover so it reads as the star of the row. */}
+              <Link
+                href="/sign-up"
+                prefetch
+                aria-label={txt.signUp}
+                className="group relative inline-flex items-center gap-1.5 overflow-hidden rounded-full bg-gradient-to-r from-primary via-sky-500 to-primary bg-[length:200%_100%] px-4 py-1.5 text-xs font-bold text-primary-foreground shadow-md ring-1 ring-primary/40 transition-all duration-500 hover:-translate-y-0.5 hover:bg-[position:100%_0] hover:shadow-lg hover:shadow-primary/30 sm:text-sm"
+              >
+                {/* Diagonal shine sweep on hover */}
+                <span
+                  aria-hidden
+                  className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/40 to-transparent transition-transform duration-700 group-hover:translate-x-full"
+                />
+                <Sparkles className="relative h-3.5 w-3.5" />
+                <span className="relative">{txt.signUp}</span>
+                <ArrowRight className="relative h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
               </Link>
             </>
           )}

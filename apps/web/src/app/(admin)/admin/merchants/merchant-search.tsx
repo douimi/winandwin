@@ -3,8 +3,10 @@
 import { useRouter } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 import { Input } from '@winandwin/ui'
+import { useAdmin } from '../../admin-lang-context'
 
 export function MerchantSearch({ defaultValue }: { defaultValue: string }) {
+  const { txt } = useAdmin()
   const [value, setValue] = useState(defaultValue)
   const router = useRouter()
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -37,7 +39,7 @@ export function MerchantSearch({ defaultValue }: { defaultValue: string }) {
       </svg>
       <Input
         type="text"
-        placeholder="Search merchants by name or email..."
+        placeholder={txt.merchantsSearchPlaceholder}
         value={value}
         onChange={(e) => setValue(e.target.value)}
         className="w-full pl-10 border-gray-200 bg-white text-gray-900 placeholder:text-gray-400 focus:border-indigo-500 focus:ring-indigo-500/20"

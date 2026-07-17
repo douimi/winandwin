@@ -3,6 +3,7 @@
 import { Inbox } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Card, CardContent } from '@winandwin/ui'
+import { useAdmin } from '../../admin-lang-context'
 
 interface ContactRequest {
   id: string
@@ -16,20 +17,30 @@ interface ContactRequest {
   created_at: string
 }
 
-const STATUS_STYLES: Record<string, { bg: string; text: string; border: string; label: string }> = {
-  new: { bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200', label: 'New' },
-  contacted: { bg: 'bg-sky-50', text: 'text-sky-700', border: 'border-sky-200', label: 'Contacted' },
-  converted: { bg: 'bg-primary/10', text: 'text-primary', border: 'border-primary/30', label: 'Converted' },
-  rejected: { bg: 'bg-slate-100', text: 'text-slate-500', border: 'border-slate-200', label: 'Rejected' },
+// Presentational styles are static; labels are looked up at render time
+// from the admin text bundle so status pills switch on FR/EN.
+const STATUS_STYLES: Record<string, { bg: string; text: string; border: string }> = {
+  new: { bg: 'bg-emerald-50', text: 'text-emerald-700', border: 'border-emerald-200' },
+  contacted: { bg: 'bg-sky-50', text: 'text-sky-700', border: 'border-sky-200' },
+  converted: { bg: 'bg-primary/10', text: 'text-primary', border: 'border-primary/30' },
+  rejected: { bg: 'bg-slate-100', text: 'text-slate-500', border: 'border-slate-200' },
 }
 
 const STATUS_OPTIONS = ['new', 'contacted', 'converted', 'rejected'] as const
 
 export default function AdminContactsPage() {
+  const { txt } = useAdmin()
   const [contacts, setContacts] = useState<ContactRequest[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
   const [expandedId, setExpandedId] = useState<string | null>(null)
+
+  const statusLabels: Record<(typeof STATUS_OPTIONS)[number], string> = {
+    new: txt.contactsStatusNew,
+    contacted: txt.contactsStatusContacted,
+    converted: txt.contactsStatusConverted,
+    rejected: txt.contactsStatusRejected,
+  }
 
   useEffect(() => {
     loadContacts()
@@ -68,15 +79,15 @@ export default function AdminContactsPage() {
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-semibold tracking-tight">Contact Requests</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">{txt.contactsTitle}</h1>
         <div className="flex items-center gap-2">
           {error && (
             <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-medium text-amber-800">
-              Error loading
+              {txt.contactsErrorLoad}
             </span>
           )}
           <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">
-            {contacts.length} total
+            {contacts.length} {txt.contactsTotalSuffix}
           </span>
         </div>
       </div>
@@ -87,13 +98,13 @@ export default function AdminContactsPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border bg-muted/40 text-left text-xs uppercase tracking-wider text-muted-foreground">
-                  <th className="px-4 py-3 font-semibold">Date</th>
-                  <th className="px-4 py-3 font-semibold">Business</th>
-                  <th className="px-4 py-3 font-semibold">Contact</th>
-                  <th className="px-4 py-3 font-semibold">Email</th>
-                  <th className="hidden px-4 py-3 font-semibold md:table-cell">Phone</th>
-                  <th className="hidden px-4 py-3 font-semibold lg:table-cell">Type</th>
-                  <th className="px-4 py-3 font-semibold">Status</th>
+                  <th className="px-4 py-3 font-semibold">{txt.contactsColDate}</th>
+                  <th className="px-4 py-3 font-semibold">{txt.contactsColBusiness}</th>
+                  <th className="px-4 py-3 font-semibold">{txt.contactsColContact}</th>
+                  <th className="px-4 py-3 font-semibold">{txt.contactsColEmail}</th>
+                  <th className="hidden px-4 py-3 font-semibold md:table-cell">{txt.contactsColPhone}</th>
+                  <th className="hidden px-4 py-3 font-semibold lg:table-cell">{txt.contactsColType}</th>
+                  <th className="px-4 py-3 font-semibold">{txt.contactsColStatus}</th>
                 </tr>
               </thead>
               <tbody>
@@ -116,7 +127,7 @@ export default function AdminContactsPage() {
                         <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-muted text-muted-foreground">
                           <Inbox className="h-6 w-6" />
                         </div>
-                        <p className="text-sm text-muted-foreground">No contact requests yet.</p>
+                        <p className="text-sm text-muted-foreground">{txt.contactsEmpty}</p>
                       </div>
                     </td>
                   </tr>
@@ -168,7 +179,7 @@ export default function AdminContactsPage() {
                               className={`rounded-full border px-2.5 py-0.5 text-xs font-semibold cursor-pointer ${statusStyle.bg} ${statusStyle.text} ${statusStyle.border}`}
                             >
                               {STATUS_OPTIONS.map((s) => (
-                                <option key={s} value={s}>{STATUS_STYLES[s]?.label ?? s}</option>
+                                <option key={s} value={s}>{statusLabels[s]}</option>
                               ))}
                             </select>
                           </td>
@@ -176,7 +187,7 @@ export default function AdminContactsPage() {
                         {isExpanded && c.message && (
                           <tr key={`${c.id}-msg`} className="border-b border-gray-100">
                             <td colSpan={7} className="px-4 py-3 bg-gray-50">
-                              <div className="text-xs font-medium text-gray-400 mb-1">Message:</div>
+                              <div className="text-xs font-medium text-gray-400 mb-1">{txt.contactsMessageLabel}</div>
                               <div className="text-sm text-gray-700 whitespace-pre-wrap">{c.message}</div>
                             </td>
                           </tr>

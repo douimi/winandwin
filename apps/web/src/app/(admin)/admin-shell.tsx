@@ -14,6 +14,7 @@ import {
   X,
 } from 'lucide-react'
 import { signOut } from '@/lib/auth-client'
+import { AdminLanguageToggle, useAdmin } from './admin-lang-context'
 
 interface User {
   id: string
@@ -31,18 +32,19 @@ type IconComponent = ComponentType<SVGProps<SVGSVGElement>>
 
 interface NavItem {
   href: string
-  label: string
+  labelKey: 'shellNavOverview' | 'shellNavMerchants' | 'shellNavContacts' | 'shellNavSettings'
   Icon: IconComponent
 }
 
 const navItems: NavItem[] = [
-  { href: '/admin', label: 'Overview', Icon: LayoutDashboard },
-  { href: '/admin/merchants', label: 'Merchants', Icon: Store },
-  { href: '/admin/contacts', label: 'Contacts', Icon: Inbox },
-  { href: '/admin/settings', label: 'Settings', Icon: Settings },
+  { href: '/admin', labelKey: 'shellNavOverview', Icon: LayoutDashboard },
+  { href: '/admin/merchants', labelKey: 'shellNavMerchants', Icon: Store },
+  { href: '/admin/contacts', labelKey: 'shellNavContacts', Icon: Inbox },
+  { href: '/admin/settings', labelKey: 'shellNavSettings', Icon: Settings },
 ]
 
 export function AdminShell({ user, children }: AdminShellProps) {
+  const { txt } = useAdmin()
   const pathname = usePathname()
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
@@ -51,7 +53,8 @@ export function AdminShell({ user, children }: AdminShellProps) {
     return pathname.startsWith(href)
   }
 
-  const currentPageLabel = navItems.find((item) => isActive(item.href))?.label || 'Admin'
+  const currentPageLabel = navItems.find((item) => isActive(item.href))
+  const currentPageText = currentPageLabel ? txt[currentPageLabel.labelKey] : txt.shellSuperAdminLabel
   const userInitial = user.name?.charAt(0).toUpperCase() || '?'
 
   const sidebarContent = (
@@ -59,19 +62,19 @@ export function AdminShell({ user, children }: AdminShellProps) {
       {/* Brand */}
       <div className="border-b border-border px-5 py-5">
         <a href="/admin" className="flex items-center gap-2">
-          <img src="/logo.png" alt="Win & Win" className="h-9 w-auto" />
+          <img src="/logo.png" alt={txt.shellBrand} className="h-9 w-auto" />
           <span className="sr-only">winandwin.club Admin</span>
         </a>
         <span className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-foreground px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-background">
           <Shield className="h-3 w-3" />
-          Super Admin
+          {txt.shellSuperAdmin}
         </span>
       </div>
 
       {/* Primary nav */}
       <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4">
         <p className="px-3 pb-2 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
-          Navigation
+          {txt.shellSectionNavigation}
         </p>
         {navItems.map((item) => {
           const active = isActive(item.href)
@@ -92,7 +95,7 @@ export function AdminShell({ user, children }: AdminShellProps) {
                   active ? 'text-primary-foreground' : 'text-muted-foreground group-hover:text-accent-foreground'
                 }`}
               />
-              <span className="truncate">{item.label}</span>
+              <span className="truncate">{txt[item.labelKey]}</span>
             </a>
           )
         })}
@@ -104,7 +107,7 @@ export function AdminShell({ user, children }: AdminShellProps) {
             onClick={() => setSidebarOpen(false)}
           >
             <ArrowLeft className="h-4 w-4 shrink-0 text-muted-foreground group-hover:text-accent-foreground" />
-            Back to Dashboard
+            {txt.shellBackToDashboard}
           </a>
         </div>
       </nav>
@@ -128,7 +131,7 @@ export function AdminShell({ user, children }: AdminShellProps) {
           className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
         >
           <LogOut className="h-3.5 w-3.5" />
-          Sign Out
+          {txt.shellSignOut}
         </button>
       </div>
     </div>
@@ -178,9 +181,10 @@ export function AdminShell({ user, children }: AdminShellProps) {
             <Menu className="h-5 w-5" />
           </button>
           <div className="min-w-0 flex-1">
-            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Super Admin</p>
-            <h2 className="truncate text-lg font-semibold leading-tight text-foreground">{currentPageLabel}</h2>
+            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{txt.shellSuperAdminLabel}</p>
+            <h2 className="truncate text-lg font-semibold leading-tight text-foreground">{currentPageText}</h2>
           </div>
+          <AdminLanguageToggle />
         </header>
 
         <div className="flex-1 p-4 sm:p-6 lg:p-8">{children}</div>

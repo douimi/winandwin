@@ -14,6 +14,8 @@ import {
   type LucideIcon,
 } from 'lucide-react'
 import { fetchAdminStats, type AdminStats } from '@/lib/admin-api'
+import { useAdmin } from '../admin-lang-context'
+import type { AdminText } from '../admin-text'
 
 function AnimatedNumber({ value, duration = 1500 }: { value: number; duration?: number }) {
   const [display, setDisplay] = useState(0)
@@ -42,21 +44,22 @@ interface ContactRequest {
 
 interface KpiDef {
   key: keyof AdminStats
-  label: string
+  labelKey: keyof AdminText
   Icon: LucideIcon
   iconClass: string
 }
 
 // Soft tonal squares per KPI, in the same vocabulary as the merchant
-// dashboard root. No gradients, no inline clamp() — uses tokens only.
+// dashboard root. Labels are read from the admin text bundle at render
+// time so the whole board reacts to the FR/EN toggle.
 const kpiConfig: KpiDef[] = [
-  { key: 'totalMerchants', label: 'Merchants', Icon: Store, iconClass: 'bg-sky-50 text-sky-700' },
-  { key: 'totalPlayers', label: 'Players', Icon: Users, iconClass: 'bg-violet-50 text-violet-700' },
-  { key: 'gamesPlayedToday', label: 'Games Today', Icon: Gauge, iconClass: 'bg-emerald-50 text-emerald-700' },
-  { key: 'totalCouponsRedeemed', label: 'Coupons', Icon: Ticket, iconClass: 'bg-amber-50 text-amber-700' },
-  { key: 'gamesPlayedThisMonth', label: 'Games This Month', Icon: Calendar, iconClass: 'bg-blue-50 text-blue-700' },
-  { key: 'newMerchantsThisWeek', label: 'New This Week', Icon: TrendingUp, iconClass: 'bg-rose-50 text-rose-700' },
-  { key: 'disabledMerchants', label: 'Disabled', Icon: Ban, iconClass: 'bg-slate-100 text-slate-600' },
+  { key: 'totalMerchants', labelKey: 'overviewKpiMerchants', Icon: Store, iconClass: 'bg-sky-50 text-sky-700' },
+  { key: 'totalPlayers', labelKey: 'overviewKpiPlayers', Icon: Users, iconClass: 'bg-violet-50 text-violet-700' },
+  { key: 'gamesPlayedToday', labelKey: 'overviewKpiGamesToday', Icon: Gauge, iconClass: 'bg-emerald-50 text-emerald-700' },
+  { key: 'totalCouponsRedeemed', labelKey: 'overviewKpiCoupons', Icon: Ticket, iconClass: 'bg-amber-50 text-amber-700' },
+  { key: 'gamesPlayedThisMonth', labelKey: 'overviewKpiGamesThisMonth', Icon: Calendar, iconClass: 'bg-blue-50 text-blue-700' },
+  { key: 'newMerchantsThisWeek', labelKey: 'overviewKpiNewThisWeek', Icon: TrendingUp, iconClass: 'bg-rose-50 text-rose-700' },
+  { key: 'disabledMerchants', labelKey: 'overviewKpiDisabled', Icon: Ban, iconClass: 'bg-slate-100 text-slate-600' },
 ]
 
 const STATUS_STYLES: Record<string, string> = {
@@ -67,6 +70,7 @@ const STATUS_STYLES: Record<string, string> = {
 }
 
 export default function AdminOverviewPage() {
+  const { txt, lang } = useAdmin()
   const [stats, setStats] = useState<AdminStats | null>(null)
   const [contacts, setContacts] = useState<ContactRequest[]>([])
   const [loading, setLoading] = useState(true)
@@ -96,28 +100,28 @@ export default function AdminOverviewPage() {
   const [dateStr, setDateStr] = useState('')
   useEffect(() => {
     setDateStr(
-      new Date().toLocaleDateString('en-US', {
+      new Date().toLocaleDateString(lang === 'fr' ? 'fr-FR' : 'en-US', {
         weekday: 'long',
         year: 'numeric',
         month: 'long',
         day: 'numeric',
       }),
     )
-  }, [])
+  }, [lang])
 
   return (
     <div className="space-y-8">
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Overview</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">{txt.overviewTitle}</h1>
           <p className="mt-1 text-sm text-muted-foreground">{dateStr}</p>
         </div>
         <div className="flex items-center gap-3">
           {error && (
             <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-medium text-amber-800">
               <AlertTriangle className="h-3 w-3" />
-              API offline
+              {txt.commonApiOffline}
             </span>
           )}
           <button
@@ -125,7 +129,7 @@ export default function AdminOverviewPage() {
             onClick={loadData}
             className="rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
           >
-            Refresh
+            {txt.commonRefresh}
           </button>
         </div>
       </div>
@@ -144,7 +148,7 @@ export default function AdminOverviewPage() {
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                    {kpi.label}
+                    {txt[kpi.labelKey]}
                   </p>
                   {loading ? (
                     <div className="mt-2 h-8 w-24 animate-pulse rounded bg-muted" />
@@ -166,12 +170,12 @@ export default function AdminOverviewPage() {
         <Card className="transition-shadow hover:shadow-md">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
-              <CardTitle>Top Merchants</CardTitle>
+              <CardTitle>{txt.overviewTopMerchants}</CardTitle>
               <a
                 href="/admin/merchants"
                 className="text-xs font-medium text-primary transition-colors hover:underline"
               >
-                View all
+                {txt.commonViewAll}
               </a>
             </div>
           </CardHeader>
@@ -193,9 +197,9 @@ export default function AdminOverviewPage() {
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-border text-left">
-                      <th className="pb-3 pr-4 font-medium text-muted-foreground">Rank</th>
-                      <th className="pb-3 pr-4 font-medium text-muted-foreground">Name</th>
-                      <th className="pb-3 text-right font-medium text-muted-foreground">Plays</th>
+                      <th className="pb-3 pr-4 font-medium text-muted-foreground">{txt.overviewColRank}</th>
+                      <th className="pb-3 pr-4 font-medium text-muted-foreground">{txt.overviewColName}</th>
+                      <th className="pb-3 text-right font-medium text-muted-foreground">{txt.overviewColPlays}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -223,7 +227,7 @@ export default function AdminOverviewPage() {
                 </table>
               </div>
             ) : (
-              <p className="text-sm text-muted-foreground">No merchant activity recorded yet.</p>
+              <p className="text-sm text-muted-foreground">{txt.overviewTopMerchantsEmpty}</p>
             )}
           </CardContent>
         </Card>
@@ -232,12 +236,12 @@ export default function AdminOverviewPage() {
         <Card className="transition-shadow hover:shadow-md">
           <CardHeader className="pb-3">
             <div className="flex items-center justify-between">
-              <CardTitle>Recent Contacts</CardTitle>
+              <CardTitle>{txt.overviewRecentContacts}</CardTitle>
               <a
                 href="/admin/contacts"
                 className="text-xs font-medium text-primary transition-colors hover:underline"
               >
-                View all
+                {txt.commonViewAll}
               </a>
             </div>
           </CardHeader>
@@ -272,7 +276,7 @@ export default function AdminOverviewPage() {
                 })}
               </div>
             ) : (
-              <p className="text-sm text-muted-foreground">No contact requests yet.</p>
+              <p className="text-sm text-muted-foreground">{txt.overviewRecentContactsEmpty}</p>
             )}
           </CardContent>
         </Card>
@@ -281,7 +285,7 @@ export default function AdminOverviewPage() {
       {/* Recent Activity */}
       <Card className="transition-shadow hover:shadow-md">
         <CardHeader className="pb-3">
-          <CardTitle>Recent Activity</CardTitle>
+          <CardTitle>{txt.overviewRecentActivity}</CardTitle>
         </CardHeader>
         <CardContent>
           {loading ? (
@@ -298,9 +302,9 @@ export default function AdminOverviewPage() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-border text-left">
-                    <th className="pb-3 pr-4 font-medium text-muted-foreground">Merchant</th>
-                    <th className="pb-3 pr-4 font-medium text-muted-foreground">Result</th>
-                    <th className="pb-3 text-right font-medium text-muted-foreground">Time</th>
+                    <th className="pb-3 pr-4 font-medium text-muted-foreground">{txt.overviewColMerchant}</th>
+                    <th className="pb-3 pr-4 font-medium text-muted-foreground">{txt.overviewColResult}</th>
+                    <th className="pb-3 text-right font-medium text-muted-foreground">{txt.overviewColTime}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -334,7 +338,7 @@ export default function AdminOverviewPage() {
               </table>
             </div>
           ) : (
-            <p className="text-sm text-muted-foreground">No recent activity.</p>
+            <p className="text-sm text-muted-foreground">{txt.overviewRecentActivityEmpty}</p>
           )}
         </CardContent>
       </Card>

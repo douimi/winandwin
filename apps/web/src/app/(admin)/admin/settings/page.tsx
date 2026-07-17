@@ -3,6 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle, Button } from '@winandwin/ui'
 import { useEffect, useState } from 'react'
 import { adminRequest } from '@/lib/admin-api'
+import { useAdmin } from '../../admin-lang-context'
 
 interface TierConfig {
   monthlyPlays: number
@@ -32,6 +33,7 @@ const tierAccentColors: Record<string, { topBorder: string; badge: string }> = {
 }
 
 export default function AdminSettingsPage() {
+  const { txt } = useAdmin()
   const [settings, setSettings] = useState<PlatformSetting[]>([])
   const [tierLimits, setTierLimits] = useState<Record<string, TierConfig> | null>(null)
   const [loading, setLoading] = useState(true)
@@ -121,9 +123,9 @@ export default function AdminSettingsPage() {
 
       setTierLimits(updated)
       setEditedTierValues({})
-      setFeedback({ type: 'success', message: 'Tier limits saved successfully' })
+      setFeedback({ type: 'success', message: txt.settingsFeedbackTierSaved })
     } catch (err) {
-      setFeedback({ type: 'error', message: err instanceof Error ? err.message : 'Failed to save tier limits' })
+      setFeedback({ type: 'error', message: err instanceof Error ? err.message : txt.settingsFeedbackTierFail })
     } finally {
       setSaving(false)
     }
@@ -165,21 +167,40 @@ export default function AdminSettingsPage() {
 
       await Promise.all(promises)
       setEditedPlatform(false)
-      setFeedback({ type: 'success', message: 'Platform settings saved successfully' })
+      setFeedback({ type: 'success', message: txt.settingsFeedbackPlatformSaved })
     } catch (err) {
-      setFeedback({ type: 'error', message: err instanceof Error ? err.message : 'Failed to save settings' })
+      setFeedback({ type: 'error', message: err instanceof Error ? err.message : txt.settingsFeedbackPlatformFail })
     } finally {
       setSaving(false)
     }
   }
 
   const hasTierChanges = Object.keys(editedTierValues).length > 0
-  const dataSource = tierLimits ? 'Database' : 'Default (no DB values found)'
+  const dataSource = tierLimits ? txt.settingsTierSectionSourceDb : txt.settingsTierSectionSourceDefault
+
+  const tierDisplayName: Record<(typeof TIER_NAMES)[number], string> = {
+    free: txt.tierFree,
+    starter: txt.tierStarter,
+    pro: txt.tierPro,
+    enterprise: txt.tierEnterprise,
+  }
+
+  const atmosphereLabels: Record<string, string> = {
+    joyful: txt.atmosphereJoyful,
+    elegant: txt.atmosphereElegant,
+    energetic: txt.atmosphereEnergetic,
+    calm: txt.atmosphereCalm,
+    festive: txt.atmosphereFestive,
+    luxury: txt.atmosphereLuxury,
+    playful: txt.atmospherePlayful,
+    neon: txt.atmosphereNeon,
+    custom: txt.atmosphereCustom,
+  }
 
   if (loading) {
     return (
       <div className="space-y-8">
-        <h1 className="text-2xl font-bold text-gray-900">Platform Settings</h1>
+        <h1 className="text-2xl font-bold text-gray-900">{txt.settingsTitle}</h1>
         <Card className="border border-gray-200 bg-white shadow-sm rounded-xl">
           <CardContent className="flex items-center justify-center py-12">
             <div className="space-y-3 w-full max-w-md">
@@ -203,15 +224,15 @@ export default function AdminSettingsPage() {
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Platform Settings</h1>
-          <p className="mt-1 text-sm text-gray-500">Configure tier limits and platform-wide settings</p>
+          <h1 className="text-2xl font-bold text-gray-900">{txt.settingsTitle}</h1>
+          <p className="mt-1 text-sm text-gray-500">{txt.settingsSubtitle}</p>
         </div>
         <button
           type="button"
           onClick={loadSettings}
           className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-gray-600 hover:bg-gray-50 transition-colors"
         >
-          Refresh
+          {txt.commonRefresh}
         </button>
       </div>
 
@@ -232,14 +253,14 @@ export default function AdminSettingsPage() {
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-lg font-bold text-gray-900">Tier Limits</h2>
+            <h2 className="text-lg font-bold text-gray-900">{txt.settingsTierSectionTitle}</h2>
             <p className="text-sm text-gray-500">
-              Source: <span className="font-medium text-primary">{dataSource}</span>
+              {txt.settingsTierSectionSource} <span className="font-medium text-primary">{dataSource}</span>
             </p>
           </div>
           {hasTierChanges && (
             <Button onClick={handleSaveTierLimits} disabled={saving} className="font-semibold">
-              {saving ? 'Saving...' : 'Save Tier Limits'}
+              {saving ? txt.commonSaving : txt.settingsTierSaveButton}
             </Button>
           )}
         </div>
@@ -254,16 +275,16 @@ export default function AdminSettingsPage() {
               <Card key={name} className={`overflow-hidden border-t-2 ${accent.topBorder}`}>
                 <CardHeader className="pb-4">
                   <div className="flex items-center justify-between">
-                    <CardTitle className="text-lg capitalize">{name}</CardTitle>
-                    <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold capitalize ${accent.badge}`}>
-                      {name}
+                    <CardTitle className="text-lg">{tierDisplayName[name]}</CardTitle>
+                    <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold ${accent.badge}`}>
+                      {tierDisplayName[name]}
                     </span>
                   </div>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
                     <div className="flex items-center justify-between rounded-lg bg-muted/40 px-4 py-3">
-                      <span className="text-sm font-medium text-muted-foreground">Monthly Plays Limit</span>
+                      <span className="text-sm font-medium text-muted-foreground">{txt.settingsTierMonthlyPlays}</span>
                       <input
                         type="number"
                         value={monthlyPlays}
@@ -288,12 +309,12 @@ export default function AdminSettingsPage() {
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-lg font-bold text-gray-900">Platform Settings</h2>
-            <p className="text-sm text-gray-500">Global configuration for the platform</p>
+            <h2 className="text-lg font-bold text-gray-900">{txt.settingsPlatformSectionTitle}</h2>
+            <p className="text-sm text-gray-500">{txt.settingsPlatformSectionSubtitle}</p>
           </div>
           {editedPlatform && (
             <Button onClick={handleSavePlatformSettings} disabled={saving} className="font-semibold">
-              {saving ? 'Saving...' : 'Save Platform Settings'}
+              {saving ? txt.commonSaving : txt.settingsPlatformSaveButton}
             </Button>
           )}
         </div>
@@ -304,7 +325,7 @@ export default function AdminSettingsPage() {
               {/* Default Atmosphere */}
               <div className="space-y-1.5">
                 <label htmlFor="default-atmosphere" className="block text-sm font-medium text-gray-700">
-                  Default Atmosphere for New Merchants
+                  {txt.settingsPlatformDefaultAtmosphere}
                 </label>
                 <select
                   id="default-atmosphere"
@@ -315,23 +336,17 @@ export default function AdminSettingsPage() {
                   }}
                   className="w-full rounded-lg border border-input bg-card px-3 py-2 text-sm text-foreground shadow-xs transition-colors focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/40"
                 >
-                  <option value="joyful">Joyful</option>
-                  <option value="elegant">Elegant</option>
-                  <option value="energetic">Energetic</option>
-                  <option value="calm">Calm</option>
-                  <option value="festive">Festive</option>
-                  <option value="luxury">Luxury</option>
-                  <option value="playful">Playful</option>
-                  <option value="neon">Neon</option>
-                  <option value="custom">Custom</option>
+                  {Object.entries(atmosphereLabels).map(([value, label]) => (
+                    <option key={value} value={value}>{label}</option>
+                  ))}
                 </select>
-                <p className="text-xs text-gray-400">Applied to new merchants when they sign up</p>
+                <p className="text-xs text-gray-400">{txt.settingsPlatformAtmosphereHelp}</p>
               </div>
 
               {/* Site Name */}
               <div className="space-y-1.5">
                 <label htmlFor="site-name" className="block text-sm font-medium text-gray-700">
-                  Site Name
+                  {txt.settingsPlatformSiteName}
                 </label>
                 <input
                   id="site-name"
@@ -349,7 +364,7 @@ export default function AdminSettingsPage() {
               {/* Support Email */}
               <div className="space-y-1.5">
                 <label htmlFor="support-email" className="block text-sm font-medium text-gray-700">
-                  Support Email
+                  {txt.settingsPlatformSupportEmail}
                 </label>
                 <input
                   id="support-email"
@@ -374,11 +389,8 @@ export default function AdminSettingsPage() {
           <div className="flex items-start gap-3">
             <span className="mt-0.5 text-lg">{'\u2139\uFE0F'}</span>
             <div>
-              <p className="text-sm font-medium text-gray-700">Database-backed configuration</p>
-              <p className="mt-1 text-sm text-gray-500">
-                All settings are stored in the <code className="rounded bg-white border border-gray-200 px-1.5 py-0.5 text-xs text-primary">platform_settings</code> table.
-                Changes take effect within 30 seconds. Default values are only used if no database values exist.
-              </p>
+              <p className="text-sm font-medium text-gray-700">{txt.settingsSourceInfoTitle}</p>
+              <p className="mt-1 text-sm text-gray-500">{txt.settingsSourceInfoBody}</p>
             </div>
           </div>
         </CardContent>
