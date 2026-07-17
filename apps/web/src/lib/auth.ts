@@ -46,6 +46,17 @@ export function getAuth() {
             },
           }
         : undefined,
+      // Auto-link a fresh Google sign-in to an existing account that shares
+      // the same email. Without this better-auth returns
+      // `unable_to_link_account` when a merchant who signed up with
+      // email/password later tries the Google button. Google always returns
+      // a verified email so trusting it here is safe.
+      account: {
+        accountLinking: {
+          enabled: true,
+          trustedProviders: ['google'],
+        },
+      },
       session: {
         expiresIn: 60 * 60 * 24 * 7,
         updateAge: 60 * 60 * 24,
