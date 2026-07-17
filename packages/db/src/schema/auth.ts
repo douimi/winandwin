@@ -41,6 +41,10 @@ export const accounts = pgTable('account', {
   providerId: text('providerId').notNull(),
   accessToken: text('accessToken'),
   refreshToken: text('refreshToken'),
+  // OIDC id_token — better-auth 1.5+ writes this on every Google sign-in.
+  // Without this column present, the account insert fails and the OAuth
+  // flow errors out with "unable to create user" or "unable_to_link_account".
+  idToken: text('idToken'),
   accessTokenExpiresAt: timestamp('accessTokenExpiresAt'),
   refreshTokenExpiresAt: timestamp('refreshTokenExpiresAt'),
   scope: text('scope'),
