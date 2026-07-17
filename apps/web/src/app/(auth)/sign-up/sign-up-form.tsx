@@ -24,6 +24,7 @@ import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { signUp } from '@/lib/auth-client'
 import { createMerchant } from '@/lib/api'
+import { GoogleButton } from '../google-button'
 
 interface Category {
   value: string
@@ -144,6 +145,14 @@ export function SignUpForm() {
             <p className="text-sm text-muted-foreground">Start engaging your customers in minutes</p>
           </CardHeader>
           <CardContent className="pt-2">
+            <GoogleButton label="Continue with Google" callbackURL="/onboarding" />
+
+            <div className="my-5 flex items-center gap-3 text-xs uppercase tracking-wider text-muted-foreground">
+              <span className="h-px flex-1 bg-border" />
+              <span>or with email</span>
+              <span className="h-px flex-1 bg-border" />
+            </div>
+
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-1.5">

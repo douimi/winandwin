@@ -27,6 +27,16 @@ export function getAuth() {
         enabled: true,
         minPasswordLength: 8,
       },
+      // Google OAuth — enabled when both env vars are present. Kept optional
+      // so local/preview envs without Google credentials still boot.
+      socialProviders: process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET
+        ? {
+            google: {
+              clientId: process.env.GOOGLE_CLIENT_ID,
+              clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+            },
+          }
+        : undefined,
       session: {
         expiresIn: 60 * 60 * 24 * 7,
         updateAge: 60 * 60 * 24,

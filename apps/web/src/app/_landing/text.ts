@@ -50,6 +50,7 @@ const fr = {
   navPlans: 'Tarifs',
   navContact: 'Contact',
   signIn: 'Connexion',
+  signUp: 'Inscription',
   contactUs: 'Nous contacter',
   myDashboard: 'Mon tableau de bord',
 
@@ -464,6 +465,7 @@ const en = {
   navPlans: 'Pricing',
   navContact: 'Contact',
   signIn: 'Sign In',
+  signUp: 'Sign Up',
   contactUs: 'Contact us',
   myDashboard: 'My Dashboard',
 

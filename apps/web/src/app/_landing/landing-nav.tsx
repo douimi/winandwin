@@ -45,11 +45,11 @@ export function LandingNav() {
                   {txt.signIn}
                 </Button>
               </Link>
-              <a href="#contact">
+              <Link href="/sign-up" prefetch>
                 <Button size="sm" className="font-semibold">
-                  {txt.contactUs}
+                  {txt.signUp}
                 </Button>
-              </a>
+              </Link>
             </>
           )}
         </div>
