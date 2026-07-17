@@ -18,6 +18,7 @@ import { useParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { fetchPlayerDetail, type PlayerCoupon, type PlayerDetail, type PlayerGamePlay } from '@/lib/api'
 import { useMerchantId } from '@/lib/merchant-context'
+import { useApp } from '@/lib/i18n/app-lang-context'
 
 const COUPON_STATUS_BADGE: Record<string, string> = {
   active: 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200',
@@ -26,17 +27,17 @@ const COUPON_STATUS_BADGE: Record<string, string> = {
   revoked: 'bg-rose-50 text-rose-700 ring-1 ring-rose-200',
 }
 
-function formatDate(iso: string | null) {
+function formatDate(iso: string | null, lang: 'fr' | 'en' = 'fr') {
   if (!iso) return '—'
-  return new Date(iso).toLocaleDateString('en-US', {
+  return new Date(iso).toLocaleDateString(lang === 'fr' ? 'fr-FR' : 'en-US', {
     month: 'short',
     day: 'numeric',
     year: 'numeric',
   })
 }
 
-function formatDateTime(iso: string) {
-  return new Date(iso).toLocaleDateString('en-US', {
+function formatDateTime(iso: string, lang: 'fr' | 'en' = 'fr') {
+  return new Date(iso).toLocaleDateString(lang === 'fr' ? 'fr-FR' : 'en-US', {
     month: 'short',
     day: 'numeric',
     year: 'numeric',
@@ -46,6 +47,7 @@ function formatDateTime(iso: string) {
 }
 
 export default function PlayerDetailPage() {
+  const { txt, lang } = useApp()
   const params = useParams()
   const merchantId = useMerchantId()
   const playerId = params.id as string
@@ -67,7 +69,7 @@ export default function PlayerDetailPage() {
         const data = await fetchPlayerDetail(merchantId!, playerId)
         if (!cancelled) setDetail(data)
       } catch (err) {
-        if (!cancelled) setError(err instanceof Error ? err.message : 'Failed to load player')
+        if (!cancelled) setError(err instanceof Error ? err.message : txt.commonError)
       } finally {
         if (!cancelled) setLoading(false)
       }
@@ -82,10 +84,10 @@ export default function PlayerDetailPage() {
   if (loading) {
     return (
       <div className="mx-auto max-w-4xl space-y-6">
-        <BackLink />
+        <BackLink label={txt.playersDetailBack} />
         <Card>
           <CardContent className="flex items-center justify-center py-12">
-            <p className="text-sm text-muted-foreground">Loading player…</p>
+            <p className="text-sm text-muted-foreground">{txt.commonLoading}</p>
           </CardContent>
         </Card>
       </div>
@@ -95,11 +97,13 @@ export default function PlayerDetailPage() {
   if (error || !detail) {
     return (
       <div className="mx-auto max-w-4xl space-y-6">
-        <BackLink />
+        <BackLink label={txt.playersDetailBack} />
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
             <XCircle className="h-8 w-8 text-destructive" />
-            <p className="mt-3 text-sm text-destructive">{error || 'Player not found'}</p>
+            <p className="mt-3 text-sm text-destructive">
+              {error || (lang === 'fr' ? 'Joueur introuvable' : 'Player not found')}
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -109,12 +113,12 @@ export default function PlayerDetailPage() {
   const { player, plays, coupons } = detail
   const winCount = plays.filter((p) => p.result === 'win').length
   const lossCount = plays.filter((p) => p.result === 'lose').length
-  const displayName = player.name || 'Anonymous player'
+  const displayName = player.name || txt.playersAnonymous
   const initial = (player.name || player.email || '?').charAt(0).toUpperCase()
 
   return (
     <div className="mx-auto max-w-4xl space-y-6">
-      <BackLink />
+      <BackLink label={txt.playersDetailBack} />
 
       {/* Identity + top-line stats */}
       <Card>
@@ -142,31 +146,31 @@ export default function PlayerDetailPage() {
                 )}
                 <span className="inline-flex items-center gap-1.5">
                   <Calendar className="h-3.5 w-3.5" />
-                  Joined {formatDate(player.createdAt)}
+                  {txt.playersColJoined} {formatDate(player.createdAt, lang)}
                 </span>
                 <span className="inline-flex items-center gap-1.5">
                   <Clock className="h-3.5 w-3.5" />
-                  Last seen {formatDateTime(player.lastSeenAt)}
+                  {txt.playersColLastSeen} {formatDateTime(player.lastSeenAt, lang)}
                 </span>
               </div>
             </div>
           </div>
 
           <div className="grid flex-1 grid-cols-2 gap-3 sm:grid-cols-4">
-            <MiniStat Icon={Gauge} label="Plays" value={player.totalPlays} tone="sky" />
+            <MiniStat Icon={Gauge} label={txt.playersColPlays} value={player.totalPlays} tone="sky" />
             <MiniStat
               Icon={Trophy}
-              label="Wins"
+              label={txt.playersColWins}
               value={player.totalWins}
               tone="emerald"
             />
             <MiniStat
               Icon={BadgeCheck}
-              label="Win %"
+              label={txt.playersDetailWinRate}
               value={`${player.winRate}%`}
               tone="violet"
             />
-            <MiniStat Icon={User} label="Points" value={player.points} tone="amber" />
+            <MiniStat Icon={User} label={txt.playersColPoints} value={player.points} tone="amber" />
           </div>
         </CardContent>
       </Card>
@@ -176,7 +180,7 @@ export default function PlayerDetailPage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Ticket className="h-4 w-4 text-primary" />
-            Coupons ({coupons.length})
+            {txt.playersDetailCouponsTitle} ({coupons.length})
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -238,14 +242,14 @@ export default function PlayerDetailPage() {
 
 // ── Helpers ────────────────────────────────────────────────────────────
 
-function BackLink() {
+function BackLink({ label }: { label: string }) {
   return (
     <a
       href="/dashboard/players"
       className="inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
     >
       <ArrowLeft className="h-4 w-4" />
-      Back to players
+      {label}
     </a>
   )
 }

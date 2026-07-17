@@ -16,6 +16,7 @@ import {
   type UpdateGamePayload,
 } from '@/lib/api'
 import { useMerchantTier } from '@/lib/merchant-context'
+import { useApp } from '@/lib/i18n/app-lang-context'
 import { hasFeature } from '@/lib/tier-features'
 
 const GAME_TYPE_LABELS: Record<string, { label: string; icon: string }> = {
@@ -113,6 +114,7 @@ function buildConditionsArray(draft: PrizeDraft): string[] {
 }
 
 export default function GameDetailPage() {
+  const { txt, lang } = useApp()
   const params = useParams()
   const router = useRouter()
   const tier = useMerchantTier()
@@ -325,11 +327,11 @@ export default function GameDetailPage() {
     return (
       <div className="mx-auto max-w-2xl space-y-6">
         <a href="/dashboard/games" className="text-sm text-muted-foreground hover:text-foreground">
-          &larr; Back to Games
+          &larr; {lang === 'fr' ? 'Retour aux jeux' : 'Back to Games'}
         </a>
         <Card>
           <CardContent className="flex items-center justify-center py-12">
-            <p className="text-sm text-muted-foreground">Loading game...</p>
+            <p className="text-sm text-muted-foreground">{txt.commonLoading}</p>
           </CardContent>
         </Card>
       </div>
@@ -340,11 +342,13 @@ export default function GameDetailPage() {
     return (
       <div className="mx-auto max-w-2xl space-y-6">
         <a href="/dashboard/games" className="text-sm text-muted-foreground hover:text-foreground">
-          &larr; Back to Games
+          &larr; {lang === 'fr' ? 'Retour aux jeux' : 'Back to Games'}
         </a>
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
-            <p className="text-sm text-destructive">{error || 'Game not found'}</p>
+            <p className="text-sm text-destructive">
+              {error || (lang === 'fr' ? 'Jeu introuvable' : 'Game not found')}
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -357,7 +361,7 @@ export default function GameDetailPage() {
     <div className="mx-auto max-w-2xl space-y-6">
       <div className="flex items-center justify-between">
         <a href="/dashboard/games" className="text-sm text-muted-foreground hover:text-foreground">
-          &larr; Back to Games
+          &larr; {lang === 'fr' ? 'Retour aux jeux' : 'Back to Games'}
         </a>
       </div>
 
@@ -454,7 +458,7 @@ export default function GameDetailPage() {
       {/* Prizes */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>Prizes</CardTitle>
+          <CardTitle>{lang === 'fr' ? 'Prix' : 'Prizes'}</CardTitle>
           <Button type="button" variant="outline" size="sm" onClick={startAddPrize}>
             + Add Prize
           </Button>

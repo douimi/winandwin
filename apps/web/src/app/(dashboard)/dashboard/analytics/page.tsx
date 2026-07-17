@@ -14,6 +14,8 @@ import {
 import { useEffect, useState } from 'react'
 import { fetchAnalytics, type AnalyticsData } from '@/lib/api'
 import { useMerchantId, useMerchantTier } from '@/lib/merchant-context'
+import { useApp } from '@/lib/i18n/app-lang-context'
+import type { AppText } from '@/lib/i18n/app-text'
 import { hasFeature } from '@/lib/tier-features'
 import { ProFeatureLock } from '@/components/pro-feature-lock'
 
@@ -34,11 +36,11 @@ function AnimatedNumber({ value, duration = 1500 }: { value: number; duration?: 
 
 type Period = 'today' | 'week' | 'month' | 'all'
 
-const PERIOD_LABELS: Record<Period, string> = {
-  today: 'Today',
-  week: 'This Week',
-  month: 'This Month',
-  all: 'All Time',
+const PERIOD_KEYS: Record<Period, keyof AppText> = {
+  today: 'analyticsPeriodToday',
+  week: 'analyticsPeriodWeek',
+  month: 'analyticsPeriodMonth',
+  all: 'analyticsPeriodAll',
 }
 
 interface KpiDef {
@@ -50,6 +52,7 @@ interface KpiDef {
 }
 
 export default function AnalyticsPage() {
+  const { txt, lang } = useApp()
   const merchantId = useMerchantId()
   const tier = useMerchantTier()
   const [data, setData] = useState<AnalyticsData | null>(null)
@@ -73,7 +76,7 @@ export default function AnalyticsPage() {
         if (!cancelled) setData(result)
       } catch (err) {
         if (!cancelled) {
-          setError(err instanceof Error ? err.message : 'Failed to load analytics')
+          setError(err instanceof Error ? err.message : txt.commonError)
         }
       } finally {
         if (!cancelled) setLoading(false)
@@ -90,7 +93,7 @@ export default function AnalyticsPage() {
     return (
       <div className="space-y-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <h1 className="text-2xl font-semibold tracking-tight">Analytics</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">{txt.analyticsTitle}</h1>
         </div>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {Array.from({ length: 4 }).map((_, i) => (
@@ -105,7 +108,7 @@ export default function AnalyticsPage() {
         </div>
         <Card>
           <CardContent className="flex items-center justify-center py-16">
-            <p className="text-sm text-muted-foreground">Loading analytics...</p>
+            <p className="text-sm text-muted-foreground">{txt.commonLoading}</p>
           </CardContent>
         </Card>
       </div>
@@ -115,12 +118,12 @@ export default function AnalyticsPage() {
   if (error) {
     return (
       <div className="space-y-6">
-        <h1 className="text-2xl font-semibold tracking-tight">Analytics</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">{txt.analyticsTitle}</h1>
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
             <p className="text-sm text-destructive">{error}</p>
             <Button variant="outline" size="sm" className="mt-4" onClick={() => setPeriod((p) => p)}>
-              Try again
+              {txt.commonRetry}
             </Button>
           </CardContent>
         </Card>
@@ -137,18 +140,22 @@ export default function AnalyticsPage() {
   ) {
     return (
       <div className="space-y-6">
-        <h1 className="text-2xl font-semibold tracking-tight">Analytics</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">{txt.analyticsTitle}</h1>
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-16">
             <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-muted text-muted-foreground">
               <TrendingDown className="h-6 w-6" />
             </div>
-            <p className="mt-3 text-lg font-medium">No analytics data yet</p>
+            <p className="mt-3 text-lg font-medium">
+              {lang === 'fr' ? 'Aucune donnée pour le moment' : 'No analytics data yet'}
+            </p>
             <p className="mt-1 max-w-sm text-center text-sm text-muted-foreground">
-              Start collecting data by activating a game. Once customers start playing, you will see your conversion funnel, top actions, and prize popularity here.
+              {lang === 'fr'
+                ? 'Activez un jeu pour commencer à collecter des données. Vos entonnoirs, actions préférées et prix populaires apparaîtront ici.'
+                : 'Start collecting data by activating a game. Once customers start playing, you will see your conversion funnel, top actions, and prize popularity here.'}
             </p>
             <Button asChild className="mt-4">
-              <a href="/dashboard/games">Go to Games</a>
+              <a href="/dashboard/games">{txt.shellNavGames}</a>
             </Button>
           </CardContent>
         </Card>
@@ -158,28 +165,28 @@ export default function AnalyticsPage() {
 
   const kpiCards: KpiDef[] = [
     {
-      title: 'Total Players',
+      title: txt.analyticsKpiTotalPlayers,
       value: data.kpis.totalPlayers,
       change: data.kpis.totalPlayersChange,
       Icon: Users,
       iconClass: 'bg-sky-50 text-sky-700',
     },
     {
-      title: 'Games Played',
+      title: txt.analyticsKpiGamesPlayed,
       value: data.kpis.gamesPlayed,
       change: data.kpis.gamesPlayedChange,
       Icon: Gauge,
       iconClass: 'bg-violet-50 text-violet-700',
     },
     {
-      title: 'Actions Completed',
+      title: txt.analyticsKpiActionsCompleted,
       value: data.kpis.actionsCompleted,
       change: data.kpis.actionsCompletedChange,
       Icon: CheckCircle2,
       iconClass: 'bg-emerald-50 text-emerald-700',
     },
     {
-      title: 'Coupons Redeemed',
+      title: txt.analyticsKpiCouponsRedeemed,
       value: data.kpis.couponsRedeemed,
       change: data.kpis.couponsRedeemedChange,
       Icon: Ticket,
@@ -209,10 +216,10 @@ export default function AnalyticsPage() {
     <div className="space-y-6">
       {/* Header with period selector */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <h1 className="text-2xl font-semibold tracking-tight">Analytics</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">{txt.analyticsTitle}</h1>
         {hasFeature(tier, 'analytics.periodSelector') ? (
           <div className="inline-flex items-center gap-0.5 rounded-lg border border-border bg-muted/50 p-0.5">
-            {(Object.keys(PERIOD_LABELS) as Period[]).map((p) => (
+            {(Object.keys(PERIOD_KEYS) as Period[]).map((p) => (
               <button
                 key={p}
                 type="button"
@@ -223,16 +230,16 @@ export default function AnalyticsPage() {
                     : 'text-muted-foreground hover:text-foreground'
                 }`}
               >
-                {PERIOD_LABELS[p]}
+                {txt[PERIOD_KEYS[p]]}
               </button>
             ))}
           </div>
         ) : (
           <div className="relative">
             <div className="pointer-events-none flex gap-1 rounded-lg border bg-muted/50 p-1 opacity-40 blur-[1px]">
-              {(Object.keys(PERIOD_LABELS) as Period[]).map((p) => (
+              {(Object.keys(PERIOD_KEYS) as Period[]).map((p) => (
                 <Button key={p} variant="ghost" size="sm" className="h-8 px-3 text-xs sm:text-sm">
-                  {PERIOD_LABELS[p]}
+                  {txt[PERIOD_KEYS[p]]}
                 </Button>
               ))}
             </div>

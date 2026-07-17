@@ -5,30 +5,36 @@ import { Award, Download, Lock, Medal, Trophy, Users } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { fetchPlayers, type PlayerData, type PlayerListPage, type PlayerSortField } from '@/lib/api'
 import { useMerchantId, useMerchantTier } from '@/lib/merchant-context'
+import { useApp } from '@/lib/i18n/app-lang-context'
+import type { AppText } from '@/lib/i18n/app-text'
 import { hasFeature } from '@/lib/tier-features'
 
 const PAGE_SIZE_OPTIONS = [10, 20, 50, 100]
 
 type ColumnDef = {
   field: PlayerSortField
-  label: string
+  labelKey: keyof AppText
   className?: string
 }
 
 const COLUMNS: ColumnDef[] = [
-  { field: 'name', label: 'Player' },
-  { field: 'totalPlays', label: 'Plays' },
-  { field: 'totalWins', label: 'Wins' },
-  { field: 'lastSeenAt', label: 'Last Active', className: 'hidden sm:table-cell' },
-  { field: 'createdAt', label: 'Joined', className: 'hidden md:table-cell' },
+  { field: 'name', labelKey: 'playersColName' },
+  { field: 'totalPlays', labelKey: 'playersColPlays' },
+  { field: 'totalWins', labelKey: 'playersColWins' },
+  { field: 'lastSeenAt', labelKey: 'playersColLastSeen', className: 'hidden sm:table-cell' },
+  { field: 'createdAt', labelKey: 'playersColJoined', className: 'hidden md:table-cell' },
 ]
 
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+function formatDate(iso: string, lang: 'fr' | 'en' = 'fr') {
+  return new Date(iso).toLocaleDateString(lang === 'fr' ? 'fr-FR' : 'en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  })
 }
 
-function formatDateTime(iso: string) {
-  return new Date(iso).toLocaleDateString('en-US', {
+function formatDateTime(iso: string, lang: 'fr' | 'en' = 'fr') {
+  return new Date(iso).toLocaleDateString(lang === 'fr' ? 'fr-FR' : 'en-US', {
     month: 'short',
     day: 'numeric',
     hour: '2-digit',
@@ -71,6 +77,7 @@ function getRankBadge(rank: number) {
 }
 
 export default function PlayersPage() {
+  const { txt, lang } = useApp()
   const merchantId = useMerchantId()
   const tier = useMerchantTier()
 
@@ -118,11 +125,11 @@ export default function PlayersPage() {
       setPageData(result)
       setError(null)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load players')
+      setError(err instanceof Error ? err.message : txt.commonError)
     } finally {
       setLoading(false)
     }
-  }, [merchantId, page, pageSize, sortField, sortDir, debouncedSearch])
+  }, [merchantId, page, pageSize, sortField, sortDir, debouncedSearch, txt])
 
   useEffect(() => {
     loadPlayers()
@@ -224,7 +231,7 @@ export default function PlayersPage() {
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-semibold tracking-tight">Players</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">{txt.playersTitle}</h1>
         <div className="flex items-center gap-3">
           {hasFeature(tier, 'players.export') ? (
             <button
@@ -234,7 +241,7 @@ export default function PlayersPage() {
               className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-sm font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground disabled:opacity-50"
             >
               <Download className="h-3.5 w-3.5" />
-              {exportLoading ? 'Exporting…' : 'Export CSV'}
+              {exportLoading ? (lang === 'fr' ? 'Export en cours…' : 'Exporting…') : txt.couponsExportCsv}
             </button>
           ) : (
             <a
@@ -242,14 +249,14 @@ export default function PlayersPage() {
               className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent"
             >
               <Lock className="h-3.5 w-3.5" />
-              Export CSV
+              {txt.couponsExportCsv}
               <span className="ml-0.5 rounded-full bg-primary/10 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-primary">
                 Pro
               </span>
             </a>
           )}
           <div className="text-sm text-muted-foreground">
-            {!loading && `${stats.totalPlayers} player${stats.totalPlayers !== 1 ? 's' : ''}`}
+            {!loading && `${stats.totalPlayers} ${stats.totalPlayers === 1 ? (lang === 'fr' ? 'joueur' : 'player') : (lang === 'fr' ? 'joueurs' : 'players')}`}
           </div>
         </div>
       </div>
@@ -259,19 +266,19 @@ export default function PlayersPage() {
         <div className="grid gap-3 grid-cols-2 sm:grid-cols-4">
           <div className="rounded-xl border border-border bg-card p-3 text-center shadow-xs">
             <p className="text-2xl font-bold tabular-nums text-primary">{stats.totalPlayers}</p>
-            <p className="text-xs text-muted-foreground">Total Players</p>
+            <p className="text-xs text-muted-foreground">{txt.playersStatTotal}</p>
           </div>
           <div className="rounded-xl border border-border bg-card p-3 text-center shadow-xs">
             <p className="text-2xl font-bold tabular-nums">{stats.totalPlays}</p>
-            <p className="text-xs text-muted-foreground">Total Plays</p>
+            <p className="text-xs text-muted-foreground">{txt.playersStatPlays}</p>
           </div>
           <div className="rounded-xl border border-border bg-card p-3 text-center shadow-xs">
             <p className="text-2xl font-bold tabular-nums text-emerald-600">{stats.totalWins}</p>
-            <p className="text-xs text-muted-foreground">Total Wins</p>
+            <p className="text-xs text-muted-foreground">{txt.playersStatWins}</p>
           </div>
           <div className="rounded-xl border border-border bg-card p-3 text-center shadow-xs">
             <p className="text-2xl font-bold tabular-nums">{winRate}%</p>
-            <p className="text-xs text-muted-foreground">Win Rate</p>
+            <p className="text-xs text-muted-foreground">{txt.playersDetailWinRate}</p>
           </div>
         </div>
       )}
@@ -283,10 +290,10 @@ export default function PlayersPage() {
           <div className="flex flex-wrap items-center justify-between gap-3">
             <CardTitle className="flex items-center gap-2">
               <Trophy className="h-4 w-4 text-primary" />
-              Player Rankings
+              {txt.playersRankingTitle}
             </CardTitle>
             <div className="text-xs text-muted-foreground">
-              {loading ? 'Loading…' : `${pagination.total} total`}
+              {loading ? txt.commonLoading : `${pagination.total} ${lang === 'fr' ? 'au total' : 'total'}`}
             </div>
           </div>
         </CardHeader>
@@ -295,7 +302,7 @@ export default function PlayersPage() {
           <div className="flex flex-wrap items-center gap-3">
             <input
               type="text"
-              placeholder="Search by name or email…"
+              placeholder={txt.playersSearchPlaceholder}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="flex h-9 w-full max-w-sm rounded-md border border-input bg-background px-3 py-1 text-sm shadow-xs transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
@@ -304,9 +311,9 @@ export default function PlayersPage() {
             <div className="flex flex-wrap gap-1.5">
               {(
                 [
-                  { field: 'totalWins' as PlayerSortField, label: 'Most Wins' },
-                  { field: 'totalPlays' as PlayerSortField, label: 'Most Plays' },
-                  { field: 'lastSeenAt' as PlayerSortField, label: 'Recent' },
+                  { field: 'totalWins' as PlayerSortField, label: lang === 'fr' ? 'Meilleurs gains' : 'Most Wins' },
+                  { field: 'totalPlays' as PlayerSortField, label: lang === 'fr' ? 'Plus actifs' : 'Most Plays' },
+                  { field: 'lastSeenAt' as PlayerSortField, label: lang === 'fr' ? 'Récents' : 'Recent' },
                 ]
               ).map((preset) => (
                 <button
@@ -329,7 +336,7 @@ export default function PlayersPage() {
 
             <div className="ml-auto flex items-center gap-2">
               <label htmlFor="pageSize" className="text-xs text-muted-foreground">
-                Rows per page
+                {lang === 'fr' ? 'Lignes par page' : 'Rows per page'}
               </label>
               <select
                 id="pageSize"
@@ -363,9 +370,11 @@ export default function PlayersPage() {
               <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-muted text-muted-foreground">
                 <Users className="h-6 w-6" />
               </div>
-              <p className="mt-3 text-lg font-medium">No players yet</p>
+              <p className="mt-3 text-lg font-medium">{txt.playersEmpty}</p>
               <p className="text-sm text-muted-foreground">
-                {debouncedSearch ? 'No players match your search.' : 'Players will appear here when they play your game.'}
+                {debouncedSearch
+                  ? (lang === 'fr' ? 'Aucun joueur ne correspond à votre recherche.' : 'No players match your search.')
+                  : (lang === 'fr' ? 'Les joueurs apparaîtront ici quand ils joueront.' : 'Players will appear here when they play your game.')}
               </p>
             </div>
           ) : (
@@ -380,11 +389,13 @@ export default function PlayersPage() {
                         onClick={() => toggleSort(col.field)}
                         className={`cursor-pointer select-none pb-3 font-medium text-muted-foreground transition-colors hover:text-foreground ${col.className ?? ''}`}
                       >
-                        {col.label}
+                        {txt[col.labelKey]}
                         <SortIcon field={col.field} />
                       </th>
                     ))}
-                    <th className="pb-3 font-medium text-muted-foreground">Win %</th>
+                    <th className="pb-3 font-medium text-muted-foreground">
+                      {lang === 'fr' ? 'Taux de gain' : 'Win %'}
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -408,7 +419,7 @@ export default function PlayersPage() {
                             className="block"
                           >
                             <span className="font-medium hover:text-primary hover:underline">
-                              {player.name || <span className="italic text-muted-foreground">Anonymous</span>}
+                              {player.name || <span className="italic text-muted-foreground">{txt.playersAnonymous}</span>}
                             </span>
                             {player.email && (
                               <p className="max-w-[200px] truncate text-xs text-muted-foreground">{player.email}</p>
@@ -428,10 +439,10 @@ export default function PlayersPage() {
                           </span>
                         </td>
                         <td className="hidden py-3 text-xs text-muted-foreground sm:table-cell">
-                          {formatDateTime(player.lastSeenAt)}
+                          {formatDateTime(player.lastSeenAt, lang)}
                         </td>
                         <td className="hidden py-3 text-xs text-muted-foreground md:table-cell">
-                          {formatDate(player.createdAt)}
+                          {formatDate(player.createdAt, lang)}
                         </td>
                         <td className="py-3">
                           <div className="flex items-center gap-2">
@@ -453,8 +464,10 @@ export default function PlayersPage() {
           {players.length > 0 && (
             <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
               <p className="text-xs text-muted-foreground">
-                Showing <span className="font-medium text-foreground">{showingFrom}</span>–
-                <span className="font-medium text-foreground">{showingTo}</span> of{' '}
+                {lang === 'fr' ? 'Affichage' : 'Showing'}{' '}
+                <span className="font-medium text-foreground">{showingFrom}</span>–
+                <span className="font-medium text-foreground">{showingTo}</span>{' '}
+                {lang === 'fr' ? 'sur' : 'of'}{' '}
                 <span className="font-medium text-foreground">{pagination.total}</span>
               </p>
 
@@ -465,7 +478,7 @@ export default function PlayersPage() {
                   disabled={page <= 1 || loading}
                   className="inline-flex h-8 items-center rounded-md border border-input px-3 text-xs font-medium transition-colors hover:bg-accent disabled:opacity-40"
                 >
-                  ← Prev
+                  ← {txt.commonPrevious}
                 </button>
 
                 {pageNumbers.map((pn, i) =>
@@ -496,7 +509,7 @@ export default function PlayersPage() {
                   disabled={page >= totalPages || loading}
                   className="inline-flex h-8 items-center rounded-md border border-input px-3 text-xs font-medium transition-colors hover:bg-accent disabled:opacity-40"
                 >
-                  Next →
+                  {txt.commonNext} →
                 </button>
               </div>
             </div>

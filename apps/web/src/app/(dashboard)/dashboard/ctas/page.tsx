@@ -11,6 +11,7 @@ import {
   fetchMerchant,
 } from '@/lib/api'
 import { useMerchantId } from '@/lib/merchant-context'
+import { useApp } from '@/lib/i18n/app-lang-context'
 import { TIER_LIMITS } from '@winandwin/shared/constants'
 
 const CTA_TYPES = [
@@ -119,6 +120,7 @@ const CTA_TYPES = [
 ] as const
 
 export default function CtasPage() {
+  const { txt, lang } = useApp()
   const merchantId = useMerchantId()
   const [ctaList, setCtaList] = useState<CtaItem[]>([])
   const [loading, setLoading] = useState(true)
@@ -269,10 +271,10 @@ export default function CtasPage() {
   if (loading) {
     return (
       <div className="space-y-6">
-        <h1 className="text-2xl font-bold">CTA Configuration</h1>
+        <h1 className="text-2xl font-bold">{txt.ctasTitle}</h1>
         <Card>
           <CardContent className="flex items-center justify-center py-12">
-            <p className="text-sm text-muted-foreground">Loading CTAs...</p>
+            <p className="text-sm text-muted-foreground">{txt.commonLoading}</p>
           </CardContent>
         </Card>
       </div>
@@ -282,33 +284,33 @@ export default function CtasPage() {
   return (
     <div className="mx-auto max-w-2xl space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">CTA Configuration</h1>
+        <h1 className="text-2xl font-bold">{txt.ctasTitle}</h1>
         {availableTypes.length > 0 && !showAddForm && (
           <Button onClick={() => {
             setNewCtaType(availableTypes[0]!.type)
             setNewCtaConfig({})
             setShowAddForm(true)
           }}>
-            Add CTA
+            {txt.ctasAddButton}
           </Button>
         )}
       </div>
 
       <p className="text-sm text-muted-foreground">
-        Configure the actions customers must complete before they can play the game.
-        At least one CTA must be enabled for your game to work.
+        {txt.ctasSubtitle}
       </p>
 
       <div className="rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-800">
-        {'\u2139\uFE0F'} Players see one action per visit, in display order.
-        Set the order number on each CTA: 1 = shown first, 2 = shown second, etc.
+        {'\u2139\uFE0F'} {lang === 'fr'
+          ? 'Les joueurs voient une action par visite, dans l\'ordre d\'affichage. R\u00E9glez le num\u00E9ro d\'ordre sur chaque CTA (1 = affich\u00E9 en premier, etc.).'
+          : 'Players see one action per visit, in display order. Set the order number on each CTA: 1 = shown first, 2 = shown second, etc.'}
       </div>
 
       {tierLimitMessage && (
         <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
           {tierLimitMessage}{' '}
           <a href="/dashboard/upgrade" className="font-medium underline">
-            Upgrade now
+            {lang === 'fr' ? 'Voir les plans' : 'Upgrade now'}
           </a>
         </div>
       )}
@@ -329,16 +331,18 @@ export default function CtasPage() {
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
             <p className="text-4xl">{'\uD83D\uDD17'}</p>
-            <p className="mt-2 text-lg font-medium">No CTAs configured</p>
+            <p className="mt-2 text-lg font-medium">
+              {lang === 'fr' ? 'Aucun CTA configuré' : 'No CTAs configured'}
+            </p>
             <p className="text-sm text-muted-foreground mb-4">
-              Add a CTA to define what actions customers perform before playing.
+              {txt.ctasEmpty}
             </p>
             <Button onClick={() => {
               setNewCtaType(CTA_TYPES[0].type)
               setNewCtaConfig({})
               setShowAddForm(true)
             }}>
-              Add Your First CTA
+              {lang === 'fr' ? 'Ajouter mon premier CTA' : 'Add Your First CTA'}
             </Button>
           </CardContent>
         </Card>
@@ -369,12 +373,12 @@ export default function CtasPage() {
       {showAddForm && (
         <Card className="border-primary/30">
           <CardHeader>
-            <CardTitle>Add New CTA</CardTitle>
+            <CardTitle>{lang === 'fr' ? 'Ajouter un CTA' : 'Add New CTA'}</CardTitle>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleAddCta} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="ctaType">Action Type</Label>
+                <Label htmlFor="ctaType">{lang === 'fr' ? 'Type d\'action' : 'Action Type'}</Label>
                 <select
                   id="ctaType"
                   value={newCtaType}
@@ -412,7 +416,7 @@ export default function CtasPage() {
 
               <div className="flex gap-3">
                 <Button type="submit" disabled={addLoading}>
-                  {addLoading ? 'Adding...' : 'Add CTA'}
+                  {addLoading ? (lang === 'fr' ? 'Ajout…' : 'Adding...') : txt.ctasAddButton}
                 </Button>
                 <Button
                   type="button"

@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@winandwin/ui'
 import { useEffect, useState, useCallback } from 'react'
 import { fetchPlayerRanking, type PlayerRanking } from '@/lib/api'
 import { useMerchantId } from '@/lib/merchant-context'
+import { useApp } from '@/lib/i18n/app-lang-context'
 
 function getRankDisplay(rank: number): string {
   if (rank === 1) return '\uD83E\uDD47'
@@ -13,6 +14,7 @@ function getRankDisplay(rank: number): string {
 }
 
 export default function RankingPage() {
+  const { txt, lang } = useApp()
   const merchantId = useMerchantId()
   const [ranking, setRanking] = useState<PlayerRanking[]>([])
   const [loading, setLoading] = useState(true)
@@ -29,18 +31,18 @@ export default function RankingPage() {
       setRanking(data)
       setError(null)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load ranking')
+      setError(err instanceof Error ? err.message : txt.commonError)
     } finally {
       setLoading(false)
     }
-  }, [merchantId])
+  }, [merchantId, txt])
 
   useEffect(() => {
     loadData()
   }, [loadData])
 
   function formatDateTime(iso: string) {
-    return new Date(iso).toLocaleDateString('en-US', {
+    return new Date(iso).toLocaleDateString(lang === 'fr' ? 'fr-FR' : 'en-US', {
       month: 'short',
       day: 'numeric',
       hour: '2-digit',
@@ -52,16 +54,14 @@ export default function RankingPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">Player Ranking</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Leaderboard based on player points
-          </p>
+          <h1 className="text-2xl font-bold">{txt.playersRankingTitle}</h1>
+          <p className="text-sm text-muted-foreground mt-1">{txt.playersRankingSubtitle}</p>
         </div>
         <a
           href="/dashboard/players"
           className="inline-flex items-center gap-2 rounded-lg border px-3 py-1.5 text-sm font-medium text-muted-foreground hover:bg-accent transition-colors"
         >
-          {'\u2190'} All Players
+          {'\u2190'} {lang === 'fr' ? 'Tous les joueurs' : 'All Players'}
         </a>
       </div>
 
@@ -71,19 +71,21 @@ export default function RankingPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Leaderboard</CardTitle>
+          <CardTitle>{lang === 'fr' ? 'Classement' : 'Leaderboard'}</CardTitle>
         </CardHeader>
         <CardContent>
           {loading ? (
             <div className="flex items-center justify-center py-12">
-              <p className="text-sm text-muted-foreground">Loading ranking...</p>
+              <p className="text-sm text-muted-foreground">{txt.commonLoading}</p>
             </div>
           ) : ranking.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12">
               <p className="text-4xl">{'\uD83C\uDFC6'}</p>
-              <p className="mt-2 text-lg font-medium">No rankings yet</p>
+              <p className="mt-2 text-lg font-medium">
+                {lang === 'fr' ? 'Aucun classement pour le moment' : 'No rankings yet'}
+              </p>
               <p className="text-sm text-muted-foreground">
-                Players will appear here when they earn points
+                {lang === 'fr' ? 'Les joueurs appara\u00EEtront ici quand ils gagneront des points.' : 'Players will appear here when they earn points'}
               </p>
             </div>
           ) : (
@@ -91,12 +93,12 @@ export default function RankingPage() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b text-left text-muted-foreground">
-                    <th className="pb-3 font-medium w-16">Rank</th>
-                    <th className="pb-3 font-medium">Name</th>
-                    <th className="pb-3 font-medium">Points</th>
-                    <th className="pb-3 font-medium">Plays</th>
-                    <th className="pb-3 font-medium">Wins</th>
-                    <th className="pb-3 font-medium">Last Active</th>
+                    <th className="pb-3 font-medium w-16">{txt.playersRankingCol}</th>
+                    <th className="pb-3 font-medium">{txt.playersColName}</th>
+                    <th className="pb-3 font-medium">{txt.playersColPoints}</th>
+                    <th className="pb-3 font-medium">{txt.playersColPlays}</th>
+                    <th className="pb-3 font-medium">{txt.playersColWins}</th>
+                    <th className="pb-3 font-medium">{txt.playersColLastSeen}</th>
                   </tr>
                 </thead>
                 <tbody>

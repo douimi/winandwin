@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { createGame } from '@/lib/api'
 import { useMerchantId, useMerchantTier } from '@/lib/merchant-context'
+import { useApp } from '@/lib/i18n/app-lang-context'
 import { hasFeature } from '@/lib/tier-features'
 
 const GAME_TYPES = [
@@ -58,6 +59,7 @@ function makeEmptyPrize(): Prize {
 }
 
 export function CreateGameForm() {
+  const { txt, lang } = useApp()
   const router = useRouter()
   const merchantId = useMerchantId()
   const tier = useMerchantTier()
@@ -145,7 +147,7 @@ export function CreateGameForm() {
       {/* Game Type Selection */}
       <Card>
         <CardHeader>
-          <CardTitle>Game Type</CardTitle>
+          <CardTitle>{lang === 'fr' ? 'Type de jeu' : 'Game Type'}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid gap-3 sm:grid-cols-3">
@@ -172,14 +174,14 @@ export function CreateGameForm() {
       {/* Game Name & Win Rate */}
       <Card>
         <CardHeader>
-          <CardTitle>Configuration</CardTitle>
+          <CardTitle>{lang === 'fr' ? 'Configuration' : 'Configuration'}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="gameName">Game Name</Label>
+            <Label htmlFor="gameName">{txt.gameNewNameLabel}</Label>
             <Input
               id="gameName"
-              placeholder="e.g., Weekend Spin, Lucky Draw"
+              placeholder={txt.gameNewNamePlaceholder}
               value={gameName}
               onChange={(e) => setGameName((e.target as HTMLInputElement).value)}
               required
@@ -227,9 +229,9 @@ export function CreateGameForm() {
       {/* Prizes */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>Prizes</CardTitle>
+          <CardTitle>{lang === 'fr' ? 'Prix' : 'Prizes'}</CardTitle>
           <Button type="button" variant="outline" size="sm" onClick={addPrize}>
-            + Add Prize
+            + {txt.gameNewAddPrize}
           </Button>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -409,7 +411,7 @@ export function CreateGameForm() {
       )}
 
       <Button type="submit" size="lg" className="w-full" disabled={submitting}>
-        {submitting ? 'Creating...' : 'Create Game'}
+        {submitting ? txt.gameNewSubmitting : txt.gameNewSubmit}
       </Button>
     </form>
   )

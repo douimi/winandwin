@@ -5,6 +5,7 @@ import { Check, CheckCircle2 } from 'lucide-react'
 import { useState, useEffect, useCallback } from 'react'
 import { fetchMerchant } from '@/lib/api'
 import { useMerchantId } from '@/lib/merchant-context'
+import { useApp } from '@/lib/i18n/app-lang-context'
 
 const PLANS = [
   {
@@ -60,9 +61,17 @@ const PLANS = [
 ]
 
 export default function UpgradePage() {
+  const { txt, lang } = useApp()
   const merchantId = useMerchantId()
   const [currentTier, setCurrentTier] = useState<string>('free')
   const [loading, setLoading] = useState(true)
+
+  const tierDisplayName: Record<string, string> = {
+    free: txt.shellTierFree,
+    starter: txt.shellTierStarter,
+    pro: txt.shellTierPro,
+    enterprise: txt.shellTierEnterprise,
+  }
 
   // Modal state
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null)
@@ -126,10 +135,10 @@ export default function UpgradePage() {
   if (loading) {
     return (
       <div className="mx-auto max-w-4xl space-y-6">
-        <h1 className="text-2xl font-bold">Upgrade Plan</h1>
+        <h1 className="text-2xl font-bold">{txt.upgradeTitle}</h1>
         <Card>
           <CardContent className="flex items-center justify-center py-12">
-            <p className="text-sm text-muted-foreground">Loading...</p>
+            <p className="text-sm text-muted-foreground">{txt.commonLoading}</p>
           </CardContent>
         </Card>
       </div>
@@ -139,12 +148,14 @@ export default function UpgradePage() {
   return (
     <div className="mx-auto max-w-4xl space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Upgrade Plan</h1>
+        <h1 className="text-2xl font-bold">{txt.upgradeTitle}</h1>
         <p className="text-muted-foreground mt-1">
-          You are currently on the <span className="font-semibold capitalize">{currentTier}</span> plan.
+          {lang === 'fr'
+            ? <>Vous êtes actuellement sur le plan <span className="font-semibold">{tierDisplayName[currentTier] ?? currentTier}</span>.</>
+            : <>You are currently on the <span className="font-semibold">{tierDisplayName[currentTier] ?? currentTier}</span> plan.</>}
           {currentTier === 'enterprise'
-            ? ' You have the best plan available!'
-            : ' Choose a plan below to unlock more features.'}
+            ? (lang === 'fr' ? ' Vous avez le meilleur plan disponible !' : ' You have the best plan available!')
+            : (lang === 'fr' ? ' Choisissez un plan ci-dessous pour débloquer plus de fonctionnalités.' : ' Choose a plan below to unlock more features.')}
         </p>
       </div>
 
@@ -155,9 +166,13 @@ export default function UpgradePage() {
             <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
               <CheckCircle2 className="h-6 w-6" />
             </div>
-            <h2 className="text-lg font-semibold text-emerald-900">Request submitted!</h2>
+            <h2 className="text-lg font-semibold text-emerald-900">
+              {lang === 'fr' ? 'Demande envoyée !' : 'Request submitted!'}
+            </h2>
             <p className="mt-1 text-sm text-emerald-800">
-              We&apos;ll contact you within 24 hours to set up your new plan!
+              {lang === 'fr'
+                ? 'Nous vous contacterons sous 24 heures pour finaliser votre nouveau plan !'
+                : "We'll contact you within 24 hours to set up your new plan!"}
             </p>
             <Button
               className="mt-4"
@@ -168,7 +183,7 @@ export default function UpgradePage() {
                 setMessage('')
               }}
             >
-              Back to plans
+              {lang === 'fr' ? 'Retour aux plans' : 'Back to plans'}
             </Button>
           </CardContent>
         </Card>
@@ -189,20 +204,24 @@ export default function UpgradePage() {
                 >
                   {plan.popular && (
                     <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-primary px-3 py-0.5 text-xs font-semibold uppercase tracking-wide text-primary-foreground shadow-sm">
-                      Most Popular
+                      {lang === 'fr' ? 'Le plus populaire' : 'Most Popular'}
                     </div>
                   )}
                   <CardHeader className="pb-4">
-                    <CardTitle className="text-lg">{plan.name}</CardTitle>
+                    <CardTitle className="text-lg">{tierDisplayName[plan.tier] ?? plan.name}</CardTitle>
                     <div className="mt-2">
                       {plan.price === 'Custom' ? (
-                        <span className="text-3xl font-bold tracking-tight">Custom</span>
+                        <span className="text-3xl font-bold tracking-tight">
+                          {lang === 'fr' ? 'Sur mesure' : 'Custom'}
+                        </span>
                       ) : (
                         <>
                           <span className="text-3xl font-bold tracking-tight tabular-nums">
                             {'\u20AC'}{plan.price}
                           </span>
-                          <span className="text-muted-foreground">/month</span>
+                          <span className="text-muted-foreground">
+                            {lang === 'fr' ? '/mois' : '/month'}
+                          </span>
                         </>
                       )}
                     </div>
@@ -220,7 +239,7 @@ export default function UpgradePage() {
                     <div className="mt-6">
                       {isCurrent ? (
                         <Button disabled className="w-full">
-                          Current Plan
+                          {txt.upgradeCurrent}
                         </Button>
                       ) : (
                         <Button
@@ -228,7 +247,7 @@ export default function UpgradePage() {
                           variant={plan.popular ? 'default' : 'outline'}
                           onClick={() => setSelectedPlan(plan.tier)}
                         >
-                          Contact Us to Upgrade
+                          {lang === 'fr' ? 'Nous contacter' : 'Contact Us to Upgrade'}
                         </Button>
                       )}
                     </div>
@@ -242,7 +261,11 @@ export default function UpgradePage() {
           {selectedPlan && (
             <Card className="border-primary/30 bg-primary/[0.02]">
               <CardHeader>
-                <CardTitle>Request Upgrade to {tierLabel(selectedPlan)}</CardTitle>
+                <CardTitle>
+                  {lang === 'fr'
+                    ? `Demander le plan ${tierDisplayName[selectedPlan] ?? tierLabel(selectedPlan)}`
+                    : `Request Upgrade to ${tierDisplayName[selectedPlan] ?? tierLabel(selectedPlan)}`}
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 {error && (
@@ -253,28 +276,34 @@ export default function UpgradePage() {
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div className="grid gap-4 sm:grid-cols-2">
                     <div className="space-y-2">
-                      <Label>Current Plan</Label>
-                      <Input value={tierLabel(currentTier)} disabled />
+                      <Label>{txt.upgradeCurrentPlan}</Label>
+                      <Input value={tierDisplayName[currentTier] ?? tierLabel(currentTier)} disabled />
                     </div>
                     <div className="space-y-2">
-                      <Label>Desired Plan</Label>
-                      <Input value={tierLabel(selectedPlan)} disabled />
+                      <Label>{lang === 'fr' ? 'Plan souhaité' : 'Desired Plan'}</Label>
+                      <Input value={tierDisplayName[selectedPlan] ?? tierLabel(selectedPlan)} disabled />
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="upgradeMessage">Message (optional)</Label>
+                    <Label htmlFor="upgradeMessage">
+                      {lang === 'fr' ? 'Message (optionnel)' : 'Message (optional)'}
+                    </Label>
                     <textarea
                       id="upgradeMessage"
                       value={message}
                       onChange={(e) => setMessage(e.target.value)}
-                      placeholder="Tell us about your needs, expected volume, or any questions..."
+                      placeholder={lang === 'fr'
+                        ? 'Décrivez vos besoins, votre volume attendu ou vos questions…'
+                        : 'Tell us about your needs, expected volume, or any questions...'}
                       rows={3}
                       className="flex w-full rounded-lg border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                     />
                   </div>
                   <div className="flex gap-3">
                     <Button type="submit" disabled={submitting}>
-                      {submitting ? 'Submitting...' : 'Submit Upgrade Request'}
+                      {submitting
+                        ? (lang === 'fr' ? 'Envoi…' : 'Submitting...')
+                        : (lang === 'fr' ? 'Envoyer la demande' : 'Submit Upgrade Request')}
                     </Button>
                     <Button
                       type="button"

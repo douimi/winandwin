@@ -5,10 +5,12 @@ import { useEffect, useState, useCallback } from 'react'
 import { fetchMerchant, updateMerchant } from '@/lib/api'
 import { useMerchantId, useMerchantTier } from '@/lib/merchant-context'
 import { hasFeature } from '@/lib/tier-features'
+import { useApp } from '@/lib/i18n/app-lang-context'
 import { QRSection } from './qr-section'
 import type { Merchant } from '@winandwin/shared'
 
 export default function SettingsPage() {
+  const { txt, lang } = useApp()
   const merchantId = useMerchantId()
   const merchantTier = useMerchantTier()
   const [loading, setLoading] = useState(true)
@@ -129,10 +131,10 @@ export default function SettingsPage() {
   if (loading) {
     return (
       <div className="mx-auto max-w-2xl space-y-6">
-        <h1 className="text-2xl font-bold">Settings</h1>
+        <h1 className="text-2xl font-bold">{txt.settingsTitle}</h1>
         <Card>
           <CardContent className="flex items-center justify-center py-12">
-            <p className="text-sm text-muted-foreground">Loading settings...</p>
+            <p className="text-sm text-muted-foreground">{txt.commonLoading}</p>
           </CardContent>
         </Card>
       </div>
@@ -158,12 +160,12 @@ export default function SettingsPage() {
       {/* Business Information */}
       <Card>
         <CardHeader>
-          <CardTitle>{'\uD83C\uDFE2'} Business Information</CardTitle>
+          <CardTitle>{'\uD83C\uDFE2'} {lang === 'fr' ? 'Informations de l\'entreprise' : 'Business Information'}</CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSaveInfo} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="businessName">Business Name</Label>
+              <Label htmlFor="businessName">{txt.settingsBusinessName}</Label>
               <Input
                 id="businessName"
                 value={name}

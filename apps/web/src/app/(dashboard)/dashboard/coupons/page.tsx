@@ -15,6 +15,8 @@ import {
   type CouponWithDetails,
 } from '@/lib/api'
 import { useMerchantId, useMerchantTier } from '@/lib/merchant-context'
+import { useApp } from '@/lib/i18n/app-lang-context'
+import type { AppText } from '@/lib/i18n/app-text'
 import { hasFeature } from '@/lib/tier-features'
 
 // Confirmation dialog state — which coupon and which action to run.
@@ -34,29 +36,37 @@ const PAGE_SIZE_OPTIONS = [10, 20, 50, 100]
 
 type ColumnDef = {
   field: CouponSortField
-  label: string
+  labelKey: keyof AppText
   className?: string
 }
 
 const COLUMNS: ColumnDef[] = [
-  { field: 'code', label: 'Code' },
-  { field: 'prizeName', label: 'Prize' },
-  { field: 'status', label: 'Status' },
-  { field: 'playerName', label: 'Player' },
-  { field: 'validFrom', label: 'Valid From', className: 'hidden md:table-cell' },
-  { field: 'validUntil', label: 'Valid Until' },
-  { field: 'redeemedAt', label: 'Redeemed', className: 'hidden lg:table-cell' },
-  { field: 'createdAt', label: 'Issued', className: 'hidden lg:table-cell' },
+  { field: 'code', labelKey: 'couponsColCode' },
+  { field: 'prizeName', labelKey: 'couponsColPrize' },
+  { field: 'status', labelKey: 'couponsColStatus' },
+  { field: 'playerName', labelKey: 'couponsColPlayer' },
+  { field: 'validFrom', labelKey: 'couponsColValidFrom', className: 'hidden md:table-cell' },
+  { field: 'validUntil', labelKey: 'couponsColValidUntil' },
+  { field: 'redeemedAt', labelKey: 'couponsColRedeemedAt', className: 'hidden lg:table-cell' },
+  { field: 'createdAt', labelKey: 'couponsColCreated', className: 'hidden lg:table-cell' },
 ]
 
-function formatDate(iso: string | null) {
+function formatDate(iso: string | null, lang: 'fr' | 'en' = 'fr') {
   if (!iso) return '—'
-  return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+  return new Date(iso).toLocaleDateString(lang === 'fr' ? 'fr-FR' : 'en-US', { month: 'short', day: 'numeric', year: 'numeric' })
 }
 
 export default function CouponsPage() {
+  const { txt, lang } = useApp()
   const merchantId = useMerchantId()
   const tier = useMerchantTier()
+
+  const statusLabels: Record<string, string> = {
+    active: txt.couponsStatusActive,
+    redeemed: txt.couponsStatusRedeemed,
+    expired: txt.couponsStatusExpired,
+    revoked: txt.couponsStatusRevoked,
+  }
 
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(20)
@@ -112,11 +122,11 @@ export default function CouponsPage() {
       setPageData(result)
       setError(null)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load coupons')
+      setError(err instanceof Error ? err.message : txt.commonError)
     } finally {
       setLoading(false)
     }
-  }, [merchantId, page, pageSize, sortField, sortDir, debouncedSearch, statusFilter])
+  }, [merchantId, page, pageSize, sortField, sortDir, debouncedSearch, statusFilter, txt])
 
   const loadStats = useCallback(async () => {
     if (!merchantId) return
@@ -173,10 +183,16 @@ export default function CouponsPage() {
     try {
       if (kind === 'redeem') {
         await redeemCoupon(coupon.id)
-        setToast({ kind: 'success', message: `Coupon ${coupon.code} marked as redeemed.` })
+        setToast({
+          kind: 'success',
+          message: lang === 'fr' ? `Coupon ${coupon.code} validé.` : `Coupon ${coupon.code} marked as redeemed.`,
+        })
       } else {
         await revokeCoupon(coupon.id)
-        setToast({ kind: 'success', message: `Coupon ${coupon.code} revoked.` })
+        setToast({
+          kind: 'success',
+          message: lang === 'fr' ? `Coupon ${coupon.code} révoqué.` : `Coupon ${coupon.code} revoked.`,
+        })
       }
       // Refresh in the background so pagination + stats stay in sync.
       loadCoupons().catch(() => { /* silent — the optimistic state is already correct */ })
@@ -184,7 +200,10 @@ export default function CouponsPage() {
     } catch (err) {
       // Rollback the optimistic status.
       patchCouponStatus(coupon.id, prevStatus)
-      const msg = err instanceof Error ? err.message : `Failed to ${kind} coupon`
+      const fallback = kind === 'redeem'
+        ? (lang === 'fr' ? 'Échec de la validation' : 'Failed to redeem coupon')
+        : (lang === 'fr' ? 'Échec de la révocation' : 'Failed to revoke coupon')
+      const msg = err instanceof Error ? err.message : fallback
       setToast({ kind: 'error', message: msg })
     } finally {
       setActionLoading(null)
@@ -244,7 +263,7 @@ export default function CouponsPage() {
       a.click()
       URL.revokeObjectURL(url)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to export coupons')
+      setError(err instanceof Error ? err.message : txt.commonError)
     } finally {
       setExportLoading(false)
     }
@@ -276,7 +295,7 @@ export default function CouponsPage() {
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-semibold tracking-tight">Coupons</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">{txt.couponsTitle}</h1>
         {hasFeature(tier, 'coupons.export') ? (
           <button
             type="button"
@@ -285,7 +304,7 @@ export default function CouponsPage() {
             className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-sm font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground disabled:opacity-50"
           >
             <Download className="h-3.5 w-3.5" />
-            {exportLoading ? 'Exporting…' : 'Export CSV'}
+            {exportLoading ? (lang === 'fr' ? 'Export en cours…' : 'Exporting…') : txt.couponsExportCsv}
           </button>
         ) : (
           <a
@@ -293,7 +312,7 @@ export default function CouponsPage() {
             className="inline-flex items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent"
           >
             <Lock className="h-3.5 w-3.5" />
-            Export CSV
+            {txt.couponsExportCsv}
             <span className="ml-0.5 rounded-full bg-primary/10 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-primary">
               Pro
             </span>
@@ -307,7 +326,7 @@ export default function CouponsPage() {
       <div className="grid gap-4 sm:grid-cols-3">
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Active</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">{txt.couponsStatusActive}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold">{stats?.active ?? '—'}</div>
@@ -315,7 +334,9 @@ export default function CouponsPage() {
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Redeemed This Week</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              {lang === 'fr' ? 'Validés cette semaine' : 'Redeemed this week'}
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold">{stats?.redeemedThisWeek ?? '—'}</div>
@@ -323,7 +344,9 @@ export default function CouponsPage() {
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">Redemption Rate</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">
+              {lang === 'fr' ? 'Taux de validation' : 'Redemption rate'}
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold">{stats?.redemptionRate != null ? `${stats.redemptionRate}%` : '—'}</div>
@@ -335,9 +358,9 @@ export default function CouponsPage() {
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between gap-3 flex-wrap">
-            <CardTitle>All Coupons</CardTitle>
+            <CardTitle>{lang === 'fr' ? 'Tous les coupons' : 'All coupons'}</CardTitle>
             <div className="text-xs text-muted-foreground">
-              {loading ? 'Loading…' : `${pagination.total} total`}
+              {loading ? txt.commonLoading : `${pagination.total} ${lang === 'fr' ? 'au total' : 'total'}`}
             </div>
           </div>
         </CardHeader>
@@ -345,7 +368,7 @@ export default function CouponsPage() {
           <div className="flex flex-wrap items-center gap-3">
             <input
               type="text"
-              placeholder="Search code, prize, player…"
+              placeholder={txt.couponsSearchPlaceholder}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="flex h-9 w-full max-w-sm rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
@@ -355,14 +378,16 @@ export default function CouponsPage() {
               onChange={(e) => setStatusFilter(e.target.value as CouponStatusFilter | '')}
               className="h-9 rounded-md border border-input bg-background px-3 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
             >
-              <option value="">All statuses</option>
-              <option value="active">Active</option>
-              <option value="redeemed">Redeemed</option>
-              <option value="expired">Expired</option>
-              <option value="revoked">Revoked</option>
+              <option value="">{lang === 'fr' ? 'Tous les statuts' : 'All statuses'}</option>
+              <option value="active">{txt.couponsStatusActive}</option>
+              <option value="redeemed">{txt.couponsStatusRedeemed}</option>
+              <option value="expired">{txt.couponsStatusExpired}</option>
+              <option value="revoked">{txt.couponsStatusRevoked}</option>
             </select>
             <div className="flex items-center gap-2 ml-auto">
-              <label htmlFor="pageSize" className="text-xs text-muted-foreground">Rows per page</label>
+              <label htmlFor="pageSize" className="text-xs text-muted-foreground">
+                {lang === 'fr' ? 'Lignes par page' : 'Rows per page'}
+              </label>
               <select
                 id="pageSize"
                 value={pageSize}
@@ -390,9 +415,13 @@ export default function CouponsPage() {
               <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-muted text-muted-foreground">
                 <Ticket className="h-6 w-6" />
               </div>
-              <p className="mt-3 text-lg font-medium">No coupons match</p>
+              <p className="mt-3 text-lg font-medium">
+                {lang === 'fr' ? 'Aucun coupon' : 'No coupons match'}
+              </p>
               <p className="text-sm text-muted-foreground">
-                {debouncedSearch || statusFilter ? 'Try adjusting the filters.' : 'Coupons will appear here when players win prizes.'}
+                {debouncedSearch || statusFilter
+                  ? (lang === 'fr' ? 'Ajustez les filtres.' : 'Try adjusting the filters.')
+                  : (lang === 'fr' ? 'Les coupons apparaîtront ici quand des joueurs gagneront.' : 'Coupons will appear here when players win prizes.')}
               </p>
             </div>
           ) : (
@@ -406,11 +435,11 @@ export default function CouponsPage() {
                         onClick={() => toggleSort(col.field)}
                         className={`pb-3 font-medium select-none cursor-pointer hover:text-foreground transition-colors ${col.className ?? ''}`}
                       >
-                        {col.label}
+                        {txt[col.labelKey]}
                         <SortIcon field={col.field} />
                       </th>
                     ))}
-                    <th className="pb-3 font-medium">Actions</th>
+                    <th className="pb-3 font-medium">{txt.commonActions}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -420,7 +449,7 @@ export default function CouponsPage() {
                       <td className="py-3">{coupon.prizeName}</td>
                       <td className="py-3">
                         <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_BADGE[coupon.status] || ''}`}>
-                          {coupon.status}
+                          {statusLabels[coupon.status] ?? coupon.status}
                         </span>
                       </td>
                       <td className="py-3">
@@ -434,18 +463,18 @@ export default function CouponsPage() {
                             )}
                           </div>
                         ) : (
-                          <span className="text-muted-foreground italic">Anonymous</span>
+                          <span className="text-muted-foreground italic">{txt.couponsAnonymous}</span>
                         )}
                       </td>
                       <td className="py-3 text-muted-foreground hidden md:table-cell">
-                        {formatDate(coupon.validFrom)}
+                        {formatDate(coupon.validFrom, lang)}
                       </td>
-                      <td className="py-3 text-muted-foreground">{formatDate(coupon.validUntil)}</td>
+                      <td className="py-3 text-muted-foreground">{formatDate(coupon.validUntil, lang)}</td>
                       <td className="py-3 text-muted-foreground hidden lg:table-cell">
-                        {formatDate(coupon.redeemedAt)}
+                        {formatDate(coupon.redeemedAt, lang)}
                       </td>
                       <td className="py-3 text-muted-foreground hidden lg:table-cell">
-                        {formatDate(coupon.createdAt)}
+                        {formatDate(coupon.createdAt, lang)}
                       </td>
                       <td className="py-3">
                         {coupon.status === 'active' && (
@@ -456,7 +485,7 @@ export default function CouponsPage() {
                               disabled={actionLoading === coupon.id}
                               onClick={() => setConfirm({ kind: 'redeem', coupon })}
                             >
-                              {actionLoading === coupon.id ? '...' : 'Redeem'}
+                              {actionLoading === coupon.id ? '...' : txt.couponsRedeem}
                             </Button>
                             <Button
                               size="sm"
@@ -464,7 +493,7 @@ export default function CouponsPage() {
                               disabled={actionLoading === coupon.id}
                               onClick={() => setConfirm({ kind: 'revoke', coupon })}
                             >
-                              {actionLoading === coupon.id ? '...' : 'Revoke'}
+                              {actionLoading === coupon.id ? '...' : txt.couponsRevoke}
                             </Button>
                           </div>
                         )}
@@ -480,7 +509,9 @@ export default function CouponsPage() {
           {coupons.length > 0 && (
             <div className="flex items-center justify-between gap-3 flex-wrap pt-2">
               <p className="text-xs text-muted-foreground">
-                Showing <span className="font-medium text-foreground">{showingFrom}</span>–<span className="font-medium text-foreground">{showingTo}</span> of{' '}
+                {lang === 'fr' ? 'Affichage' : 'Showing'}{' '}
+                <span className="font-medium text-foreground">{showingFrom}</span>–<span className="font-medium text-foreground">{showingTo}</span>{' '}
+                {lang === 'fr' ? 'sur' : 'of'}{' '}
                 <span className="font-medium text-foreground">{pagination.total}</span>
               </p>
 
@@ -491,7 +522,7 @@ export default function CouponsPage() {
                   disabled={page <= 1 || loading}
                   className="inline-flex h-8 items-center rounded-md border border-input px-3 text-xs font-medium disabled:opacity-40 hover:bg-accent transition-colors"
                 >
-                  ← Prev
+                  ← {txt.commonPrevious}
                 </button>
 
                 {pageNumbers.map((pn, i) =>
@@ -520,7 +551,7 @@ export default function CouponsPage() {
                   disabled={page >= totalPages || loading}
                   className="inline-flex h-8 items-center rounded-md border border-input px-3 text-xs font-medium disabled:opacity-40 hover:bg-accent transition-colors"
                 >
-                  Next →
+                  {txt.commonNext} →
                 </button>
               </div>
             </div>
@@ -561,32 +592,38 @@ export default function CouponsPage() {
               </div>
               <div className="min-w-0 flex-1">
                 <h3 id="coupon-confirm-title" className="text-base font-semibold tracking-tight">
-                  {confirm.kind === 'redeem' ? 'Redeem this coupon?' : 'Revoke this coupon?'}
+                  {confirm.kind === 'redeem'
+                    ? (lang === 'fr' ? 'Valider ce coupon ?' : 'Redeem this coupon?')
+                    : txt.couponsRevokeConfirmTitle}
                 </h3>
                 <p className="mt-1 text-sm text-muted-foreground">
                   {confirm.kind === 'redeem'
-                    ? 'The customer receives their reward and the coupon is marked used. This action cannot be undone.'
-                    : 'The coupon becomes invalid and cannot be used or redeemed. This cannot be undone.'}
+                    ? (lang === 'fr'
+                        ? 'Le client reçoit sa récompense et le coupon est marqué comme validé. Action irréversible.'
+                        : 'The customer receives their reward and the coupon is marked used. This action cannot be undone.')
+                    : (lang === 'fr'
+                        ? 'Le coupon devient invalide et ne pourra plus être validé. Action irréversible.'
+                        : txt.couponsRevokeConfirmBody)}
                 </p>
 
                 <div className="mt-4 space-y-1 rounded-lg border border-border bg-muted/40 p-3 text-xs">
                   <div className="flex items-center justify-between gap-3">
-                    <span className="text-muted-foreground">Code</span>
+                    <span className="text-muted-foreground">{txt.couponsColCode}</span>
                     <span className="font-mono font-semibold tracking-wide">{confirm.coupon.code}</span>
                   </div>
                   <div className="flex items-center justify-between gap-3">
-                    <span className="text-muted-foreground">Prize</span>
+                    <span className="text-muted-foreground">{txt.couponsColPrize}</span>
                     <span className="font-medium">{confirm.coupon.prizeName}</span>
                   </div>
                   {confirm.coupon.playerName && (
                     <div className="flex items-center justify-between gap-3">
-                      <span className="text-muted-foreground">Player</span>
+                      <span className="text-muted-foreground">{txt.couponsColPlayer}</span>
                       <span className="truncate font-medium">{confirm.coupon.playerName}</span>
                     </div>
                   )}
                   {confirm.coupon.playerEmail && (
                     <div className="flex items-center justify-between gap-3">
-                      <span className="text-muted-foreground">Email</span>
+                      <span className="text-muted-foreground">{txt.commonEmail}</span>
                       <span className="max-w-[180px] truncate">{confirm.coupon.playerEmail}</span>
                     </div>
                   )}
@@ -602,7 +639,7 @@ export default function CouponsPage() {
                 onClick={() => setConfirm(null)}
                 disabled={actionLoading === confirm.coupon.id}
               >
-                Cancel
+                {txt.commonCancel}
               </Button>
               <Button
                 type="button"
@@ -612,7 +649,9 @@ export default function CouponsPage() {
                 disabled={actionLoading === confirm.coupon.id}
                 autoFocus
               >
-                {confirm.kind === 'redeem' ? 'Yes, redeem' : 'Yes, revoke'}
+                {confirm.kind === 'redeem'
+                  ? (lang === 'fr' ? 'Oui, valider' : 'Yes, redeem')
+                  : (lang === 'fr' ? 'Oui, révoquer' : 'Yes, revoke')}
               </Button>
             </div>
           </div>
