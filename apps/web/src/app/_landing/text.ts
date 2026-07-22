@@ -25,9 +25,6 @@ export function whatsAppUrl(lang: Lang) {
 // French (primary) — this is the shape all other locales must match.
 // ─────────────────────────────────────────────────────────────────────
 const fr = {
-  // Sticky offer bar at the very top
-  offerBar: '🎁 Offre de lancement : premier mois gratuit + flyer QR imprimé offert',
-  offerBarCta: 'Discuter sur WhatsApp',
 
   // Hero — loss-aversion framing
   heroEyebrow: '🇲🇦 Testé au Maroc et en France',
@@ -443,8 +440,6 @@ const fr = {
 // The `Record<Lang, LandingText>` at the bottom enforces that fr + en
 // share the same shape — no need to duplicate the type annotation here.
 const en = {
-  offerBar: '🎁 Launch offer: first month free + printed QR flyer included',
-  offerBarCta: 'Chat on WhatsApp',
 
   heroEyebrow: '🇲🇦 Tested in Morocco and France',
   heroTitle1: 'Your customers come in,',

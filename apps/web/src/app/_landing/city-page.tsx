@@ -11,7 +11,6 @@ import { LandingHow } from './landing-how'
 import { LandingIndustries } from './landing-industries'
 import { LandingLangProvider } from './lang-context'
 import { LandingNav } from './landing-nav'
-import { LandingOfferBar } from './landing-offer-bar'
 import { LandingPlans } from './landing-plans'
 import { LandingRoiCalculator } from './landing-roi-calculator'
 import { LandingTicker } from './landing-ticker'
@@ -28,7 +27,6 @@ export function CityPage({ city }: { city: CityMeta }) {
   return (
     <LandingLangProvider>
       <div className="min-h-screen bg-background text-foreground">
-        <LandingOfferBar />
         <LandingNav />
         <main>
           <LandingCityHero city={city} />

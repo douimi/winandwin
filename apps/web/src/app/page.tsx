@@ -1,6 +1,5 @@
 import { LandingLangProvider } from './_landing/lang-context'
 import { LandingNav } from './_landing/landing-nav'
-import { LandingOfferBar } from './_landing/landing-offer-bar'
 import { LandingHero } from './_landing/landing-hero'
 import { LandingTicker } from './_landing/landing-ticker'
 import { LandingHow } from './_landing/landing-how'
@@ -20,7 +19,6 @@ export default function HomePage() {
   return (
     <LandingLangProvider>
       <div className="min-h-screen bg-background text-foreground">
-        <LandingOfferBar />
         <LandingNav />
         <main>
           <LandingHero />
