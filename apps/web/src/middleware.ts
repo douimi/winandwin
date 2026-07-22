@@ -1,16 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-const publicPaths = ['/', '/sign-in', '/sign-up', '/forgot-password']
+// Only the authenticated surfaces need a session. Everything else — the
+// landing page, city-specific landings, legal pages (privacy, terms,
+// confidentiality), auth pages, validate, static assets — is public and
+// must never be gated. Guarding by a *deny*list (rather than an ever-
+// growing allowlist) means new marketing pages ship without ever having
+// to touch this file again.
+const PROTECTED_PREFIXES = ['/dashboard', '/admin', '/onboarding']
+
+function requiresAuth(pathname: string): boolean {
+  return PROTECTED_PREFIXES.some(
+    (p) => pathname === p || pathname.startsWith(`${p}/`),
+  )
+}
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
-  // Allow public paths, /validate/* routes, and API/static routes
-  if (
-    publicPaths.includes(pathname) ||
-    pathname.startsWith('/validate') ||
-    pathname.startsWith('/api/')
-  ) {
+  if (!requiresAuth(pathname)) {
     return NextResponse.next()
   }
 
