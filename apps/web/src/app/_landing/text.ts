@@ -262,8 +262,9 @@ const fr = {
   trusted: 'Approuvé par plus de 500 commerces au Maroc et en France',
   madeWith: 'Fait avec',
   inMorocco: 'au Maroc',
-  terms: 'Conditions',
-  privacy: 'Confidentialité',
+  terms: 'Conditions générales',
+  privacy: 'Politique de confidentialité',
+  confidentiality: 'Notice de confidentialité',
   contact: 'Contact',
   copyright: '© 2026 Win & Win. Tous droits réservés.',
 
@@ -618,8 +619,9 @@ const en = {
   trusted: 'Trusted by 500+ merchants across Morocco and France',
   madeWith: 'Made with',
   inMorocco: 'in Morocco',
-  terms: 'Terms',
-  privacy: 'Privacy',
+  terms: 'Terms & Conditions',
+  privacy: 'Privacy Policy',
+  confidentiality: 'Confidentiality Notice',
   contact: 'Contact',
   copyright: '© 2026 Win & Win. All rights reserved.',
 

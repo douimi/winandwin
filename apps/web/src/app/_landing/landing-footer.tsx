@@ -88,13 +88,18 @@ export function LandingFooter() {
                 </a>
               </li>
               <li>
-                <a href="#" className="text-muted-foreground transition-colors hover:text-foreground">
+                <a href="/terms" className="text-muted-foreground transition-colors hover:text-foreground">
                   {txt.terms}
                 </a>
               </li>
               <li>
-                <a href="#" className="text-muted-foreground transition-colors hover:text-foreground">
+                <a href="/privacy" className="text-muted-foreground transition-colors hover:text-foreground">
                   {txt.privacy}
+                </a>
+              </li>
+              <li>
+                <a href="/confidentiality" className="text-muted-foreground transition-colors hover:text-foreground">
+                  {txt.confidentiality}
                 </a>
               </li>
             </ul>
