@@ -6,12 +6,31 @@
  * 2. Hardware fingerprint — only hardware/device signals that stay the same
  *    across different browsers on the same phone (screen, GPU, CPU, memory, touch)
  *
- * The server uses both: full for primary identification, hardware for
- * cross-browser detection on the same device.
+ * The server matches players on the full fingerprint only (suffixed with a
+ * random nonce, see STORAGE_KEY); the hardware one is kept for fraud analytics.
  */
 
-const STORAGE_KEY = 'winandwin_fingerprint'
+// v2: the full fingerprint now carries a random per-browser nonce. v1 was purely
+// derived from device signals, which are identical on every phone of the same
+// model + OS (notably iPhones on Safari), so strangers collided on one player
+// row and were told they had "already played". The v1 key is ignored on purpose
+// so already-cached colliding IDs get replaced.
+const STORAGE_KEY = 'winandwin_fingerprint_v2'
 const HW_STORAGE_KEY = 'winandwin_hw_fingerprint'
+
+/** Random 128-bit hex nonce — makes the ID unique per browser install */
+function randomNonce(): string {
+  try {
+    if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+      return crypto.randomUUID().replace(/-/g, '')
+    }
+    const bytes = new Uint8Array(16)
+    crypto.getRandomValues(bytes)
+    return Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('')
+  } catch {
+    return `${Date.now().toString(16)}${Math.random().toString(16).slice(2)}`
+  }
+}
 
 /** FNV-1a hash — fast with good distribution */
 function fnv1a(input: string): string {
@@ -236,7 +255,7 @@ export async function generateFingerprint(): Promise<string> {
     if (stored) return stored
   } catch { /* storage unavailable */ }
 
-  const fp = generateFullFingerprint()
+  const fp = `${generateFullFingerprint()}_${randomNonce()}`
 
   try {
     localStorage.setItem(STORAGE_KEY, fp)
