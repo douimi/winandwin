@@ -811,6 +811,9 @@ playRouter.post('/:slug/register', async (c) => {
       .limit(1)
 
     if (playerResult.length === 0) {
+      // A winner whose fingerprint changed between /spin and /register lands
+      // here and never gets their coupon email.
+      console.warn('[Register] Player not found for fingerprint on', slug)
       return c.json(
         { success: false, error: { code: 'NOT_FOUND', message: 'Player not found' } },
         404,
@@ -917,9 +920,15 @@ playRouter.post('/:slug/register', async (c) => {
           apiKey,
         )
         emailSent = true
-      } catch {
-        /* email is best-effort — the coupon is still in the DB */
+      } catch (err) {
+        // Email is best-effort — the coupon is still in the DB — but log it,
+        // otherwise a broken Resend key/domain/quota goes unnoticed.
+        console.error('[Email] Failed to send coupon email:', err)
       }
+    } else {
+      console.warn('[Register] No coupon to email for player', playerData.id, {
+        hasRecentWin: recentWin.length > 0,
+      })
     }
 
     return c.json({

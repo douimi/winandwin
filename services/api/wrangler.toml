@@ -6,6 +6,11 @@ compatibility_flags = ["nodejs_compat"]
 [vars]
 ENVIRONMENT = "development"
 
+# Persist console.log / errors so production issues can be inspected after the
+# fact (Cloudflare dashboard → Workers → winandwin-api → Logs).
+[observability]
+enabled = true
+
 # DATABASE_URL is a secret — set it with:
 # wrangler secret put DATABASE_URL
 # For local dev, create a .dev.vars file with:
